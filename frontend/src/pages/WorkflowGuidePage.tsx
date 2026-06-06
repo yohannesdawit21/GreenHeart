@@ -49,9 +49,9 @@ const WORKFLOW_STEPS: WorkflowStep[] = [
     highlight: 'Interview availability → Open',
     steps: [
       'Use a second browser or incognito window.',
-      'Apply at Advisor Apply with name, email, password, and bio.',
+      'Apply at Advisor Apply — title, license, specialties, session rate, and approach.',
       'Land on Advisor Hub with status “Under review”.',
-      'Toggle Interview availability to Open (not Live dispatch — that unlocks after verification).',
+      'Toggle Interview availability to Open (Live dispatch unlocks after verification).',
       'Wait on Advisor Hub — partners only see you when the toggle is Open.',
     ],
   },
