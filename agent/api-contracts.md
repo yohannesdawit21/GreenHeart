@@ -29,7 +29,7 @@ When implementing an endpoint or socket event, update the contract file **first*
 | GET | `/api/verification/applicants` | `verification.api.ts` | stub — partner doctor queue |
 | POST | `/api/verification/interviews` | `verification.api.ts` | stub — start video interview |
 | PATCH | `/api/verification/interviews/:id/complete` | `verification.api.ts` | stub — pass/fail |
-| GET | `/api/verification/interviews/:id/livekit-token` | `verification.api.ts` | stub — Role C |
+| GET | `/api/verification/interviews/:id/livekit-token` | `verification.api.ts` | Role C service ready — Role B route pending |
 
 ### Wallet & Ledger (Role B — M3)
 

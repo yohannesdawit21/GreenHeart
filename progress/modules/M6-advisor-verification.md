@@ -1,7 +1,7 @@
 # M6 — Advisor Verification & RBAC
 
 **Owners:** Role B + Role A + Role C (LiveKit)  
-**Agent:** unassigned  
+**Agent:** cursor-role-c (Role C tasks)  
 **Spec:** [agent/modules/M6-advisor-verification.md](../../agent/modules/M6-advisor-verification.md)
 
 ## Tasks
@@ -22,10 +22,11 @@
 - [ ] `/verification/:interviewId` — LiveKit verification room UI
 
 ### Role C
-- [ ] Verification interview LiveKit tokens (no escrow)
-- [ ] M4 search filter: `verification_status = verified` only
-- [ ] M5 gate: presence + patient sessions require verified advisor
+- [x] Verification interview LiveKit tokens (no escrow) — `livekit/verification.service.ts`
+- [x] M4 search filter: `verification_status = verified` only (feat/m4-m5-role-c / merged in M5)
+- [x] M5 gate: presence + patient sessions require verified advisor (feat/m5-presence-sessions)
+- [x] `shared/contracts/verification.api.ts` LiveKit types
 
 ## Blocked by
 
-M2 roles/JWT foundation; M5 LiveKit token service for reuse
+Role B verification module wiring `GET /api/verification/interviews/:id/livekit-token`
