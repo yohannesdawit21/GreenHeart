@@ -27,15 +27,9 @@ Merge **M5 PR first**, then **M6 PR**. Close `feat/m4-m5-role-c` (superseded).
 | M1 | Frontend | Role A | Gemini CLI | **mostly done** | M4/M5/M6 APIs for full E2E |
 | M2 | Auth & Users | Role B | cursor-agent | **core done** | M6 role extensions |
 | M3 | Wallet & Ledger | Role B | cursor-agent | **done** | — |
-<<<<<<< HEAD
 | M4 | Search & Vectors | Role C | cursor-role-c | **done** (branch `feat/m6-verification-livekit`) | Merge PR to `main` |
-| M5 | Presence & Sessions | Role C | cursor-role-c | **done** (branch `feat/m6-verification-livekit`) | Merge PR to `main` |
-| M6 | Advisor Verification | B + A + C | unassigned | **partial** — Role C LiveKit helpers only | Role B APIs + Role A UI |
-=======
-| M4 | Search & Vectors | Role C | cursor-role-c | **PR ready** | Merge `feat/m5-presence-sessions` |
-| M5 | Presence & Sessions | Role C | cursor-role-c | **PR ready** | Merge `feat/m5-presence-sessions` |
-| M6 | Advisor Verification | B + A + C | mixed | **in progress** | Role B/A APIs; Role C PR `feat/m6-verification-livekit` |
->>>>>>> origin/main
+| M5 | Presence & Sessions | Role C | cursor-role-c | **done** — functional E2E passing | Merge PR to `main` |
+| M6 | Advisor Verification | B + A + C | mixed | **partial** — Role C LiveKit helpers only | Role B APIs + Role A UI |
 
 ## Definition of done (MVP demo)
 
