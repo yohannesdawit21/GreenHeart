@@ -1,10 +1,33 @@
 import { Router } from 'express';
+import { z } from 'zod';
+import { AppError } from '../../shared/errors/AppError.js';
+import { requireAuth } from '../../shared/middleware/auth.middleware.js';
+import { validateBody } from '../../shared/middleware/validateBody.js';
+import { getOnlineAdvisors, updatePresenceStatus } from './presence.service.js';
 
-/** Role C — implement in M5 */
 const router = Router();
 
-router.patch('/status', (_req, res) => {
-  res.json({ advisorId: '', online: false, _note: 'stub — implement M5' });
+const statusSchema = z.object({
+  online: z.boolean(),
+});
+
+router.patch('/status', requireAuth, validateBody(statusSchema), async (req, res, next) => {
+  try {
+    const { online } = req.body as z.infer<typeof statusSchema>;
+    const result = await updatePresenceStatus(req.auth!, online);
+    res.json(result);
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.get('/advisors', async (_req, res, next) => {
+  try {
+    const result = await getOnlineAdvisors();
+    res.json(result);
+  } catch (err) {
+    next(err);
+  }
 });
 
 export const presenceRouter = router;

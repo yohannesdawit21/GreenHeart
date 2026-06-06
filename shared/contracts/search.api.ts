@@ -1,5 +1,6 @@
 /**
  * Search API contracts — Owner: Role C
+ * Backend: POST /api/search/semantic, POST /api/search/reindex/:advisorId
  */
 
 import type { AdvisorCardDto } from './users.api';
