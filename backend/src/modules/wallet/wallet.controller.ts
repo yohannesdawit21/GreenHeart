@@ -18,6 +18,19 @@ export async function initiatePurchase(req: Request, res: Response) {
   res.json(result);
 }
 
+/** Dev/demo — authenticated user completes their pending mock payment */
+export async function completeSandboxPurchase(req: Request, res: Response) {
+  const { mockPaymentId } = req.body as { mockPaymentId?: string };
+  if (!mockPaymentId) {
+    throw new AppError(400, 'VALIDATION_ERROR', 'mockPaymentId is required');
+  }
+  const result = await walletService.processPaymentWebhook({
+    gatewayReference: mockPaymentId,
+    status: 'completed',
+  });
+  res.json(result);
+}
+
 export async function lockEscrow(req: Request, res: Response) {
   const { clientId, amountCoins } = req.body;
   const success = await walletService.lockEscrow(clientId, amountCoins, req.body.sessionId);

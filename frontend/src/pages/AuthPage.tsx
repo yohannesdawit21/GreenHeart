@@ -11,7 +11,6 @@ export function AuthPage() {
   const [mode, setMode] = useState<AuthMode>('login')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [role, setRole] = useState<'client' | 'advisor'>('client')
   const [error, setError] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -182,60 +181,21 @@ export function AuthPage() {
                 {isSubmitting ? 'PROCESSING...' : 'CONTINUE TO PLATFORM'}
                 <MaterialIcon name="arrow_forward" className="text-[18px]" />
               </button>
-              <div className="mt-stack-sm relative flex items-center justify-center">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-outline-variant" />
-                </div>
-                <div className="relative bg-surface-container-lowest px-4 font-label-md text-label-md text-on-surface-variant">
-                  Or continue with
-                </div>
-              </div>
-              <button
-                type="button"
-                className="w-full bg-surface-container-lowest border border-outline-variant text-on-surface font-label-md text-label-md py-3 rounded-lg hover:bg-surface-container transition-colors flex justify-center items-center gap-stack-sm"
-              >
-                <img
-                  alt="Google Logo"
-                  className="w-5 h-5"
-                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuAYdvonpeUd4Vy2ExHFpRyyxWnLTD9SzprpyMIahsN2QNVwd8M5fuWQo7mhsLgPd3KCin3_GEJiF55p0UhN86wD-9HkuPtY6pIQ-0gCIOkmFnS4fAR45AjB6ZXMJuLGPpQ7RfF-Zlk9q1PhFxPVyMKzdP0RWWRss0O5dVxN5f-zAfKM8k8bUfz-e_qKCQxaGt1ZxK3nX_roQ5Ha-I44d2ELvBSRx0puhfUJoV9kq3F5opSezkM9C0vyawuf-AoagU80Y6COh1JdquCb"
-                />
-                Google
-              </button>
             </form>
           ) : (
             <form className="flex flex-col gap-stack-md" onSubmit={handleSubmit}>
               <div className="text-center mb-stack-sm">
-                <h2 className="font-headline-md text-headline-md text-on-surface">Create Account</h2>
-                <p className="font-body-md text-body-md text-on-surface-variant">Select your primary role to get started.</p>
+                <h2 className="font-headline-md text-headline-md text-on-surface">Create patient account</h2>
+                <p className="font-body-md text-body-md text-on-surface-variant">
+                  Register to discover advisors and book sessions.
+                </p>
               </div>
-              <div className="grid grid-cols-2 gap-stack-sm mb-stack-sm">
-                <label className="cursor-pointer">
-                  <input 
-                    className="peer sr-only" 
-                    name="role" 
-                    type="radio" 
-                    checked={role === 'client'}
-                    onChange={() => setRole('client')}
-                  />
-                  <div className="p-stack-sm border border-outline-variant rounded-lg peer-checked:border-primary peer-checked:bg-surface-container peer-checked:ring-1 peer-checked:ring-primary transition-all text-center">
-                    <MaterialIcon name="health_and_safety" filled className="text-primary mb-unit" />
-                    <div className="font-label-md text-label-md text-on-surface">Looking for Care</div>
-                  </div>
-                </label>
-                <label className="cursor-pointer">
-                  <input 
-                    className="peer sr-only" 
-                    name="role" 
-                    type="radio" 
-                    checked={role === 'advisor'}
-                    onChange={() => navigate('/auth/advisor-apply')}
-                  />
-                  <div className="p-stack-sm border border-outline-variant rounded-lg peer-checked:border-primary peer-checked:bg-surface-container peer-checked:ring-1 peer-checked:ring-primary transition-all text-center">
-                    <MaterialIcon name="medical_services" filled className="text-primary mb-unit" />
-                    <div className="font-label-md text-label-md text-on-surface">Offering Service</div>
-                  </div>
-                </label>
-              </div>
+              <p className="text-center text-sm text-on-surface-variant bg-surface-container rounded-lg py-2 px-3">
+                Are you a doctor?{' '}
+                <Link to="/auth/advisor-apply" className="text-primary font-medium hover:underline">
+                  Apply as an advisor →
+                </Link>
+              </p>
               <div>
                 <label className="block font-label-md text-label-md text-on-surface-variant mb-unit">Email Address</label>
                 <input
@@ -270,8 +230,9 @@ export function AuthPage() {
           )}
 
           <p className="mt-stack-md text-center font-label-md text-label-md text-on-surface-variant">
-            <Link to="/discover" className="text-primary hover:underline">
-              Browse as guest →
+            Doctors:{' '}
+            <Link to="/auth/advisor-apply" className="text-primary hover:underline">
+              Apply as an advisor
             </Link>
           </p>
         </div>

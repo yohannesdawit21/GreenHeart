@@ -1,285 +1,152 @@
 import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { AppShell, appShellMainClass } from '../components/layout/AppShell'
 import { MaterialIcon } from '../components/MaterialIcon'
-import { Logo } from '../components/Logo'
 import { sessionService } from '../api/session.service'
 import { walletService } from '../api/wallet.service'
 import { useAuth } from '../context/AuthContext'
+import { useSocket } from '../context/SocketContext'
 import type { WalletBalance, TransactionDto } from '@shared/contracts/wallet.api'
 
 export function AdvisorControlPage() {
   const { user } = useAuth()
+  const { connected } = useSocket()
   const [online, setOnline] = useState(false)
   const [balance, setBalance] = useState<WalletBalance | null>(null)
   const [transactions, setTransactions] = useState<TransactionDto[]>([])
   const [loading, setLoading] = useState(true)
   const [presenceError, setPresenceError] = useState('')
 
+  const verificationStatus = user?.profile?.verificationStatus
+  const canGoOnline = verificationStatus === 'verified' && connected
+
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [balanceData, transData] = await Promise.all([
-          walletService.getBalance(),
-          walletService.getTransactions()
-        ])
-        setBalance(balanceData.wallet)
-        setTransactions(transData.transactions)
-      } catch (err) {
-        console.error('Failed to fetch advisor data', err)
-      } finally {
-        setLoading(false)
-      }
-    }
-    fetchData()
+    Promise.all([walletService.getBalance(), walletService.getTransactions()])
+      .then(([bal, tx]) => {
+        setBalance(bal.wallet)
+        setTransactions(tx.transactions)
+      })
+      .catch(console.error)
+      .finally(() => setLoading(false))
   }, [])
 
   const handlePresenceToggle = async () => {
-    if (user?.profile?.verificationStatus !== 'verified') return
+    if (!canGoOnline && !online) return
     setPresenceError('')
     const newStatus = !online
     try {
       await sessionService.updatePresence({ online: newStatus })
       setOnline(newStatus)
     } catch (err: any) {
-      const code = err.response?.data?.error?.code as string | undefined
-      const message = err.response?.data?.error?.message as string | undefined
+      const code = err.response?.data?.error?.code
+      const message = err.response?.data?.error?.message
       if (code === 'ADVISOR_NOT_VERIFIED') {
         setPresenceError('You must be verified before going online.')
-      } else if (code === 'SOCKET_NOT_CONNECTED') {
-        setPresenceError('Realtime connection required — refresh the page and try again.')
+      } else if (code === 'SOCKET_NOT_CONNECTED' || !connected) {
+        setPresenceError('Realtime connection required — wait for Live indicator or refresh.')
       } else {
         setPresenceError(message || 'Could not update online status.')
       }
     }
   }
 
-  const verificationStatus = user?.profile?.verificationStatus
-
   return (
-    <div className="text-on-surface antialiased bg-background min-h-screen">
-      <header className="bg-surface-container-lowest border-b border-outline-variant fixed top-0 left-0 w-full z-50 flex justify-between items-center px-margin-desktop h-16 md:hidden">
-        <div className="flex items-center gap-2 font-headline-md text-headline-md font-bold text-primary">
-          <Logo className="w-8 h-8" />
-          Green Heart
-        </div>
-        <div className="flex items-center gap-stack-md">
-          <Link to="/auth" className="text-primary cursor-pointer hover:bg-surface-container p-2 rounded-full">
-            <MaterialIcon name="account_circle" />
-          </Link>
-          <Link to="/wallet" className="text-primary cursor-pointer hover:bg-surface-container p-2 rounded-full">
-            <MaterialIcon name="monetization_on" />
-          </Link>
-        </div>
-      </header>
-
-      <nav className="bg-surface border-r border-outline-variant hidden md:flex flex-col w-64 h-screen py-stack-lg px-stack-md gap-stack-md fixed left-0 top-0">
-        <div className="mb-stack-lg flex items-center gap-3 px-4">
-          <Logo className="w-10 h-10" />
-          <div>
-            <Link to="/discover" className="font-headline-md text-headline-md font-extrabold text-primary block">
-              Green Heart
-            </Link>
-            <div className="font-label-md text-label-md text-on-surface-variant">Holistic Health</div>
-          </div>
-        </div>
-        <Link to="/discover" className="flex items-center gap-stack-sm text-on-surface-variant px-4 py-3 hover:bg-surface-container-high rounded-lg transition-transform hover:scale-95">
-          <MaterialIcon name="explore" />
-          <span className="font-label-md text-label-md">Discover</span>
-        </Link>
-        <Link to="/wallet" className="flex items-center gap-stack-sm text-on-surface-variant px-4 py-3 hover:bg-surface-container-high rounded-lg transition-transform hover:scale-95">
-          <MaterialIcon name="account_balance_wallet" />
-          <span className="font-label-md text-label-md">WALLET</span>
-        </Link>
-        <Link to="/advisor" className="flex items-center gap-stack-sm bg-secondary-container text-on-secondary-container rounded-lg px-4 py-3 scale-[0.98] transition-transform">
-          <MaterialIcon name="history" filled />
-          <span className="font-label-md text-label-md">Logs</span>
-        </Link>
-        <span className="flex items-center gap-stack-sm text-on-surface-variant px-4 py-3 hover:bg-surface-container-high rounded-lg transition-transform hover:scale-95 cursor-pointer">
-          <MaterialIcon name="settings" />
-          <span className="font-label-md text-label-md">Settings</span>
-        </span>
-      </nav>
-
-      <main className="pt-20 md:pt-stack-lg md:ml-64 px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto pb-32 md:pb-stack-lg">
+    <AppShell activeNav="advisor" showSearch={false}>
+      <main className={`${appShellMainClass} flex flex-col gap-stack-lg`}>
         {verificationStatus === 'pending_review' && (
-          <div className="bg-primary-container/20 border border-primary-container text-on-primary-container p-stack-md rounded-lg mb-stack-lg flex items-center gap-stack-sm shadow-sm">
-            <MaterialIcon name="info" filled className="text-primary" />
-            <div className="flex-grow">
-              <p className="font-label-md text-label-md font-bold uppercase tracking-wider">Application Under Review</p>
-              <p className="font-body-md text-body-md opacity-80">Our partner doctors are reviewing your credentials. You will be notified once verified.</p>
+          <div className="bg-primary-container/20 border border-primary/30 p-stack-md rounded-lg mb-stack-lg flex gap-3">
+            <MaterialIcon name="hourglass_top" filled className="text-primary shrink-0" />
+            <div>
+              <p className="font-label-md font-bold uppercase tracking-wide text-primary">Under review</p>
+              <p className="text-sm text-on-surface-variant mt-1">
+                A partner doctor will review your application. You cannot go online until verified.
+              </p>
             </div>
           </div>
         )}
 
         {verificationStatus === 'rejected' && (
-          <div className="bg-error-container/20 border border-error text-on-error-container p-stack-md rounded-lg mb-stack-lg flex items-center gap-stack-sm shadow-sm">
-            <MaterialIcon name="error" filled className="text-error" />
-            <div className="flex-grow">
-              <p className="font-label-md text-label-md font-bold uppercase tracking-wider">Verification Rejected</p>
-              <p className="font-body-md text-body-md opacity-80">Your application could not be verified. Please contact support for more information.</p>
+          <div className="bg-error-container/20 border border-error p-stack-md rounded-lg mb-stack-lg flex gap-3">
+            <MaterialIcon name="cancel" filled className="text-error shrink-0" />
+            <div>
+              <p className="font-label-md font-bold text-error">Application rejected</p>
+              <p className="text-sm text-on-surface-variant mt-1">Contact support if you believe this was an error.</p>
             </div>
           </div>
         )}
 
         {verificationStatus === 'verified' && (
-          <div className="bg-secondary/10 border border-secondary text-secondary-container p-stack-sm rounded-lg mb-stack-lg flex items-center justify-center gap-stack-sm text-xs font-label-md uppercase tracking-[0.2em]">
-            <MaterialIcon name="verified" filled className="text-[16px]" />
-            Verified Medical Advisor
+          <div className="bg-secondary-container/20 border border-secondary/40 p-stack-sm rounded-lg mb-stack-lg flex items-center justify-center gap-2 text-sm font-label-md uppercase tracking-wider text-secondary">
+            <MaterialIcon name="verified" filled />
+            Verified advisor
           </div>
         )}
 
         {presenceError && (
-          <div className="bg-error-container/20 border border-error text-on-error-container p-stack-sm rounded-lg mb-stack-lg flex items-center gap-stack-sm">
-            <MaterialIcon name="error" filled className="text-error shrink-0" />
-            <p className="font-body-md text-body-md">{presenceError}</p>
-          </div>
+          <div className="bg-error-container/20 border border-error p-stack-sm rounded-lg mb-stack-lg text-sm">{presenceError}</div>
         )}
 
-        <div className="bg-surface-container-lowest border border-outline-variant rounded-lg p-stack-md flex justify-between items-center mb-stack-lg shadow-[0_1px_3px_rgba(0,0,0,0.05)]">
-          <div className="flex items-center gap-stack-sm">
-            <MaterialIcon name="cell_tower" className="text-outline" />
-            <span className="font-label-md text-label-md text-on-surface-variant tracking-widest uppercase">
-              Live Dispatch
-            </span>
+        <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-stack-md mb-stack-lg flex justify-between items-center">
+          <div>
+            <p className="font-label-md text-xs uppercase tracking-wider text-on-surface-variant">Live dispatch</p>
+            <p className="text-sm text-on-surface-variant mt-1">
+              {connected ? 'Connected — patients can reach you when online' : 'Connecting to server…'}
+            </p>
           </div>
-          <div className="flex items-center gap-stack-sm">
-            <span className={`font-label-md text-label-md ${online ? 'text-secondary' : 'text-outline'}`}>
-              ● {online ? 'ONLINE' : 'OFFLINE'}
+          <div className="flex items-center gap-3">
+            <span className={`text-sm font-label-md ${online ? 'text-secondary' : 'text-outline'}`}>
+              {online ? 'Online' : 'Offline'}
             </span>
             <button
               type="button"
               disabled={verificationStatus !== 'verified'}
               aria-pressed={online}
               onClick={handlePresenceToggle}
-              className={`w-12 h-6 rounded-full relative transition-colors duration-300 focus:outline-none ${
+              className={`w-14 h-7 rounded-full relative transition-colors ${
                 online ? 'bg-secondary' : 'bg-surface-variant'
-              } ${verificationStatus !== 'verified' ? 'opacity-50 cursor-not-allowed' : ''}`}
+              } ${verificationStatus !== 'verified' ? 'opacity-40 cursor-not-allowed' : ''}`}
             >
               <span
-                className={`absolute top-1 w-4 h-4 rounded-full transition-transform duration-300 ${
-                  online ? 'left-7 bg-white' : 'left-1 bg-outline'
+                className={`absolute top-1 w-5 h-5 rounded-full bg-white transition-all ${
+                  online ? 'left-8' : 'left-1'
                 }`}
               />
             </button>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-gutter mb-stack-lg">
-          <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-stack-lg flex flex-col justify-between shadow-[0_4px_24px_rgba(13,92,96,0.08)]">
-            <div className="flex justify-between items-start mb-stack-md">
-              <div className="w-12 h-12 bg-secondary-container/20 rounded-lg flex items-center justify-center border border-secondary-container/30">
-                <MaterialIcon name="account_balance_wallet" filled className="text-secondary" />
-              </div>
-              <span className="bg-surface-container px-3 py-1 rounded-full font-label-md text-label-md text-on-surface-variant">
-                Total Earnings
-              </span>
-            </div>
-            <div>
-              <h2 className="font-stat-xl text-stat-xl text-on-surface mb-unit">
-                {loading ? '...' : balance?.coinBalance || 0} <span className="font-headline-md text-headline-md text-on-surface-variant font-normal">Coins</span>
-              </h2>
-              <p className="font-body-md text-body-md text-on-surface-variant">Available for withdrawal</p>
-            </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-gutter mb-stack-lg">
+          <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-stack-lg">
+            <p className="text-sm text-on-surface-variant mb-1">Earnings (coins)</p>
+            <p className="font-stat-xl text-stat-xl">{loading ? '…' : balance?.coinBalance ?? 0}</p>
           </div>
-
-          <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-stack-lg flex flex-col justify-between shadow-[0_4px_24px_rgba(13,92,96,0.08)]">
-            <div className="flex justify-between items-start mb-stack-md">
-              <div className="w-12 h-12 bg-primary-container/10 rounded-lg flex items-center justify-center border border-primary-container/20">
-                <MaterialIcon name="schedule" filled className="text-primary" />
-              </div>
-              <span className="bg-surface-container px-3 py-1 rounded-full font-label-md text-label-md text-on-surface-variant">
-                Escrow Balance
-              </span>
-            </div>
-            <div>
-              <h2 className="font-stat-xl text-stat-xl text-on-surface mb-unit">
-                {loading ? '...' : balance?.escrowBalance || 0} <span className="font-headline-md text-headline-md text-on-surface-variant font-normal">Coins</span>
-              </h2>
-              <p className="font-body-md text-body-md text-on-surface-variant">Pending session completion</p>
-            </div>
-          </div>
-
-          <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-stack-lg flex flex-col justify-between shadow-[0_4px_24px_rgba(13,92,96,0.08)]">
-            <div className="flex justify-between items-start mb-stack-md">
-              <div className="w-12 h-12 bg-tertiary-container/10 rounded-lg flex items-center justify-center border border-tertiary-container/20">
-                <MaterialIcon name="star" filled className="text-tertiary" />
-              </div>
-              <span className="bg-surface-container px-3 py-1 rounded-full font-label-md text-label-md text-on-surface-variant">
-                Quality Score
-              </span>
-            </div>
-            <div>
-              <h2 className="font-stat-xl text-stat-xl text-on-surface mb-unit">
-                {user?.profile?.coinRatePerSession ? `Rate: ${user.profile.coinRatePerSession}` : '4.9'} <span className="font-headline-md text-headline-md text-on-surface-variant font-normal">/ 5.0</span>
-              </h2>
-              <p className="font-body-md text-body-md text-on-surface-variant">Based on recent performance</p>
-            </div>
+          <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-stack-lg">
+            <p className="text-sm text-on-surface-variant mb-1">Session rate</p>
+            <p className="font-stat-xl text-stat-xl">{user?.profile?.coinRatePerSession ?? 0} <span className="text-lg font-normal">coins</span></p>
           </div>
         </div>
 
-        <div className="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-[0_1px_3px_rgba(0,0,0,0.05)]">
-          <div className="px-stack-lg py-stack-md border-b border-outline-variant bg-surface-bright flex justify-between items-center">
-            <h3 className="font-headline-md text-headline-md text-on-surface">Recent Activity</h3>
-            <button type="button" className="flex items-center gap-unit text-primary hover:text-primary-container transition-colors">
-              <span className="font-label-md text-label-md">Download CSV</span>
-              <MaterialIcon name="download" className="text-[18px]" />
-            </button>
+        <div className="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden">
+          <div className="px-stack-lg py-stack-md border-b border-outline-variant">
+            <h3 className="font-headline-md">Recent activity</h3>
           </div>
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="border-b border-outline-variant/50">
-                  <th className="py-stack-sm px-stack-lg font-label-md text-label-md text-on-surface-variant">Date</th>
-                  <th className="py-stack-sm px-stack-lg font-label-md text-label-md text-on-surface-variant">Type</th>
-                  <th className="py-stack-sm px-stack-lg font-label-md text-label-md text-on-surface-variant text-right">
-                    Amount (Coins)
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="font-body-md text-body-md text-on-surface">
-                {transactions.map((tx, i) => (
-                  <tr
-                    key={tx.id}
-                    className={`hover:bg-surface transition-colors border-b border-outline-variant/30 ${
-                      i % 2 === 1 ? 'bg-[#F8F9FA]' : 'bg-surface-container-lowest'
-                    }`}
-                  >
-                    <td className="py-stack-sm px-stack-lg">{new Date(tx.timestamp).toLocaleDateString()}</td>
-                    <td className="py-stack-sm px-stack-lg text-on-surface-variant uppercase text-xs tracking-wider">{tx.type.replace('_', ' ')}</td>
-                    <td className={`py-stack-sm px-stack-lg text-right font-label-md text-label-md ${tx.amountCoins > 0 ? 'text-secondary' : 'text-error'}`}>
-                      {tx.amountCoins > 0 ? '+' : ''}{tx.amountCoins}
-                    </td>
-                  </tr>
-                ))}
-                {!loading && transactions.length === 0 && (
-                  <tr>
-                    <td colSpan={3} className="py-10 text-center text-on-surface-variant">No recent activity</td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+          {transactions.length === 0 ? (
+            <p className="p-8 text-center text-on-surface-variant text-sm">No sessions yet — go online to receive calls.</p>
+          ) : (
+            <ul className="divide-y divide-outline-variant/40">
+              {transactions.slice(0, 8).map((tx) => (
+                <li key={tx.id} className="px-stack-lg py-3 flex justify-between text-sm">
+                  <span className="text-on-surface-variant">{new Date(tx.timestamp).toLocaleDateString()}</span>
+                  <span className="capitalize">{tx.type.replace(/_/g, ' ')}</span>
+                  <span className={tx.amountCoins > 0 ? 'text-secondary font-medium' : 'text-error'}>
+                    {tx.amountCoins > 0 ? '+' : ''}
+                    {tx.amountCoins}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
       </main>
-
-      <nav className="bg-surface-container-lowest border-t border-outline-variant fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 py-2 md:hidden shadow-lg">
-        <Link to="/discover" className="flex flex-col items-center justify-center text-on-surface-variant p-2 hover:text-primary transition-transform scale-95">
-          <MaterialIcon name="explore" />
-          <span className="font-label-md text-label-md text-[10px]">Discover</span>
-        </Link>
-        <Link to="/wallet" className="flex flex-col items-center justify-center text-on-surface-variant p-2 hover:text-primary transition-transform scale-95">
-          <MaterialIcon name="account_balance_wallet" />
-          <span className="font-label-md text-label-md text-[10px]">Wallet</span>
-        </Link>
-        <Link to="/advisor" className="flex flex-col items-center justify-center bg-secondary-container text-on-secondary-container rounded-xl p-2 scale-95 transition-transform">
-          <MaterialIcon name="history" filled />
-          <span className="font-label-md text-label-md text-[10px]">Logs</span>
-        </Link>
-        <span className="flex flex-col items-center justify-center text-on-surface-variant p-2 hover:text-primary transition-transform scale-95 cursor-pointer">
-          <MaterialIcon name="settings" />
-          <span className="font-label-md text-label-md text-[10px]">Settings</span>
-        </span>
-      </nav>
-    </div>
+    </AppShell>
   )
 }

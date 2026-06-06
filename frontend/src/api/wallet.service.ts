@@ -18,7 +18,12 @@ export const walletService = {
   },
 
   initiatePurchase: async (data: PurchaseInitiateRequest): Promise<PurchaseInitiateResponse> => {
-    const response = await apiClient.post<PurchaseInitiateResponse>('/wallet/purchase', data);
+    const response = await apiClient.post<PurchaseInitiateResponse>('/wallet/purchase/initiate', data);
     return response.data;
+  },
+
+  /** Sandbox — complete mock payment (authenticated, no webhook secret) */
+  completeSandboxPurchase: async (mockPaymentId: string): Promise<void> => {
+    await apiClient.post('/wallet/purchase/complete-sandbox', { mockPaymentId });
   },
 };

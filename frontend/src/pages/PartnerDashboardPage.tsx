@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { AppShell } from '../components/layout/AppShell'
+import { AppShell, appShellMainClass } from '../components/layout/AppShell'
 import { MaterialIcon } from '../components/MaterialIcon'
 import { verificationService } from '../api/verification.service'
 import type { ApplicantDto } from '@shared/contracts/verification.api'
@@ -8,6 +8,7 @@ import type { ApplicantDto } from '@shared/contracts/verification.api'
 export function PartnerDashboardPage() {
   const [applicants, setApplicants] = useState<ApplicantDto[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -15,8 +16,8 @@ export function PartnerDashboardPage() {
       try {
         const data = await verificationService.getApplicants()
         setApplicants(data.applicants)
-      } catch (err) {
-        console.error('Failed to fetch applicants', err)
+      } catch (err: any) {
+        setError(err.response?.data?.error?.message || 'Could not load applicants')
       } finally {
         setLoading(false)
       }
@@ -28,15 +29,15 @@ export function PartnerDashboardPage() {
     try {
       const data = await verificationService.startInterview({ applicantId })
       navigate(`/verification/${data.interviewId}`)
-    } catch (err) {
-      console.error('Failed to start interview', err)
+    } catch (err: any) {
+      setError(err.response?.data?.error?.message || 'Could not start interview')
     }
   }
 
   return (
-    <AppShell activeNav="advisor" showSearch={false}>
-      <main className="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop py-stack-lg flex flex-col gap-stack-lg">
-        <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-stack-md">
+    <AppShell activeNav="partner" showSearch={false}>
+      <main className={`${appShellMainClass} flex flex-col gap-stack-lg`}>
+        <header className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-stack-md">
           <div>
             <h1 className="font-display-lg text-headline-lg-mobile md:text-display-lg text-on-background">Medical Partner Portal</h1>
             <p className="font-body-lg text-body-lg text-on-surface-variant">Review and verify new advisor applications.</p>
@@ -46,6 +47,12 @@ export function PartnerDashboardPage() {
             <span className="font-label-md text-label-md text-secondary font-bold">Authorized Medical Partner</span>
           </div>
         </header>
+
+        {error && (
+          <div className="bg-error-container/30 border border-error text-on-error-container p-stack-md rounded-lg">
+            {error}
+          </div>
+        )}
 
         <section className="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-sm">
           <div className="px-stack-lg py-stack-md border-b border-outline-variant bg-surface-bright flex justify-between items-center">

@@ -16,7 +16,7 @@ export const sessionService = {
   },
 
   getOnlineAdvisors: async (): Promise<OnlineAdvisorsResponse> => {
-    const response = await apiClient.get<OnlineAdvisorsResponse>('/presence/online');
+    const response = await apiClient.get<OnlineAdvisorsResponse>('/presence/advisors');
     return response.data;
   },
 
@@ -26,7 +26,7 @@ export const sessionService = {
   },
 
   getLiveKitToken: async (sessionId: string): Promise<LiveKitTokenResponse> => {
-    const response = await apiClient.get<LiveKitTokenResponse>(`/session/${sessionId}/token`);
+    const response = await apiClient.get<LiveKitTokenResponse>(`/session/${sessionId}/livekit-token`);
     return response.data;
   },
 
