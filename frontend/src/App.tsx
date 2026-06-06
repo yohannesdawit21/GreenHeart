@@ -12,13 +12,14 @@ import { AuthPage } from './pages/AuthPage'
 import { ConsultationRoomPage } from './pages/ConsultationRoomPage'
 import { DiscoveryAiPage, DiscoveryPage } from './pages/DiscoveryPage'
 import { IncomingCallPage } from './pages/IncomingCallPage'
+import { IncomingVerificationPage } from './pages/IncomingVerificationPage'
 import { WalletPage } from './pages/WalletPage'
 import { WorkflowGuidePage } from './pages/WorkflowGuidePage'
 import { ClientAreaRoute, GuestAuthRoute, ProtectedRoute } from './components/ProtectedRoute'
 import { HomeRedirect, NotFoundRedirect, TrailingSlashRedirect } from './components/RouteRedirects'
 import { useSocket } from './context/SocketContext'
 import { useAuth } from './context/AuthContext'
-import type { IncomingCallDispatchPayload, VerificationInterviewStartedPayload } from '@shared/contracts/socket.events'
+import type { IncomingCallDispatchPayload } from '@shared/contracts/socket.events'
 
 export default function App() {
   const { socket } = useSocket()
@@ -34,15 +35,9 @@ export default function App() {
       )
     }
 
-    const handleVerificationInterview = (payload: VerificationInterviewStartedPayload) => {
-      navigate(`/verification/${payload.interviewId}`)
-    }
-
     socket.on('incoming_call_dispatch', handleIncomingCall)
-    socket.on('verification_interview_started', handleVerificationInterview)
     return () => {
       socket.off('incoming_call_dispatch', handleIncomingCall)
-      socket.off('verification_interview_started', handleVerificationInterview)
     }
   }, [socket, user, navigate])
 
@@ -157,6 +152,14 @@ export default function App() {
         element={
           <ProtectedRoute roles={['advisor', 'partner_doctor']}>
             <VerificationRoomPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/incoming-verification"
+        element={
+          <ProtectedRoute roles={['advisor']}>
+            <IncomingVerificationPage />
           </ProtectedRoute>
         }
       />

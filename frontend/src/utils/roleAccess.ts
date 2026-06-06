@@ -77,6 +77,7 @@ const ROUTE_ACCESS: Record<string, UserRole[] | 'public' | 'guest'> = {
   '/consultation': ['client', 'advisor'],
   '/verification': ['advisor', 'partner_doctor'],
   '/incoming-call': ['advisor'],
+  '/incoming-verification': ['advisor'],
 }
 
 function matchRoutePrefix(pathname: string): string | undefined {

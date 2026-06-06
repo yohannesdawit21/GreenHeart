@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { AppShell } from '../components/layout/AppShell'
 import {
   appShellMainClass,
@@ -11,6 +12,10 @@ import {
 } from '../components/layout/dashboard-ui'
 import { btnGhost, btnToggle } from '../components/layout/buttonStyles'
 import { MaterialIcon } from '../components/MaterialIcon'
+import {
+  VerificationInvitationModal,
+  type VerificationInvitation,
+} from '../components/verification/VerificationInvitationModal'
 import { sessionService } from '../api/session.service'
 import { walletService } from '../api/wallet.service'
 import { verificationService } from '../api/verification.service'
@@ -18,7 +23,7 @@ import { useAuth } from '../context/AuthContext'
 import { useSocket } from '../context/SocketContext'
 import { getApiErrorCode, getApiErrorMessage } from '../utils/apiError'
 import type { WalletBalance, TransactionDto } from '@shared/contracts/wallet.api'
-import { useNavigate } from 'react-router-dom'
+import type { VerificationInterviewStartedPayload } from '@shared/contracts/socket.events'
 
 export function AdvisorControlPage() {
   const { user } = useAuth()
@@ -48,19 +53,21 @@ export function AdvisorControlPage() {
   useEffect(() => {
     if (!awaitingVerification) return
 
-    const joinIfActive = async () => {
+    const promptIfActive = async () => {
       try {
         const data = await verificationService.getMyInterview()
         if (data.interviewId) {
-          navigate(`/verification/${data.interviewId}`)
+          navigate(
+            `/incoming-verification?interviewId=${encodeURIComponent(data.interviewId)}&partnerName=${encodeURIComponent(data.partnerName ?? 'Partner Doctor')}`,
+          )
         }
       } catch {
         /* polling fallback — ignore transient errors */
       }
     }
 
-    void joinIfActive()
-    const poll = setInterval(joinIfActive, 3000)
+    void promptIfActive()
+    const poll = setInterval(promptIfActive, 5000)
     return () => clearInterval(poll)
   }, [awaitingVerification, navigate])
 
@@ -108,8 +115,8 @@ export function AdvisorControlPage() {
         {awaitingVerification && verificationStatus === 'pending_review' && (
           <DashboardAlert variant="warning" icon="hourglass_top" title="Application under review">
             {connected
-              ? 'Stay on this page — when a partner doctor starts your verification interview, you will be connected to the video room automatically.'
-              : 'Connecting to realtime server… Keep this page open. You will join the verification call automatically once Live connects and the partner starts the interview.'}
+              ? 'Stay on this page — when a partner starts your verification interview, you will get an accept prompt (like an incoming call).'
+              : 'Connecting to realtime server… Keep this page open so you receive the verification invitation when a partner starts the interview.'}
           </DashboardAlert>
         )}
 

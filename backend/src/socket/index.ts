@@ -25,3 +25,9 @@ export function initSocket(httpServer: HttpServer): Server {
 export function getIO(): Server | null {
   return io;
 }
+
+export function isUserSocketConnected(userId: string): boolean {
+  if (!io) return false;
+  const room = io.sockets.adapter.rooms.get(`user:${userId}`);
+  return (room?.size ?? 0) > 0;
+}

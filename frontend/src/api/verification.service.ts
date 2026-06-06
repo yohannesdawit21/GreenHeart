@@ -8,6 +8,7 @@ import type {
   CompleteInterviewRequest,
   CompleteInterviewResponse,
   MyVerificationInterviewResponse,
+  VerificationInterviewActionResponse,
   OverrideVerificationStatusRequest,
   VerificationLiveKitTokenResponse,
 } from '@shared/contracts/verification.api';
@@ -47,6 +48,20 @@ export const verificationService = {
 
   getMyInterview: async (): Promise<MyVerificationInterviewResponse> => {
     const response = await apiClient.get<MyVerificationInterviewResponse>('/verification/my-interview');
+    return response.data;
+  },
+
+  acceptInterview: async (interviewId: string): Promise<VerificationInterviewActionResponse> => {
+    const response = await apiClient.post<VerificationInterviewActionResponse>(
+      `/verification/interviews/${interviewId}/accept`,
+    );
+    return response.data;
+  },
+
+  declineInterview: async (interviewId: string): Promise<VerificationInterviewActionResponse> => {
+    const response = await apiClient.post<VerificationInterviewActionResponse>(
+      `/verification/interviews/${interviewId}/decline`,
+    );
     return response.data;
   },
 

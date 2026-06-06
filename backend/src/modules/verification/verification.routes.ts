@@ -25,6 +25,16 @@ router.post(
   validateBody(startInterviewSchema),
   verificationController.startInterview,
 );
+router.post(
+  '/interviews/:id/accept',
+  requireRole('advisor'),
+  verificationController.acceptInterview,
+);
+router.post(
+  '/interviews/:id/decline',
+  requireRole('advisor'),
+  verificationController.declineInterview,
+);
 router.patch(
   '/interviews/:id/complete',
   requireRole('partner_doctor'),

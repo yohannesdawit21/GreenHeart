@@ -2,13 +2,13 @@ import { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import {
   LiveKitRoom,
-  VideoConference,
   RoomAudioRenderer,
 } from '@livekit/components-react'
 import '@livekit/components-styles'
 import { MaterialIcon } from '../components/MaterialIcon'
 import { btnDangerSolid } from '../components/layout/buttonStyles'
 import { FormError, RoomErrorScreen } from '../components/layout/dashboard-ui'
+import { TwoPartyVideoLayout } from '../components/livekit/TwoPartyVideoLayout'
 import { sessionService } from '../api/session.service'
 import { getApiErrorMessage } from '../utils/apiError'
 
@@ -110,7 +110,7 @@ export function ConsultationRoomPage() {
           {endError && <FormError>{endError}</FormError>}
         </div>
 
-        <VideoConference />
+        <TwoPartyVideoLayout headerOffset="5rem" />
         <RoomAudioRenderer />
       </LiveKitRoom>
     </div>

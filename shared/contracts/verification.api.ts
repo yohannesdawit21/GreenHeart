@@ -17,6 +17,8 @@ export interface ApplicantDto {
   coinRatePerSession: number;
   verificationStatus: VerificationStatus;
   createdAt: string;
+  /** Connected to Advisor Hub via realtime socket */
+  isOnline?: boolean;
 }
 
 /** GET /api/admin/advisors — admin list of all advisors + verification status */
@@ -48,6 +50,13 @@ export interface StartInterviewRequest {
 export interface StartInterviewResponse {
   interviewId: string;
   livekitRoom?: string;
+  applicantOnline: boolean;
+  applicantUsername: string;
+}
+
+export interface VerificationInterviewActionResponse {
+  interviewId: string;
+  ok: true;
 }
 
 /** GET /api/verification/my-interview — active interview for logged-in advisor applicant */

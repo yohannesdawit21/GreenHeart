@@ -3,7 +3,7 @@ import bcrypt from 'bcryptjs';
 import { config } from '../../config/index.js';
 import { AppError } from '../../shared/errors/AppError.js';
 import type { InterviewOutcome, VerificationStatus } from '../../shared/types/contracts.js';
-import { getIO } from '../../socket/index.js';
+import { getIO, isUserSocketConnected } from '../../socket/index.js';
 import { toApplicantDto, toPartnerDoctorDto } from '../users/users.mapper.js';
 import * as usersRepo from '../users/users.repository.js';
 import * as verificationRepo from './verification.repository.js';
@@ -36,7 +36,10 @@ async function notifyApplicantInterviewStarted(
 
 export async function listApplicants() {
   const rows = await usersRepo.listPendingApplicants();
-  return rows.map(toApplicantDto);
+  return rows.map((row) => ({
+    ...toApplicantDto(row),
+    isOnline: isUserSocketConnected(row.id),
+  }));
 }
 
 export async function startInterview(partnerDoctorId: string, applicantId: string) {
@@ -48,12 +51,16 @@ export async function startInterview(partnerDoctorId: string, applicantId: strin
     throw new AppError(400, 'VALIDATION_ERROR', 'Applicant is not pending review');
   }
 
+  const applicantOnline = isUserSocketConnected(applicantId);
+
   const existing = await verificationRepo.findInProgressInterviewForApplicant(applicantId);
   if (existing) {
     await notifyApplicantInterviewStarted(applicantId, existing.id, partnerDoctorId);
     return {
       interviewId: existing.id,
       livekitRoom: existing.livekit_room,
+      applicantOnline,
+      applicantUsername: applicant.username,
     };
   }
 
@@ -69,7 +76,53 @@ export async function startInterview(partnerDoctorId: string, applicantId: strin
   return {
     interviewId: interview.id,
     livekitRoom: interview.livekit_room,
+    applicantOnline,
+    applicantUsername: applicant.username,
   };
+}
+
+export async function acceptInterview(applicantId: string, interviewId: string) {
+  const interview = await verificationRepo.findInterviewById(interviewId);
+  if (!interview) {
+    throw new AppError(404, 'VALIDATION_ERROR', 'Interview not found');
+  }
+  if (interview.applicant_id !== applicantId) {
+    throw new AppError(403, 'FORBIDDEN', 'Not your interview');
+  }
+  if (interview.status !== 'in_progress') {
+    throw new AppError(400, 'VALIDATION_ERROR', 'Interview is not active');
+  }
+
+  const applicant = await usersRepo.findUserById(applicantId);
+  const io = getIO();
+  io?.to(`user:${interview.partner_doctor_id}`).emit('verification_interview_accepted', {
+    interviewId,
+    applicantName: applicant?.username ?? 'Applicant',
+  });
+
+  return { interviewId, ok: true as const };
+}
+
+export async function declineInterview(applicantId: string, interviewId: string) {
+  const interview = await verificationRepo.findInterviewById(interviewId);
+  if (!interview) {
+    throw new AppError(404, 'VALIDATION_ERROR', 'Interview not found');
+  }
+  if (interview.applicant_id !== applicantId) {
+    throw new AppError(403, 'FORBIDDEN', 'Not your interview');
+  }
+  if (interview.status !== 'in_progress') {
+    throw new AppError(400, 'VALIDATION_ERROR', 'Interview is not active');
+  }
+
+  const applicant = await usersRepo.findUserById(applicantId);
+  const io = getIO();
+  io?.to(`user:${interview.partner_doctor_id}`).emit('verification_interview_declined', {
+    interviewId,
+    applicantName: applicant?.username ?? 'Applicant',
+  });
+
+  return { interviewId, ok: true as const };
 }
 
 export async function getMyActiveInterview(applicantId: string) {

@@ -37,12 +37,24 @@ export interface VerificationInterviewStartedPayload {
   partnerName: string;
 }
 
+export interface VerificationInterviewAcceptedPayload {
+  interviewId: string;
+  applicantName: string;
+}
+
+export interface VerificationInterviewDeclinedPayload {
+  interviewId: string;
+  applicantName: string;
+}
+
 /** Server → Client/Advisor */
 export interface ServerToClientEvents {
   incoming_call_dispatch: (payload: IncomingCallDispatchPayload) => void;
   session_ready: (payload: SessionReadyPayload) => void;
   call_processing: (payload: CallProcessingPayload) => void;
   verification_interview_started: (payload: VerificationInterviewStartedPayload) => void;
+  verification_interview_accepted: (payload: VerificationInterviewAcceptedPayload) => void;
+  verification_interview_declined: (payload: VerificationInterviewDeclinedPayload) => void;
 }
 
 /** Client/Advisor → Server */
