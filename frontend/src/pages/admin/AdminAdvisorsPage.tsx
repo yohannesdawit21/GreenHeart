@@ -12,8 +12,10 @@ import {
 import { btnDanger, btnSuccess } from '../../components/layout/buttonStyles'
 import { MaterialIcon } from '../../components/MaterialIcon'
 import { AdminSubNav } from '../../components/admin/AdminSubNav'
+import { AdvisorApplicationDetails } from '../../components/admin/AdvisorApplicationDetails'
 import { verificationService } from '../../api/verification.service'
 import { getApiErrorMessage } from '../../utils/apiError'
+import { parseAdvisorApplicationBio } from '../../utils/advisorApplicationBio'
 import type { ApplicantDto, VerificationStatus } from '@shared/contracts/verification.api'
 
 type StatusFilter = 'all' | VerificationStatus
@@ -137,7 +139,7 @@ export function AdminAdvisorsPage() {
                       Status
                     </th>
                     <th className="py-stack-sm px-stack-lg text-xs uppercase tracking-wide text-on-surface-variant font-label-md">
-                      Specialties
+                      Credentials
                     </th>
                     <th className="py-stack-sm px-stack-lg text-xs uppercase tracking-wide text-on-surface-variant font-label-md">
                       Rate
@@ -176,21 +178,19 @@ export function AdminAdvisorsPage() {
                           <td className="py-stack-md px-stack-lg">
                             <VerificationStatusPill status={a.verificationStatus} />
                           </td>
-                          <td className="py-stack-md px-stack-lg">
-                            <div className="flex flex-wrap gap-1 max-w-[200px]">
-                              {a.tags.length > 0 ? (
-                                a.tags.map((tag) => (
-                                  <span
-                                    key={tag}
-                                    className="text-[10px] uppercase bg-surface-container px-2 py-0.5 rounded"
-                                  >
-                                    {tag}
-                                  </span>
-                                ))
-                              ) : (
-                                <span className="text-xs text-on-surface-variant">—</span>
-                              )}
-                            </div>
+                          <td className="py-stack-md px-stack-lg max-w-[220px]">
+                            {(() => {
+                              const parsed = parseAdvisorApplicationBio(a.bio)
+                              const preview =
+                                parsed.credentials ??
+                                parsed.professionalTitle ??
+                                (parsed.isStructured ? '—' : parsed.rawBio.slice(0, 80))
+                              return (
+                                <p className="text-xs text-on-surface-variant line-clamp-2" title={preview}>
+                                  {preview || '—'}
+                                </p>
+                              )
+                            })()}
                           </td>
                           <td className="py-stack-md px-stack-lg text-sm whitespace-nowrap">
                             {a.coinRatePerSession} coins
@@ -233,11 +233,9 @@ export function AdminAdvisorsPage() {
                               <div className="grid md:grid-cols-2 gap-stack-md text-sm">
                                 <div>
                                   <p className="font-label-md text-xs uppercase tracking-wide text-on-surface-variant mb-2">
-                                    Profile & credentials
+                                    Application from registration
                                   </p>
-                                  <pre className="whitespace-pre-wrap font-body-md text-on-surface-variant bg-surface-container-lowest rounded-lg border border-outline-variant/40 p-stack-sm text-xs leading-relaxed max-h-48 overflow-y-auto">
-                                    {a.bio || 'No bio provided.'}
-                                  </pre>
+                                  <AdvisorApplicationDetails bio={a.bio} />
                                 </div>
                                 <div className="space-y-3">
                                   <div>
@@ -254,7 +252,20 @@ export function AdminAdvisorsPage() {
                                     <p className="text-xs uppercase tracking-wide text-on-surface-variant mb-1">
                                       Specialties ({a.tags.length})
                                     </p>
-                                    <p>{a.tags.join(', ') || 'None listed'}</p>
+                                    <div className="flex flex-wrap gap-1">
+                                      {a.tags.length > 0 ? (
+                                        a.tags.map((tag) => (
+                                          <span
+                                            key={tag}
+                                            className="text-[10px] uppercase bg-surface-container px-2 py-0.5 rounded"
+                                          >
+                                            {tag}
+                                          </span>
+                                        ))
+                                      ) : (
+                                        <span className="text-sm">None listed</span>
+                                      )}
+                                    </div>
                                   </div>
                                   {a.verificationStatus === 'verified' && (
                                     <div className="flex items-center gap-2 text-secondary text-sm">
