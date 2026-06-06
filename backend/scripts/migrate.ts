@@ -6,10 +6,11 @@ import { connectPostgres, disconnectPostgres, getPool } from '../src/database/po
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const sqlDir = join(__dirname, '../sql');
 
+/** Apply numbered SQL migrations in order (001, 002, …). */
 async function migrate() {
   await connectPostgres();
   const files = readdirSync(sqlDir)
-    .filter((f) => f.endsWith('.sql'))
+    .filter((f) => /^\d{3}_.+\.sql$/.test(f))
     .sort();
 
   for (const file of files) {

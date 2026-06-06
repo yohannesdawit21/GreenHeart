@@ -9,6 +9,7 @@
     "start": "node dist/index.js",
     "lint": "eslint src --ext .ts",
     "db:migrate": "tsx scripts/migrate.ts",
+    "db:seed": "tsx scripts/seed-admin.ts",
     "test:smoke": "tsx scripts/smoke-test.ts",
     "test:smoke:m5": "tsx scripts/smoke-test-m5.ts",
     "test:smoke:m6": "tsx scripts/smoke-test-m6-livekit.ts",

@@ -7,6 +7,8 @@ import { presenceRouter } from './modules/presence/presence.routes.js';
 import { searchRouter } from './modules/search/search.routes.js';
 import { sessionsRouter } from './modules/sessions/sessions.routes.js';
 import { usersRouter } from './modules/users/users.routes.js';
+import { adminRouter } from './modules/verification/admin.routes.js';
+import { verificationRouter } from './modules/verification/verification.routes.js';
 import { walletRouter } from './modules/wallet/wallet.routes.js';
 import { verificationLiveKitRouter } from './livekit/verification.routes.js';
 import { errorHandler } from './shared/middleware/errorHandler.js';
@@ -28,10 +30,12 @@ export function createApp() {
     res.json({ status: 'ok', service: 'codex-api' });
   });
 
-  // --- Role B routes (M2, M3) ---
+  // --- Role B routes (M2, M3, M6) ---
   app.use('/api/auth', authRouter);
   app.use('/api/users', usersRouter);
   app.use('/api/wallet', walletRouter);
+  app.use('/api/verification', verificationRouter);
+  app.use('/api/admin', adminRouter);
 
   // --- Role C routes (M4, M5, M6 LiveKit token) ---
   app.use('/api/search', searchRouter);

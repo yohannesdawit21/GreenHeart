@@ -75,7 +75,7 @@ async function main() {
 
   // Register client
   const reg = await req('POST', '/api/auth/register', {
-    body: { email: clientEmail, password: 'password123', role: 'client' },
+    body: { email: clientEmail, password: 'password123' },
   });
   if (reg.status === 201 && (reg.body as { user?: { id?: string } }).user?.id) {
     ok('POST /api/auth/register (client)');
@@ -89,24 +89,29 @@ async function main() {
   if (me.status === 200) ok('GET /api/auth/me');
   else fail('GET /api/auth/me', JSON.stringify(me.body));
 
-  // Register advisor
-  const advReg = await req('POST', '/api/auth/register', {
+  // Register advisor applicant (pending_review — not in public list)
+  const advReg = await req('POST', '/api/auth/register/advisor', {
     body: {
       email: advisorEmail,
       password: 'password123',
-      role: 'advisor',
       profile: { username: 'DrSmoke', bio: 'Test advisor', tags: ['stress'], coinRatePerSession: 10 },
     },
   });
   const advisorId = (advReg.body as { user?: { id?: string } }).user?.id ?? '';
-  if (advReg.status === 201 && advisorId) ok('POST /api/auth/register (advisor)');
-  else fail('POST /api/auth/register (advisor)', JSON.stringify(advReg.body));
+  if (advReg.status === 201 && advisorId) ok('POST /api/auth/register/advisor');
+  else fail('POST /api/auth/register/advisor', JSON.stringify(advReg.body));
 
-  // List advisors
+  const pendingStatus = (advReg.body as { user?: { profile?: { verificationStatus?: string } } }).user
+    ?.profile?.verificationStatus;
+  if (pendingStatus === 'pending_review') ok('Advisor applicant pending_review');
+  else fail('Advisor verification status', JSON.stringify(advReg.body));
+
+  // List advisors — pending applicant must NOT appear
   const advisors = await req('GET', '/api/users/advisors');
   const list = (advisors.body as { advisors?: { username?: string }[] }).advisors ?? [];
-  if (advisors.status === 200 && list.some((a) => a.username === 'DrSmoke')) ok('GET /api/users/advisors');
-  else fail('GET /api/users/advisors', JSON.stringify(advisors.body));
+  if (advisors.status === 200 && !list.some((a) => a.username === 'DrSmoke')) {
+    ok('GET /api/users/advisors (excludes pending)');
+  } else fail('GET /api/users/advisors', JSON.stringify(advisors.body));
 
   // Balance
   const bal0 = await req('GET', '/api/wallet/balance', { cookie });

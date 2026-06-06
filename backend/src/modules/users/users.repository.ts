@@ -1,4 +1,8 @@
-import type { UpdateProfileRequest, UserRole } from '../../shared/types/contracts.js';
+import type {
+  UpdateProfileRequest,
+  UserRole,
+  VerificationStatus,
+} from '../../shared/types/contracts.js';
 import { getPool } from '../../database/postgres/connection.js';
 
 export interface UserWithProfileRow {
@@ -11,6 +15,7 @@ export interface UserWithProfileRow {
   bio: string;
   tags: string[];
   coin_rate_per_session: number;
+  verification_status: VerificationStatus | null;
 }
 
 export interface AdvisorRow {
@@ -19,12 +24,26 @@ export interface AdvisorRow {
   bio: string;
   tags: string[];
   coin_rate_per_session: number;
+  verification_status: VerificationStatus | null;
 }
+
+export interface ApplicantRow {
+  id: string;
+  email: string;
+  username: string;
+  bio: string;
+  tags: string[];
+  coin_rate_per_session: number;
+  verification_status: VerificationStatus;
+  created_at: Date;
+}
+
+const USER_SELECT = `SELECT u.id, u.email, u.password_hash, u.role, u.created_at,
+            p.username, p.bio, p.tags, p.coin_rate_per_session, p.verification_status`;
 
 export async function findUserByEmail(email: string): Promise<UserWithProfileRow | null> {
   const { rows } = await getPool().query<UserWithProfileRow>(
-    `SELECT u.id, u.email, u.password_hash, u.role, u.created_at,
-            p.username, p.bio, p.tags, p.coin_rate_per_session
+    `${USER_SELECT}
      FROM users u
      JOIN profiles p ON p.user_id = u.id
      WHERE u.email = $1`,
@@ -35,8 +54,7 @@ export async function findUserByEmail(email: string): Promise<UserWithProfileRow
 
 export async function findUserById(userId: string): Promise<UserWithProfileRow | null> {
   const { rows } = await getPool().query<UserWithProfileRow>(
-    `SELECT u.id, u.email, u.password_hash, u.role, u.created_at,
-            p.username, p.bio, p.tags, p.coin_rate_per_session
+    `${USER_SELECT}
      FROM users u
      JOIN profiles p ON p.user_id = u.id
      WHERE u.id = $1`,
@@ -53,6 +71,7 @@ export async function createUserWithProfileAndWallet(input: {
   bio: string;
   tags: string[];
   coinRatePerSession: number;
+  verificationStatus?: VerificationStatus | null;
 }): Promise<UserWithProfileRow> {
   const client = await getPool().connect();
   try {
@@ -67,9 +86,16 @@ export async function createUserWithProfileAndWallet(input: {
     const userId = userResult.rows[0].id;
 
     await client.query(
-      `INSERT INTO profiles (user_id, username, bio, tags, coin_rate_per_session)
-       VALUES ($1, $2, $3, $4, $5)`,
-      [userId, input.username, input.bio, input.tags, input.coinRatePerSession],
+      `INSERT INTO profiles (user_id, username, bio, tags, coin_rate_per_session, verification_status)
+       VALUES ($1, $2, $3, $4, $5, $6)`,
+      [
+        userId,
+        input.username,
+        input.bio,
+        input.tags,
+        input.coinRatePerSession,
+        input.verificationStatus ?? null,
+      ],
     );
 
     await client.query(
@@ -130,12 +156,25 @@ export async function updateUserProfile(userId: string, updates: UpdateProfileRe
   return user;
 }
 
-export async function listAdvisors(): Promise<AdvisorRow[]> {
+export async function setVerificationStatus(
+  advisorId: string,
+  status: VerificationStatus,
+): Promise<UserWithProfileRow | null> {
+  await getPool().query(
+    `UPDATE profiles SET verification_status = $1
+     WHERE user_id = $2
+       AND user_id IN (SELECT id FROM users WHERE id = $2 AND role = 'advisor')`,
+    [status, advisorId],
+  );
+  return findUserById(advisorId);
+}
+
+export async function listVerifiedAdvisors(): Promise<AdvisorRow[]> {
   const { rows } = await getPool().query<AdvisorRow>(
-    `SELECT u.id, p.username, p.bio, p.tags, p.coin_rate_per_session
+    `SELECT u.id, p.username, p.bio, p.tags, p.coin_rate_per_session, p.verification_status
      FROM users u
      JOIN profiles p ON p.user_id = u.id
-     WHERE u.role = 'advisor'
+     WHERE u.role = 'advisor' AND p.verification_status = 'verified'
      ORDER BY p.username ASC`,
   );
   return rows;
@@ -143,11 +182,35 @@ export async function listAdvisors(): Promise<AdvisorRow[]> {
 
 export async function findAdvisorById(advisorId: string): Promise<AdvisorRow | null> {
   const { rows } = await getPool().query<AdvisorRow>(
-    `SELECT u.id, p.username, p.bio, p.tags, p.coin_rate_per_session
+    `SELECT u.id, p.username, p.bio, p.tags, p.coin_rate_per_session, p.verification_status
      FROM users u
      JOIN profiles p ON p.user_id = u.id
      WHERE u.id = $1 AND u.role = 'advisor'`,
     [advisorId],
   );
   return rows[0] ?? null;
+}
+
+export async function listPendingApplicants(): Promise<ApplicantRow[]> {
+  const { rows } = await getPool().query<ApplicantRow>(
+    `SELECT u.id, u.email, p.username, p.bio, p.tags, p.coin_rate_per_session,
+            p.verification_status, u.created_at
+     FROM users u
+     JOIN profiles p ON p.user_id = u.id
+     WHERE u.role = 'advisor' AND p.verification_status = 'pending_review'
+     ORDER BY u.created_at ASC`,
+  );
+  return rows;
+}
+
+export async function listPartnerDoctors(): Promise<ApplicantRow[]> {
+  const { rows } = await getPool().query<ApplicantRow>(
+    `SELECT u.id, u.email, p.username, p.bio, p.tags, p.coin_rate_per_session,
+            p.verification_status, u.created_at
+     FROM users u
+     JOIN profiles p ON p.user_id = u.id
+     WHERE u.role = 'partner_doctor'
+     ORDER BY p.username ASC`,
+  );
+  return rows;
 }
