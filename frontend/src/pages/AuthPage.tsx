@@ -161,9 +161,9 @@ export function AuthPage() {
               <div>
                 <div className="flex justify-between items-center mb-unit">
                   <label className="block font-label-md text-label-md text-on-surface-variant">Password</label>
-                  <button type="button" className="font-label-md text-label-md text-primary hover:underline">
+                  <span className="font-label-md text-label-md text-outline" title="Password reset coming soon">
                     Forgot?
-                  </button>
+                  </span>
                 </div>
                 <input
                   className="w-full bg-surface-container-lowest border border-outline-variant rounded-lg px-4 py-3 font-body-md text-body-md text-on-surface focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all placeholder:text-outline"
@@ -192,7 +192,9 @@ export function AuthPage() {
               </div>
               <button
                 type="button"
-                className="w-full bg-surface-container-lowest border border-outline-variant text-on-surface font-label-md text-label-md py-3 rounded-lg hover:bg-surface-container transition-colors flex justify-center items-center gap-stack-sm"
+                disabled
+                title="Google sign-in coming soon"
+                className="w-full bg-surface-container-lowest border border-outline-variant text-on-surface-variant font-label-md text-label-md py-3 rounded-lg flex justify-center items-center gap-stack-sm opacity-50 cursor-not-allowed"
               >
                 <img
                   alt="Google Logo"

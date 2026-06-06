@@ -8,6 +8,10 @@ const purchaseSchema = z.object({
   packageId: z.enum(['starter', 'growth', 'pro']),
 });
 
+const mockCompleteSchema = z.object({
+  mockPaymentId: z.string().min(1).max(128),
+});
+
 const escrowLockSchema = z.object({
   clientId: z.string().uuid(),
   amountCoins: z.number().int().positive(),
@@ -30,6 +34,12 @@ const router = Router();
 router.get('/balance', requireAuth, walletController.getBalance);
 router.get('/transactions', requireAuth, walletController.getTransactions);
 router.post('/purchase/initiate', requireAuth, validateBody(purchaseSchema), walletController.initiatePurchase);
+router.post(
+  '/purchase/complete-mock',
+  requireAuth,
+  validateBody(mockCompleteSchema),
+  walletController.completeMockPurchase,
+);
 router.post('/webhook/payment', walletController.paymentWebhook);
 
 // Internal escrow endpoints — M5 may call service directly or via HTTP

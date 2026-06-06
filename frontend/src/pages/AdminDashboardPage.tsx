@@ -8,6 +8,7 @@ export function AdminDashboardPage() {
   const [partners, setPartners] = useState<PartnerDoctorDto[]>([])
   const [applicants, setApplicants] = useState<ApplicantDto[]>([])
   const [_loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
   const [showPartnerModal, setShowPartnerModal] = useState(false)
   
   // Partner registration form
@@ -25,7 +26,7 @@ export function AdminDashboardPage() {
         setPartners(pData.partners)
         setApplicants(aData.applicants)
       } catch (err) {
-        console.error('Failed to fetch admin data', err)
+        setError('Failed to load admin data.')
       } finally {
         setLoading(false)
       }
@@ -48,7 +49,7 @@ export function AdminDashboardPage() {
       setPartnerName('')
       setPartnerPass('')
     } catch (err) {
-      console.error('Failed to register partner', err)
+      setError('Failed to register partner doctor.')
     }
   }
 
@@ -79,6 +80,12 @@ export function AdminDashboardPage() {
             REGISTER PARTNER
           </button>
         </header>
+
+        {error && (
+          <div className="bg-error-container/20 border border-error text-on-error-container p-stack-md rounded-lg">
+            {error}
+          </div>
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-gutter">
           {/* Medical Partners Section */}

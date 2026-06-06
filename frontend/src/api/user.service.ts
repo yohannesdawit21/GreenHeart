@@ -1,10 +1,10 @@
 import { apiClient } from './client';
-import type { 
-  AdvisorListResponse, 
-  AdvisorDetailResponse, 
+import type {
+  AdvisorListResponse,
+  AdvisorDetailResponse,
   UpdateProfileRequest,
-  AdvisorCardDto
 } from '@shared/contracts/users.api';
+import type { MeResponse } from '@shared/contracts/auth.api';
 
 export const userService = {
   getAdvisors: async (): Promise<AdvisorListResponse> => {
@@ -17,8 +17,8 @@ export const userService = {
     return response.data;
   },
 
-  updateProfile: async (data: UpdateProfileRequest): Promise<AdvisorCardDto> => {
-    const response = await apiClient.patch<AdvisorCardDto>('/users/profile', data);
+  updateProfile: async (data: UpdateProfileRequest): Promise<MeResponse> => {
+    const response = await apiClient.patch<MeResponse>('/users/me/profile', data);
     return response.data;
   },
 };

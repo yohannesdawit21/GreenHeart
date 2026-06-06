@@ -1,22 +1,23 @@
 import { apiClient } from './client';
-import type { 
-  PresenceStatusRequest, 
+import type {
+  PresenceStatusRequest,
   PresenceStatusResponse,
   OnlineAdvisorsResponse,
   InitiateSessionRequest,
   InitiateSessionResponse,
   LiveKitTokenResponse,
-  SessionActionResponse
+  SessionActionResponse,
+  SessionStatusResponse,
 } from '@shared/contracts/session.api';
 
 export const sessionService = {
   updatePresence: async (data: PresenceStatusRequest): Promise<PresenceStatusResponse> => {
-    const response = await apiClient.post<PresenceStatusResponse>('/presence/status', data);
+    const response = await apiClient.patch<PresenceStatusResponse>('/presence/status', data);
     return response.data;
   },
 
   getOnlineAdvisors: async (): Promise<OnlineAdvisorsResponse> => {
-    const response = await apiClient.get<OnlineAdvisorsResponse>('/presence/online');
+    const response = await apiClient.get<OnlineAdvisorsResponse>('/presence/advisors');
     return response.data;
   },
 
@@ -25,8 +26,13 @@ export const sessionService = {
     return response.data;
   },
 
+  getSessionStatus: async (sessionId: string): Promise<SessionStatusResponse> => {
+    const response = await apiClient.get<SessionStatusResponse>(`/session/${sessionId}/status`);
+    return response.data;
+  },
+
   getLiveKitToken: async (sessionId: string): Promise<LiveKitTokenResponse> => {
-    const response = await apiClient.get<LiveKitTokenResponse>(`/session/${sessionId}/token`);
+    const response = await apiClient.get<LiveKitTokenResponse>(`/session/${sessionId}/livekit-token`);
     return response.data;
   },
 

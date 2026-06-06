@@ -6,6 +6,7 @@ import { MaterialIcon } from '../components/MaterialIcon'
 import { userService } from '../api/user.service'
 import { searchService } from '../api/search.service'
 import { sessionService } from '../api/session.service'
+import { useAuth } from '../context/AuthContext'
 import type { Advisor } from '../components/AdvisorCard'
 
 const filters = ['Mental Health', 'Relationship', 'Burnout Care']
@@ -21,6 +22,7 @@ export function DiscoveryPage({ aiPulse = false }: DiscoveryPageProps) {
   const [searchQuery, setSearchQuery] = useState('')
   const [connectError, setConnectError] = useState('')
   const navigate = useNavigate()
+  const { user } = useAuth()
 
   const fetchAdvisors = useCallback(async (query?: string) => {
     setLoading(true)
@@ -49,10 +51,14 @@ export function DiscoveryPage({ aiPulse = false }: DiscoveryPageProps) {
   }
 
   const handleConnect = async (advisorId: string) => {
+    if (!user || user.role !== 'client') {
+      navigate('/auth')
+      return
+    }
     setConnectError('')
     try {
       const data = await sessionService.initiateSession({ advisorId })
-      navigate(`/consultation?sessionId=${data.sessionId}`)
+      navigate(`/waiting?sessionId=${data.sessionId}`)
     } catch (err: any) {
       const code = err.response?.data?.error?.code as string | undefined
       const message = err.response?.data?.error?.message as string | undefined
@@ -149,7 +155,9 @@ export function DiscoveryPage({ aiPulse = false }: DiscoveryPageProps) {
           ))}
           <button
             type="button"
+            onClick={() => handleSearch(activeFilter)}
             className="whitespace-nowrap px-4 py-2 rounded-full bg-surface-container-lowest text-on-surface-variant hover:bg-surface-container hover:text-primary font-label-md text-label-md transition-colors border border-outline-variant flex items-center gap-1"
+            title="Re-apply current filters"
           >
             <MaterialIcon name="tune" className="text-[18px]" />
             Filters
@@ -167,6 +175,7 @@ export function DiscoveryPage({ aiPulse = false }: DiscoveryPageProps) {
                 key={advisor.id}
                 advisor={advisor}
                 onConnect={() => handleConnect(advisor.id)}
+                onViewProfile={() => navigate(`/advisors/${advisor.id}`)}
               />
             ))}
             {advisors.length === 0 && (

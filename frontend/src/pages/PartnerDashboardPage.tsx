@@ -8,6 +8,7 @@ import type { ApplicantDto } from '@shared/contracts/verification.api'
 export function PartnerDashboardPage() {
   const [applicants, setApplicants] = useState<ApplicantDto[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -16,7 +17,7 @@ export function PartnerDashboardPage() {
         const data = await verificationService.getApplicants()
         setApplicants(data.applicants)
       } catch (err) {
-        console.error('Failed to fetch applicants', err)
+        setError('Failed to load applicants. Ensure you are logged in as a partner doctor.')
       } finally {
         setLoading(false)
       }
@@ -29,7 +30,7 @@ export function PartnerDashboardPage() {
       const data = await verificationService.startInterview({ applicantId })
       navigate(`/verification/${data.interviewId}`)
     } catch (err) {
-      console.error('Failed to start interview', err)
+      setError('Could not start interview. Please try again.')
     }
   }
 
@@ -46,6 +47,12 @@ export function PartnerDashboardPage() {
             <span className="font-label-md text-label-md text-secondary font-bold">Authorized Medical Partner</span>
           </div>
         </header>
+
+        {error && (
+          <div className="bg-error-container/20 border border-error text-on-error-container p-stack-md rounded-lg">
+            {error}
+          </div>
+        )}
 
         <section className="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-sm">
           <div className="px-stack-lg py-stack-md border-b border-outline-variant bg-surface-bright flex justify-between items-center">

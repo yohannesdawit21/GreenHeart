@@ -68,7 +68,7 @@ export function VerificationRoomPage() {
 
   if (!token || !url) return null
 
-  const isInterviewer = user?.role === 'partner_doctor' || user?.role === 'admin'
+  const isInterviewer = user?.role === 'partner_doctor'
 
   return (
     <div className="bg-midnight h-screen w-screen overflow-hidden text-on-primary font-body-md relative">

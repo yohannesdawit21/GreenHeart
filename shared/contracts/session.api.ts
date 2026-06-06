@@ -44,3 +44,10 @@ export interface SessionActionResponse {
   sessionId: string;
   status: SessionStatus;
 }
+
+export interface SessionStatusResponse {
+  sessionId: string;
+  status: SessionStatus;
+  coinAmount: number;
+  durationMinutes: number;
+}

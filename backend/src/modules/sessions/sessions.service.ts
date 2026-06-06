@@ -193,3 +193,19 @@ export async function getLiveKitTokenForSession(userId: string, sessionId: strin
   const creds = await createLiveKitToken(session.livekit_room, userId, displayName);
   return creds;
 }
+
+export async function getSessionStatus(userId: string, sessionId: string) {
+  const session = await findSessionByPublicId(sessionId);
+  if (!session) {
+    throw new AppError(404, 'SESSION_NOT_FOUND', 'Session not found');
+  }
+  if (session.client_id !== userId && session.advisor_id !== userId) {
+    throw new AppError(403, 'FORBIDDEN', 'Not a participant in this session');
+  }
+  return {
+    sessionId: session.session_id,
+    status: session.status,
+    coinAmount: session.coin_amount,
+    durationMinutes: session.duration_minutes,
+  };
+}

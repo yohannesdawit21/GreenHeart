@@ -1,9 +1,11 @@
 import { apiClient } from './client';
-import type { 
-  WalletBalanceResponse, 
-  TransactionListResponse, 
-  PurchaseInitiateRequest, 
-  PurchaseInitiateResponse 
+import type {
+  WalletBalanceResponse,
+  TransactionListResponse,
+  PurchaseInitiateRequest,
+  PurchaseInitiateResponse,
+  CompleteMockPurchaseRequest,
+  CompleteMockPurchaseResponse,
 } from '@shared/contracts/wallet.api';
 
 export const walletService = {
@@ -18,7 +20,17 @@ export const walletService = {
   },
 
   initiatePurchase: async (data: PurchaseInitiateRequest): Promise<PurchaseInitiateResponse> => {
-    const response = await apiClient.post<PurchaseInitiateResponse>('/wallet/purchase', data);
+    const response = await apiClient.post<PurchaseInitiateResponse>('/wallet/purchase/initiate', data);
+    return response.data;
+  },
+
+  completeMockPurchase: async (
+    data: CompleteMockPurchaseRequest,
+  ): Promise<CompleteMockPurchaseResponse> => {
+    const response = await apiClient.post<CompleteMockPurchaseResponse>(
+      '/wallet/purchase/complete-mock',
+      data,
+    );
     return response.data;
   },
 };

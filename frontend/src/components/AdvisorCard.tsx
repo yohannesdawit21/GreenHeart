@@ -11,9 +11,10 @@ export type Advisor = AdvisorCardDto & {
 interface AdvisorCardProps {
   advisor: Advisor
   onConnect?: () => void
+  onViewProfile?: () => void
 }
 
-export function AdvisorCard({ advisor, onConnect }: AdvisorCardProps) {
+export function AdvisorCard({ advisor, onConnect, onViewProfile }: AdvisorCardProps) {
   const name = advisor.username
   const title = advisor.bio.split('.')[0] // Use first sentence as title
   const rating = advisor.rating || 5.0
@@ -98,7 +99,7 @@ export function AdvisorCard({ advisor, onConnect }: AdvisorCardProps) {
         ) : (
           <button
             type="button"
-            onClick={onConnect}
+            onClick={onViewProfile ?? onConnect}
             className="bg-secondary-container hover:bg-secondary-fixed text-on-secondary-container font-label-md text-label-md px-4 py-2 rounded-lg transition-colors border border-transparent"
           >
             View Profile

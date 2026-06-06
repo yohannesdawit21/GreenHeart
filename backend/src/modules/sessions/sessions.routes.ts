@@ -5,6 +5,7 @@ import { requireAuth } from '../../shared/middleware/auth.middleware.js';
 import { validateBody } from '../../shared/middleware/validateBody.js';
 import {
   getLiveKitToken,
+  getSessionStatusHandler,
   postAccept,
   postDecline,
   postEnd,
@@ -22,6 +23,14 @@ const sessionIdSchema = z.object({
 });
 
 router.post('/initiate', requireAuth, validateBody(initiateSchema), postInitiate);
+
+router.get('/:id/status', requireAuth, (req, res, next) => {
+  const parsed = sessionIdSchema.safeParse(req.params);
+  if (!parsed.success) {
+    return next(new AppError(400, 'VALIDATION_ERROR', 'Invalid session id'));
+  }
+  return getSessionStatusHandler(req, res, next);
+});
 
 router.post('/:id/accept', requireAuth, (req, res, next) => {
   const parsed = sessionIdSchema.safeParse(req.params);

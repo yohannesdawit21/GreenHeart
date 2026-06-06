@@ -177,3 +177,15 @@ export async function processPaymentWebhook(input: {
   const updated = await walletRepo.findTransactionByGatewayReference(input.gatewayReference);
   return { alreadyProcessed: false, transaction: toTransactionDto(updated!) };
 }
+
+/** Dev sandbox — client completes mock checkout from frontend */
+export async function completeMockPurchase(userId: string, mockPaymentId: string) {
+  const existing = await walletRepo.findTransactionByGatewayReference(mockPaymentId);
+  if (!existing) {
+    throw new AppError(404, 'VALIDATION_ERROR', 'Payment not found');
+  }
+  if (existing.client_id !== userId) {
+    throw new AppError(403, 'FORBIDDEN', 'Not your payment');
+  }
+  return processPaymentWebhook({ gatewayReference: mockPaymentId, status: 'completed' });
+}

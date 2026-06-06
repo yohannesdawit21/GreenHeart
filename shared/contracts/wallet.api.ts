@@ -43,6 +43,16 @@ export interface PurchaseInitiateResponse {
   amountUsd: number;
 }
 
+/** Dev sandbox — complete mock checkout after purchase/initiate */
+export interface CompleteMockPurchaseRequest {
+  mockPaymentId: string;
+}
+
+export interface CompleteMockPurchaseResponse {
+  alreadyProcessed: boolean;
+  transaction: TransactionDto;
+}
+
 /** Internal — M5 calls via service, not public REST */
 export interface EscrowLockRequest {
   clientId: string;

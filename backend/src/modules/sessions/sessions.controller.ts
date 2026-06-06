@@ -5,6 +5,7 @@ import {
   declineSession,
   endSession,
   getLiveKitTokenForSession,
+  getSessionStatus,
   initiateSession,
 } from './sessions.service.js';
 
@@ -56,6 +57,16 @@ export async function getLiveKitToken(req: Request, res: Response, next: NextFun
   try {
     const sessionId = req.params.id as string;
     const result = await getLiveKitTokenForSession(req.auth!.userId, sessionId);
+    res.json(result);
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function getSessionStatusHandler(req: Request, res: Response, next: NextFunction) {
+  try {
+    const sessionId = req.params.id as string;
+    const result = await getSessionStatus(req.auth!.userId, sessionId);
     res.json(result);
   } catch (err) {
     next(err);

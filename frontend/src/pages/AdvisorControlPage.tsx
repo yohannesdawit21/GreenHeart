@@ -53,6 +53,24 @@ export function AdvisorControlPage() {
     }
   }
 
+  const handleDownloadCsv = () => {
+    if (transactions.length === 0) return
+    const header = 'Date,Type,Amount (Coins)\n'
+    const rows = transactions
+      .map(
+        (tx) =>
+          `${new Date(tx.timestamp).toISOString()},${tx.type},${tx.amountCoins}`,
+      )
+      .join('\n')
+    const blob = new Blob([header + rows], { type: 'text/csv' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = 'greenheart-activity.csv'
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
   const verificationStatus = user?.profile?.verificationStatus
 
   return (
@@ -220,7 +238,7 @@ export function AdvisorControlPage() {
         <div className="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-[0_1px_3px_rgba(0,0,0,0.05)]">
           <div className="px-stack-lg py-stack-md border-b border-outline-variant bg-surface-bright flex justify-between items-center">
             <h3 className="font-headline-md text-headline-md text-on-surface">Recent Activity</h3>
-            <button type="button" className="flex items-center gap-unit text-primary hover:text-primary-container transition-colors">
+            <button type="button" onClick={handleDownloadCsv} className="flex items-center gap-unit text-primary hover:text-primary-container transition-colors">
               <span className="font-label-md text-label-md">Download CSV</span>
               <MaterialIcon name="download" className="text-[18px]" />
             </button>
@@ -275,10 +293,10 @@ export function AdvisorControlPage() {
           <MaterialIcon name="history" filled />
           <span className="font-label-md text-label-md text-[10px]">Logs</span>
         </Link>
-        <span className="flex flex-col items-center justify-center text-on-surface-variant p-2 hover:text-primary transition-transform scale-95 cursor-pointer">
+        <Link to="/settings" className="flex flex-col items-center justify-center text-on-surface-variant p-2 hover:text-primary transition-transform scale-95">
           <MaterialIcon name="settings" />
           <span className="font-label-md text-label-md text-[10px]">Settings</span>
-        </span>
+        </Link>
       </nav>
     </div>
   )

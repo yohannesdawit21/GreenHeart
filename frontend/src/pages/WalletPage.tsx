@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { MaterialIcon } from '../components/MaterialIcon'
 import { Logo } from '../components/Logo'
 import { walletService } from '../api/wallet.service'
 import { useAuth } from '../context/AuthContext'
-import type { WalletBalance, CoinPackageId } from '@shared/contracts/wallet.api'
+import type { WalletBalance, CoinPackageId, TransactionDto } from '@shared/contracts/wallet.api'
 
 const packages = [
   {
@@ -38,40 +38,59 @@ const packages = [
 
 export function WalletPage() {
   const { user } = useAuth()
+  const [searchParams, setSearchParams] = useSearchParams()
   const [balance, setBalance] = useState<WalletBalance | null>(null)
+  const [transactions, setTransactions] = useState<TransactionDto[]>([])
   const [loading, setLoading] = useState(true)
+  const [showHistory, setShowHistory] = useState(false)
   const [selectedPackage, setSelectedPackage] = useState<CoinPackageId>('growth')
   const [isPurchasing, setIsPurchasing] = useState(false)
+  const [purchaseMessage, setPurchaseMessage] = useState('')
+
+  const refreshWallet = async () => {
+    const [balData, txData] = await Promise.all([
+      walletService.getBalance(),
+      walletService.getTransactions(),
+    ])
+    setBalance(balData.wallet)
+    setTransactions(txData.transactions)
+  }
 
   useEffect(() => {
-    const fetchBalance = async () => {
-      try {
-        const data = await walletService.getBalance()
-        setBalance(data.wallet)
-      } catch (err) {
-        console.error('Failed to fetch balance', err)
-      } finally {
-        setLoading(false)
-      }
-    }
-    fetchBalance()
+    refreshWallet()
+      .catch((err) => console.error('Failed to fetch wallet', err))
+      .finally(() => setLoading(false))
   }, [])
+
+  useEffect(() => {
+    const paymentId = searchParams.get('payment')
+    if (!paymentId?.startsWith('mock_')) return
+
+    walletService
+      .completeMockPurchase({ mockPaymentId: paymentId })
+      .then(async () => {
+        setPurchaseMessage('Payment completed — coins added to your wallet.')
+        await refreshWallet()
+        setSearchParams({})
+      })
+      .catch(() => setPurchaseMessage('Could not complete payment. Try purchasing again.'))
+  }, [searchParams, setSearchParams])
 
   const handlePurchase = async () => {
     setIsPurchasing(true)
+    setPurchaseMessage('')
     try {
       const data = await walletService.initiatePurchase({ packageId: selectedPackage })
       if (data.checkoutUrl) {
         window.location.href = data.checkoutUrl
-      } else {
-        // Handle mock payment or success message
-        alert(`Successfully initiated purchase of ${data.coins} coins for ${data.amountUsd} USD.`)
-        // Refresh balance after purchase (mock)
-        const updatedBalance = await walletService.getBalance()
-        setBalance(updatedBalance.wallet)
+      } else if (data.mockPaymentId) {
+        await walletService.completeMockPurchase({ mockPaymentId: data.mockPaymentId })
+        setPurchaseMessage(`Added ${data.coins} coins to your wallet.`)
+        await refreshWallet()
       }
     } catch (err) {
       console.error('Failed to initiate purchase', err)
+      setPurchaseMessage('Purchase failed. Please try again.')
     } finally {
       setIsPurchasing(false)
     }
@@ -109,10 +128,10 @@ export function WalletPage() {
             </Link>
           </li>
           <li>
-            <span className="flex items-center gap-stack-sm text-on-surface-variant px-4 py-3 hover:bg-surface-container-high rounded-lg transition-colors cursor-pointer">
+            <Link to="/settings" className="flex items-center gap-stack-sm text-on-surface-variant px-4 py-3 hover:bg-surface-container-high rounded-lg transition-colors">
               <MaterialIcon name="settings" />
               <span>Settings</span>
-            </span>
+            </Link>
           </li>
         </ul>
       </nav>
@@ -140,6 +159,14 @@ export function WalletPage() {
           </div>
         </header>
 
+        {purchaseMessage && (
+          <div className="px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto pt-4">
+            <p className="bg-secondary-container/30 text-on-secondary-container p-stack-sm rounded-lg font-body-md">
+              {purchaseMessage}
+            </p>
+          </div>
+        )}
+
         <div className="px-margin-mobile md:px-margin-desktop py-stack-lg max-w-container-max mx-auto space-y-stack-lg">
           <section className="rounded-xl overflow-hidden shadow-ambient relative bg-linear-to-br from-primary to-secondary p-stack-lg md:p-10 text-on-primary">
             <div className="absolute top-0 right-0 w-64 h-64 bg-white opacity-5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3" />
@@ -155,9 +182,13 @@ export function WalletPage() {
                   </h2>
                 </div>
               </div>
-              <button type="button" className="bg-surface-container-lowest text-primary px-6 py-3 rounded-lg font-label-md text-label-md hover:bg-surface-bright transition-colors shadow-sm flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setShowHistory((v) => !v)}
+                className="bg-surface-container-lowest text-primary px-6 py-3 rounded-lg font-label-md text-label-md hover:bg-surface-bright transition-colors shadow-sm flex items-center gap-2"
+              >
                 <MaterialIcon name="history" className="text-sm" />
-                View Transaction History
+                {showHistory ? 'Hide History' : 'View Transaction History'}
               </button>
             </div>
           </section>
@@ -238,6 +269,42 @@ export function WalletPage() {
               </button>
             </div>
           </section>
+
+          {showHistory && (
+            <section className="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden">
+              <div className="px-stack-lg py-stack-md border-b border-outline-variant font-headline-md">
+                Transaction History
+              </div>
+              <table className="w-full text-left">
+                <thead>
+                  <tr className="border-b border-outline-variant/50 text-on-surface-variant font-label-md text-sm">
+                    <th className="p-4">Date</th>
+                    <th className="p-4">Type</th>
+                    <th className="p-4 text-right">Coins</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {transactions.map((tx) => (
+                    <tr key={tx.id} className="border-b border-outline-variant/30">
+                      <td className="p-4">{new Date(tx.timestamp).toLocaleString()}</td>
+                      <td className="p-4 uppercase text-xs">{tx.type.replace('_', ' ')}</td>
+                      <td className={`p-4 text-right ${tx.amountCoins >= 0 ? 'text-secondary' : 'text-error'}`}>
+                        {tx.amountCoins > 0 ? '+' : ''}
+                        {tx.amountCoins}
+                      </td>
+                    </tr>
+                  ))}
+                  {transactions.length === 0 && (
+                    <tr>
+                      <td colSpan={3} className="p-8 text-center text-on-surface-variant">
+                        No transactions yet
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </section>
+          )}
         </div>
       </main>
 
@@ -254,10 +321,10 @@ export function WalletPage() {
           <MaterialIcon name="history" className="mb-1" />
           <span className="font-label-md text-[10px]">Logs</span>
         </Link>
-        <span className="flex flex-col items-center justify-center text-on-surface-variant p-2 w-16">
+        <Link to="/settings" className="flex flex-col items-center justify-center text-on-surface-variant p-2 w-16">
           <MaterialIcon name="settings" className="mb-1" />
           <span className="font-label-md text-[10px]">Settings</span>
-        </span>
+        </Link>
       </nav>
     </div>
   )
