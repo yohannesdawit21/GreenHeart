@@ -7,7 +7,7 @@
 ## Tasks
 
 - [ ] Run `backend/sql/003_advisor_embeddings.sql` (after 001)
-- [ ] Embedding service (OpenAI text-embedding-3-small)
+- [ ] Embedding service (Gemini `gemini-embedding-001` — see `embedding.service.ts` on main)
 - [ ] POST `/api/search/semantic` (SQL JOIN users + profiles, **verified only**)
 - [ ] POST `/api/search/reindex/:advisorId` (after M6 verification pass)
 - [ ] Merge online status from Redis in response

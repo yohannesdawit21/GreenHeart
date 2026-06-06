@@ -24,6 +24,7 @@ Living specification for **Project Codex** (GreenHeart). AI agents and human tea
 | M4 | Role C | [search-vectors](./modules/M4-search-vectors.md) | [progress/modules/M4-search-vectors.md](../progress/modules/M4-search-vectors.md) |
 | M5 | Role C | [presence-sessions](./modules/M5-presence-sessions.md) | [progress/modules/M5-presence-sessions.md](../progress/modules/M5-presence-sessions.md) |
 | M6 | B + A + C | [advisor-verification](./modules/M6-advisor-verification.md) | [progress/modules/M6-advisor-verification.md](../progress/modules/M6-advisor-verification.md) |
+| — | **All** | **[Sprint 2 role assignments](./modules/SPRINT-2-role-assignments.md)** | [progress/STATUS.md](../progress/STATUS.md) |
 
 ## Repo layout
 
