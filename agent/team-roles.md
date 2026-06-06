@@ -40,9 +40,9 @@ Full spec: [modules/M6-advisor-verification.md](./modules/M6-advisor-verificatio
 | **M1** | Frontend | Role A | [M1-frontend.md](./modules/M1-frontend.md) | [progress](../progress/modules/M1-frontend.md) | Phase 1–6 **done** (PR #2) |
 | **M2** | Auth & Users | Role B | [M2-auth-users.md](./modules/M2-auth-users.md) | [progress](../progress/modules/M2-auth-users.md) | Core **done** — M6 extensions pending |
 | **M3** | Wallet & Ledger | Role B | [M3-wallet-ledger.md](./modules/M3-wallet-ledger.md) | [progress](../progress/modules/M3-wallet-ledger.md) | **Done** |
-| **M4** | Search & Vectors | Role C | [M4-search-vectors.md](./modules/M4-search-vectors.md) | [progress](../progress/modules/M4-search-vectors.md) | Stub only |
-| **M5** | Presence & Sessions | Role C | [M5-presence-sessions.md](./modules/M5-presence-sessions.md) | [progress](../progress/modules/M5-presence-sessions.md) | Stub only |
-| **M6** | Advisor Verification | B + A + C | [M6-advisor-verification.md](./modules/M6-advisor-verification.md) | [progress](../progress/modules/M6-advisor-verification.md) | Spec only |
+| **M4** | Search & Vectors | Role C | [M4-search-vectors.md](./modules/M4-search-vectors.md) | [progress](../progress/modules/M4-search-vectors.md) | **Done** — PR `feat/m5-presence-sessions` (awaiting merge) |
+| **M5** | Presence & Sessions | Role C | [M5-presence-sessions.md](./modules/M5-presence-sessions.md) | [progress](../progress/modules/M5-presence-sessions.md) | **Done** — PR `feat/m5-presence-sessions` (awaiting merge) |
+| **M6** | Advisor Verification | B + A + C | [M6-advisor-verification.md](./modules/M6-advisor-verification.md) | [progress](../progress/modules/M6-advisor-verification.md) | Role C LiveKit **done** — PR `feat/m6-verification-livekit`; Role B/A pending |
 
 ---
 
@@ -163,7 +163,7 @@ progress/modules/M6-advisor-verification.md
 7. **Update contracts** — `auth.api.ts`, `models.user.ts`, create `verification.api.ts`
 8. **`/api/auth/me`** — return `verificationStatus` for advisors
 
-**Blocked until:** Role C implements `POST /api/search/reindex/:advisorId` (call on verify pass)
+**Blocked until:** Role C PR `feat/m5-presence-sessions` merged — then call `POST /api/search/reindex/:advisorId` on verify pass
 
 ### Git branch naming
 
@@ -215,27 +215,28 @@ progress/modules/M5-presence-sessions.md
 
 ### ✅ Already on `main`
 
-- `embedding.service.ts` (Gemini REST API stub)
-- Search / presence / session route stubs
+- `embedding.service.ts` (Gemini REST — document + query task types)
+- Search / presence / session **route stubs** only
+
+### ✅ Done on feature branches (merge PRs → `main`)
+
+| Branch | Modules | Summary |
+|--------|---------|---------|
+| `feat/m5-presence-sessions` | **M4 + M5** | Semantic search, reindex, Redis presence, sessions, Socket.io, LiveKit consultations, verified-only gates, `npm run test:smoke:m5` |
+| `feat/m6-verification-livekit` | **M6 (Role C)** | `livekit/verification.service.ts` + verification contract types (depends on M5 PR) |
+
+Close / skip PR `feat/m4-m5-role-c` — superseded by `feat/m5-presence-sessions`.
 
 ### 📋 Your next tasks (Sprint 2)
 
-> **Important:** Rebase `feat/m4-m5-role-c` onto latest `main` before opening a PR — `main` now has Role B backend.
-
-1. **M4** — Run `003_advisor_embeddings.sql`; implement `POST /api/search/semantic` with `verification_status = verified` filter
-2. **M4** — `POST /api/search/reindex/:advisorId` (only when verified)
-3. **M5** — Real Redis connection; `PATCH /api/presence/status` (verified advisors only)
-4. **M5** — Run `002_sessions.sql`; session initiate → `walletService.lockEscrow()` from M3
-5. **M5** — Socket.io hub + JWT auth; incoming call events
-6. **M5** — LiveKit token service; consultation room tokens; session end + escrow release
-7. **M6** — `GET /api/verification/interviews/:id/livekit-token` (no escrow)
-8. **Gates** — Return `ADVISOR_NOT_VERIFIED` if unverified advisor tries presence or receives calls
-
-**Unblocked:** M3 escrow on `main` — you can call `lockEscrow` / `releaseEscrow` now.
+1. **Merge** `feat/m5-presence-sessions` → `main` (M4 + M5)
+2. **Merge** `feat/m6-verification-livekit` → `main` after M5 (M6 LiveKit helpers)
+3. **Support Role B** — they wire `GET /api/verification/interviews/:id/livekit-token` using `createVerificationParticipantToken()`
+4. **E2E** — full call flow smoke test once PRs are on `main`
 
 ### Git branch naming
 
-`feat/m4-*` / `feat/m5-*`
+`feat/m4-*` / `feat/m5-*` / `feat/m6-verification-livekit` (Role C slice of M6)
 
 ---
 
@@ -264,10 +265,12 @@ app.use('/api/search', searchRouter);
 
 | Week | Role A | Role B | Role C |
 |------|--------|--------|--------|
-| ~~1~~ | ~~M1: API layer + wire pages~~ ✅ | ~~M2: JWT + register~~ ✅ | M4: pgvector + semantic search |
-| ~~2~~ | ~~M1: Discovery + wallet + socket~~ ✅ | ~~M3: Escrow + webhook~~ ✅ | M5: Redis + Socket.io + LiveKit |
-| **3 (now)** | M6: advisor-apply, partner, admin UIs | M6: roles, verification APIs, admin seed | M4 + M5: verified-only gates |
-| **4** | E2E polish + role routing | M2 contract updates + hardening | Full call flow + verification tokens |
+| ~~1~~ | ~~M1: API layer + wire pages~~ ✅ | ~~M2: JWT + register~~ ✅ | ~~M4: pgvector + semantic search~~ ✅ → PR `feat/m5-presence-sessions` |
+| ~~2~~ | ~~M1: Discovery + wallet + socket~~ ✅ | ~~M3: Escrow + webhook~~ ✅ | ~~M5: Redis + Socket.io + LiveKit~~ ✅ → PR `feat/m5-presence-sessions` |
+| **3 (now)** | M6: `/auth/advisor-apply`, `/partner`, `/admin` UIs | M6: roles, `004` SQL, verification APIs, admin seed | **Merge PRs** → `main`; support Role B LiveKit token route |
+| **4** | `/verification/:interviewId` UI + E2E demo | Wire reindex on verify pass; hardening | Full call + verification flow on `main` |
+
+**PR order:** `feat/m5-presence-sessions` first, then `feat/m6-verification-livekit`. Do not merge `feat/m4-m5-role-c` (superseded).
 
 ---
 
@@ -277,4 +280,4 @@ app.use('/api/search', searchRouter);
 |------|----------|--------|---------------|------------|
 | A — Frontend | _TBD_ | _TBD_ | `feat/m1-*`, `feat/m6-*` | [M1 progress](../progress/modules/M1-frontend.md) |
 | B — Core Backend | _TBD_ | _TBD_ | `feat/m2-*`, `feat/m6-*` | [M2 progress](../progress/modules/M2-auth-users.md) |
-| C — Realtime & AI | _TBD_ | _TBD_ | `feat/m4-*`, `feat/m5-*` | [M4 progress](../progress/modules/M4-search-vectors.md) |
+| C — Realtime & AI | _TBD_ | _TBD_ | `feat/m4-*`, `feat/m5-*`, `feat/m6-*` | [M4 progress](../progress/modules/M4-search-vectors.md) |

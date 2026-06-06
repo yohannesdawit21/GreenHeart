@@ -9,7 +9,16 @@
 |------------|-------|---------|
 | **#2** `feat/m1-frontend-integration` | Role A | Frontend API layer + wired pages (auth, discover, wallet, advisor, consultation, socket) |
 | **Merge** `feat/m2-auth-users` | Role B | Auth, users, wallet, escrow, webhook, Neon fix, smoke tests |
-| **Commit** M6 spec | All | Advisor verification RBAC, end-to-end workflow doc (implementation pending) |
+| **Commit** M6 spec | All | Advisor verification RBAC, end-to-end workflow doc |
+
+## Open PRs (Role C — awaiting merge)
+
+| Branch | Owner | Summary |
+|--------|-------|---------|
+| `feat/m5-presence-sessions` | Role C | **M4 + M5** — search, presence, sessions, Socket.io, LiveKit |
+| `feat/m6-verification-livekit` | Role C | **M6 (C slice)** — verification LiveKit token service |
+
+Merge **M5 PR first**, then **M6 PR**. Close `feat/m4-m5-role-c` (superseded).
 
 ## Module status
 
@@ -18,9 +27,9 @@
 | M1 | Frontend | Role A | Gemini CLI | **mostly done** | M4/M5/M6 APIs for full E2E |
 | M2 | Auth & Users | Role B | cursor-agent | **core done** | M6 role extensions |
 | M3 | Wallet & Ledger | Role B | cursor-agent | **done** | — |
-| M4 | Search & Vectors | Role C | unassigned | not_started | Rebase onto main |
-| M5 | Presence & Sessions | Role C | unassigned | not_started | Rebase onto main |
-| M6 | Advisor Verification | B + A + C | unassigned | spec_only | M2 roles foundation |
+| M4 | Search & Vectors | Role C | cursor-role-c | **PR ready** | Merge `feat/m5-presence-sessions` |
+| M5 | Presence & Sessions | Role C | cursor-role-c | **PR ready** | Merge `feat/m5-presence-sessions` |
+| M6 | Advisor Verification | B + A + C | mixed | **in progress** | Role B/A APIs; Role C PR `feat/m6-verification-livekit` |
 
 ## Definition of done (MVP demo)
 
@@ -37,7 +46,7 @@
 |------|------------|
 | **A** | [team-roles.md → Role A](../agent/team-roles.md#role-a--frontend-lead) · [M1 progress](./modules/M1-frontend.md) |
 | **B** | [team-roles.md → Role B](../agent/team-roles.md#role-b--backend-core-identity--ledger) · [M2 progress](./modules/M2-auth-users.md) |
-| **C** | [team-roles.md → Role C](../agent/team-roles.md#role-c--backend-realtime--intelligence) · [M4 progress](./modules/M4-search-vectors.md) |
+| **C** | Merge PRs · [M4 progress](./modules/M4-search-vectors.md) · [M5 progress](./modules/M5-presence-sessions.md) |
 
 ## How to claim work
 
