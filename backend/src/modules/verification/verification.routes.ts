@@ -13,12 +13,23 @@ const completeInterviewSchema = z.object({
   notes: z.string().max(2000).optional(),
 });
 
+const interviewAvailabilitySchema = z.object({
+  available: z.boolean(),
+});
+
 const router = Router();
 
 router.use(requireAuth);
 
 router.get('/applicants', requireRole('partner_doctor'), verificationController.listApplicants);
 router.get('/my-interview', requireRole('advisor'), verificationController.getMyInterview);
+router.get('/availability', requireRole('advisor'), verificationController.getInterviewAvailability);
+router.patch(
+  '/availability',
+  requireRole('advisor'),
+  validateBody(interviewAvailabilitySchema),
+  verificationController.updateInterviewAvailability,
+);
 router.post(
   '/interviews',
   requireRole('partner_doctor'),

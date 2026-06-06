@@ -8,6 +8,7 @@ import type {
   CompleteInterviewRequest,
   CompleteInterviewResponse,
   MyVerificationInterviewResponse,
+  InterviewAvailabilityResponse,
   VerificationInterviewActionResponse,
   OverrideVerificationStatusRequest,
   VerificationLiveKitTokenResponse,
@@ -48,6 +49,18 @@ export const verificationService = {
 
   getMyInterview: async (): Promise<MyVerificationInterviewResponse> => {
     const response = await apiClient.get<MyVerificationInterviewResponse>('/verification/my-interview');
+    return response.data;
+  },
+
+  getInterviewAvailability: async (): Promise<InterviewAvailabilityResponse> => {
+    const response = await apiClient.get<InterviewAvailabilityResponse>('/verification/availability');
+    return response.data;
+  },
+
+  updateInterviewAvailability: async (available: boolean): Promise<InterviewAvailabilityResponse> => {
+    const response = await apiClient.patch<InterviewAvailabilityResponse>('/verification/availability', {
+      available,
+    });
     return response.data;
   },
 

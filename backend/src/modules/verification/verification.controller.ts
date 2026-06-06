@@ -19,6 +19,19 @@ export async function getMyInterview(req: Request, res: Response) {
   res.json(result);
 }
 
+export async function getInterviewAvailability(req: Request, res: Response) {
+  const result = await verificationService.getInterviewAvailability(req.auth!.userId);
+  res.json(result);
+}
+
+export async function updateInterviewAvailability(req: Request, res: Response) {
+  const result = await verificationService.updateInterviewAvailability(
+    req.auth!.userId,
+    req.body.available,
+  );
+  res.json(result);
+}
+
 export async function acceptInterview(req: Request, res: Response) {
   const result = await verificationService.acceptInterview(
     req.auth!.userId,

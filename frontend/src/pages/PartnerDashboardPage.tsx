@@ -52,6 +52,8 @@ export function PartnerDashboardPage() {
 
   useEffect(() => {
     loadApplicants()
+    const refresh = setInterval(loadApplicants, 5000)
+    return () => clearInterval(refresh)
   }, [])
 
   useEffect(() => {
@@ -109,19 +111,19 @@ export function PartnerDashboardPage() {
     loadApplicants()
   }
 
-  const renderOnlineBadge = (applicant: ApplicantDto) => {
+  const renderAvailabilityBadge = (applicant: ApplicantDto) => {
     if (!applicant.isOnline) {
       return (
         <span className="inline-flex items-center gap-1 text-xs text-on-surface-variant">
           <span className="w-2 h-2 rounded-full bg-outline-variant" />
-          Offline
+          Closed for interview
         </span>
       )
     }
     return (
       <span className="inline-flex items-center gap-1 text-xs text-secondary font-medium">
         <span className="w-2 h-2 rounded-full bg-secondary animate-pulse" />
-        On Advisor Hub
+        Open for interview
       </span>
     )
   }
@@ -141,8 +143,8 @@ export function PartnerDashboardPage() {
         />
 
         <DashboardAlert variant="info" icon="info">
-          Start an interview to send a verification request. The applicant must accept before joining the video room.
-          Online applicants show a green status on the queue.
+          Applicants must toggle <strong>Open for interview</strong> on Advisor Hub before you can start a verification
+          call. Green status means they are ready; closed applicants stay in the queue but cannot be interviewed yet.
         </DashboardAlert>
 
         {pendingInterview && (
@@ -172,13 +174,13 @@ export function PartnerDashboardPage() {
                 <p>The doctor accepted and is joining the verification room. Enter the room to begin the interview.</p>
               ) : pendingInterview.applicantOnline ? (
                 <p>
-                  <strong>{pendingInterview.applicantUsername} is on Advisor Hub</strong> — invitation sent. Waiting
+                  <strong>{pendingInterview.applicantUsername} is open for interview</strong> — invitation sent. Waiting
                   for them to accept.
                 </p>
               ) : (
                 <p>
-                  <strong>{pendingInterview.applicantUsername} is not online</strong> — invitation queued. They will
-                  see the accept prompt when they sign in to Advisor Hub.
+                  <strong>{pendingInterview.applicantUsername} was not open for interview</strong> when the request was
+                  sent.
                 </p>
               )}
               <div className="flex flex-wrap gap-2">
@@ -226,7 +228,7 @@ export function PartnerDashboardPage() {
                     <div>
                       <p className="font-bold text-on-background">{applicant.username}</p>
                       <p className="text-sm text-on-surface-variant">{applicant.email}</p>
-                      <div className="mt-1">{renderOnlineBadge(applicant)}</div>
+                      <div className="mt-1">{renderAvailabilityBadge(applicant)}</div>
                     </div>
                     <p className="text-sm text-on-surface-variant italic line-clamp-3">"{applicant.bio}"</p>
                     {applicant.tags.length > 0 && (
@@ -240,13 +242,16 @@ export function PartnerDashboardPage() {
                     )}
                     <button
                       type="button"
-                      disabled={startingId === applicant.id}
+                      disabled={startingId === applicant.id || !applicant.isOnline}
                       onClick={() => handleStartInterview(applicant)}
-                      className={`${btnPrimary} text-sm py-3 px-4 w-full flex items-center justify-center gap-2`}
+                      className={`${btnPrimary} text-sm py-3 px-4 w-full flex items-center justify-center gap-2 disabled:opacity-40`}
                     >
                       <MaterialIcon name="videocam" className="text-sm" />
                       {startingId === applicant.id ? 'Starting…' : 'Start interview'}
                     </button>
+                    {!applicant.isOnline && (
+                      <p className="text-xs text-on-surface-variant">Applicant must open for interview first.</p>
+                    )}
                     {rowErrorId === applicant.id && actionError && (
                       <p className="text-error text-sm">{actionError}</p>
                     )}
@@ -269,7 +274,7 @@ export function PartnerDashboardPage() {
                         <td className="py-stack-md px-stack-lg align-top">
                           <div className="font-bold">{applicant.username}</div>
                           <div className="text-on-surface-variant text-sm">{applicant.email}</div>
-                          <div className="mt-2">{renderOnlineBadge(applicant)}</div>
+                          <div className="mt-2">{renderAvailabilityBadge(applicant)}</div>
                           <div className="mt-2 flex flex-wrap gap-1">
                             {applicant.tags.map((tag) => (
                               <span key={tag} className="text-[10px] bg-surface-container px-2 py-0.5 rounded uppercase">
@@ -285,13 +290,18 @@ export function PartnerDashboardPage() {
                           <div className="flex flex-col items-end gap-2">
                             <button
                               type="button"
-                              disabled={startingId === applicant.id}
+                              disabled={startingId === applicant.id || !applicant.isOnline}
                               onClick={() => handleStartInterview(applicant)}
-                              className={`${btnPrimary} text-xs py-2.5 px-4 inline-flex items-center gap-2`}
+                              className={`${btnPrimary} text-xs py-2.5 px-4 inline-flex items-center gap-2 disabled:opacity-40`}
                             >
                               <MaterialIcon name="videocam" className="text-sm" />
                               {startingId === applicant.id ? 'Starting…' : 'Start interview'}
                             </button>
+                            {!applicant.isOnline && (
+                              <p className="text-xs text-on-surface-variant max-w-xs text-right">
+                                Applicant must open for interview first.
+                              </p>
+                            )}
                             {rowErrorId === applicant.id && actionError && (
                               <p className="text-error text-xs max-w-xs text-right">{actionError}</p>
                             )}

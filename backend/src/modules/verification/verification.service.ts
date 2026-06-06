@@ -6,6 +6,8 @@ import type { InterviewOutcome, VerificationStatus } from '../../shared/types/co
 import { getIO, isUserSocketConnected } from '../../socket/index.js';
 import { toApplicantDto, toPartnerDoctorDto } from '../users/users.mapper.js';
 import * as usersRepo from '../users/users.repository.js';
+import { getRegisteredAdvisorSocketId } from '../presence/presence.repository.js';
+import * as interviewAvailabilityRepo from './interviewAvailability.repository.js';
 import * as verificationRepo from './verification.repository.js';
 
 const BCRYPT_ROUNDS = 10;
@@ -36,10 +38,46 @@ async function notifyApplicantInterviewStarted(
 
 export async function listApplicants() {
   const rows = await usersRepo.listPendingApplicants();
+  const availableIds = await interviewAvailabilityRepo.listInterviewAvailableIds();
   return rows.map((row) => ({
     ...toApplicantDto(row),
-    isOnline: isUserSocketConnected(row.id),
+    isOnline: availableIds.has(row.id),
   }));
+}
+
+export async function getInterviewAvailability(applicantId: string) {
+  const available = await interviewAvailabilityRepo.isInterviewAvailable(applicantId);
+  return { available };
+}
+
+export async function updateInterviewAvailability(applicantId: string, available: boolean) {
+  const applicant = await usersRepo.findUserById(applicantId);
+  if (!applicant || applicant.role !== 'advisor') {
+    throw new AppError(403, 'FORBIDDEN', 'Only advisors can update interview availability');
+  }
+  if (applicant.verification_status !== 'pending_review') {
+    throw new AppError(
+      400,
+      'VALIDATION_ERROR',
+      'Interview availability applies to pending applicants only',
+    );
+  }
+
+  if (available) {
+    const socketId = await getRegisteredAdvisorSocketId(applicantId);
+    if (!socketId || !isUserSocketConnected(applicantId)) {
+      throw new AppError(
+        409,
+        'SOCKET_NOT_CONNECTED',
+        'Connect to the realtime server before opening for interviews',
+      );
+    }
+    await interviewAvailabilityRepo.setInterviewAvailable(applicantId);
+  } else {
+    await interviewAvailabilityRepo.setInterviewUnavailable(applicantId);
+  }
+
+  return { available };
 }
 
 export async function startInterview(partnerDoctorId: string, applicantId: string) {
@@ -51,7 +89,14 @@ export async function startInterview(partnerDoctorId: string, applicantId: strin
     throw new AppError(400, 'VALIDATION_ERROR', 'Applicant is not pending review');
   }
 
-  const applicantOnline = isUserSocketConnected(applicantId);
+  const applicantOnline = await interviewAvailabilityRepo.isInterviewAvailable(applicantId);
+  if (!applicantOnline) {
+    throw new AppError(
+      400,
+      'APPLICANT_NOT_AVAILABLE',
+      'Applicant is not open for verification interviews',
+    );
+  }
 
   const existing = await verificationRepo.findInProgressInterviewForApplicant(applicantId);
   if (existing) {
@@ -162,6 +207,7 @@ export async function completeInterview(
 
   const newStatus: VerificationStatus = outcome === 'pass' ? 'verified' : 'rejected';
   await verificationRepo.updateAdvisorVerificationStatus(completed.applicant_id, newStatus);
+  await interviewAvailabilityRepo.setInterviewUnavailable(completed.applicant_id);
 
   if (outcome === 'pass') {
     await triggerReindex(completed.applicant_id);

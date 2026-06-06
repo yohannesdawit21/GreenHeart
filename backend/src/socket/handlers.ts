@@ -4,6 +4,7 @@ import {
   registerAdvisorSocket,
   setAdvisorOffline,
 } from '../modules/presence/presence.repository.js';
+import { setInterviewUnavailable } from '../modules/verification/interviewAvailability.repository.js';
 import { acceptSession, declineSession } from '../modules/sessions/sessions.service.js';
 import { getSocketAuth } from './auth.middleware.js';
 
@@ -54,6 +55,7 @@ export function registerSocketHandlers(io: Server): void {
       if (auth.role === 'advisor') {
         void clearAdvisorSocketRegistration(auth.userId);
         void setAdvisorOffline(auth.userId);
+        void setInterviewUnavailable(auth.userId);
       }
     });
   });

@@ -17,8 +17,16 @@ export interface ApplicantDto {
   coinRatePerSession: number;
   verificationStatus: VerificationStatus;
   createdAt: string;
-  /** Connected to Advisor Hub via realtime socket */
+  /** Open for verification interview (pending applicants only) */
   isOnline?: boolean;
+}
+
+export interface InterviewAvailabilityRequest {
+  available: boolean;
+}
+
+export interface InterviewAvailabilityResponse {
+  available: boolean;
 }
 
 /** GET /api/admin/advisors — admin list of all advisors + verification status */

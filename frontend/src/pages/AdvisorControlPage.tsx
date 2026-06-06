@@ -31,6 +31,7 @@ export function AdvisorControlPage() {
   const navigate = useNavigate()
   const location = useLocation()
   const [online, setOnline] = useState(false)
+  const [interviewOpen, setInterviewOpen] = useState(false)
   const [balance, setBalance] = useState<WalletBalance | null>(null)
   const [transactions, setTransactions] = useState<TransactionDto[]>([])
   const [loading, setLoading] = useState(true)
@@ -68,6 +69,20 @@ export function AdvisorControlPage() {
       .catch((err) => setLoadError(getApiErrorMessage(err, 'Could not load wallet data.')))
       .finally(() => setLoading(false))
   }, [])
+
+  useEffect(() => {
+    if (verificationStatus === 'verified' && user?.id) {
+      sessionService
+        .getOnlineAdvisors()
+        .then((data) => setOnline(data.advisorIds.includes(user.id)))
+        .catch(() => setOnline(false))
+    } else if (verificationStatus === 'pending_review') {
+      verificationService
+        .getInterviewAvailability()
+        .then((data) => setInterviewOpen(data.available))
+        .catch(() => setInterviewOpen(false))
+    }
+  }, [verificationStatus, user?.id])
 
   useEffect(() => {
     if (!awaitingVerification) return
@@ -130,6 +145,30 @@ export function AdvisorControlPage() {
       }
     }
   }
+
+  const handleInterviewAvailabilityToggle = async () => {
+    if (verificationStatus !== 'pending_review') return
+    setPresenceError('')
+    const newStatus = !interviewOpen
+    try {
+      await verificationService.updateInterviewAvailability(newStatus)
+      setInterviewOpen(newStatus)
+    } catch (err: unknown) {
+      const code = getApiErrorCode(err)
+      const message = getApiErrorMessage(err, 'Could not update interview availability.')
+      if (code === 'SOCKET_NOT_CONNECTED' || !connected) {
+        setPresenceError('Wait for the Live indicator in the header, then try again.')
+      } else {
+        setPresenceError(message)
+      }
+    }
+  }
+
+  const isVerified = verificationStatus === 'verified'
+  const isPendingReview = verificationStatus === 'pending_review'
+  const toggleEnabled = isVerified || isPendingReview
+  const toggleOn = isVerified ? online : interviewOpen
+  const handleToggle = isVerified ? handlePresenceToggle : handleInterviewAvailabilityToggle
 
   const handleDownloadCsv = () => {
     if (transactions.length === 0) return
@@ -202,10 +241,12 @@ export function AdvisorControlPage() {
           <DashboardAlert variant="warning" icon="hourglass_top" title="Application under review">
             {pendingInvitation ? (
               <>A verification interview request is waiting — use the dialog above to accept or decline.</>
+            ) : interviewOpen ? (
+              'You are visible to partner doctors as open for verification interviews.'
             ) : connected ? (
-              'Stay on this page — when a partner starts your verification interview, an accept dialog will appear here.'
+              'Toggle open below so partner doctors can start your verification interview.'
             ) : (
-              'Connecting to realtime server… Keep this page open so you receive the verification invitation when a partner starts the interview.'
+              'Connecting to realtime server… Then toggle open when you are ready for a verification call.'
             )}
           </DashboardAlert>
         )}
@@ -236,31 +277,39 @@ export function AdvisorControlPage() {
 
         <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-stack-md flex flex-col sm:flex-row justify-between items-start sm:items-center gap-stack-md shadow-sm">
           <div>
-            <p className="font-label-md text-xs uppercase tracking-wider text-on-surface-variant">Live dispatch</p>
+            <p className="font-label-md text-xs uppercase tracking-wider text-on-surface-variant">
+              {isVerified ? 'Live dispatch' : 'Interview availability'}
+            </p>
             <p className="text-sm text-on-surface-variant mt-1">
-              {connected
-                ? online
-                  ? 'You are visible to patients on Discover'
-                  : 'Go online to appear as available'
-                : 'Connecting to realtime server…'}
+              {!toggleEnabled
+                ? 'Complete verification to manage patient availability.'
+                : !connected
+                  ? 'Connecting to realtime server…'
+                  : isVerified
+                    ? toggleOn
+                      ? 'You are visible to patients on Discover'
+                      : 'Go online to appear as available for consultations'
+                    : toggleOn
+                      ? 'Partners can see you as ready for a verification interview'
+                      : 'Open to appear in the partner applicant queue as available'}
             </p>
           </div>
           <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">
-            <span className={`text-sm font-label-md ${online ? 'text-secondary' : 'text-outline'}`}>
-              {online ? 'Online' : 'Offline'}
+            <span className={`text-sm font-label-md ${toggleOn ? 'text-secondary' : 'text-outline'}`}>
+              {isVerified ? (toggleOn ? 'Online' : 'Offline') : toggleOn ? 'Open' : 'Closed'}
             </span>
             <button
               type="button"
-              disabled={verificationStatus !== 'verified'}
-              aria-pressed={online}
-              onClick={handlePresenceToggle}
+              disabled={!toggleEnabled || !connected}
+              aria-pressed={toggleOn}
+              onClick={handleToggle}
               className={`w-14 h-7 ${btnToggle} shrink-0 ${
-                online ? 'bg-secondary' : 'bg-surface-variant'
-              } ${verificationStatus !== 'verified' ? 'opacity-40' : ''}`}
+                toggleOn ? 'bg-secondary' : 'bg-surface-variant'
+              } ${!toggleEnabled || !connected ? 'opacity-40' : ''}`}
             >
               <span
                 className={`absolute top-1 w-5 h-5 rounded-full bg-white transition-all ${
-                  online ? 'left-8' : 'left-1'
+                  toggleOn ? 'left-8' : 'left-1'
                 }`}
               />
             </button>
