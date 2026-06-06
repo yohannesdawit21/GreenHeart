@@ -8,7 +8,9 @@ import {
 import '@livekit/components-styles'
 import { MaterialIcon } from '../components/MaterialIcon'
 import { btnDangerSolid } from '../components/layout/buttonStyles'
+import { FormError, RoomErrorScreen } from '../components/layout/dashboard-ui'
 import { sessionService } from '../api/session.service'
+import { getApiErrorMessage } from '../utils/apiError'
 
 export function ConsultationRoomPage() {
   const navigate = useNavigate()
@@ -18,6 +20,8 @@ export function ConsultationRoomPage() {
   const [url, setUrl] = useState<string | null>(null)
   const [roomName, setRoomName] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
+  const [connectionError, setConnectionError] = useState('')
+  const [endError, setEndError] = useState('')
 
   useEffect(() => {
     if (!sessionId) {
@@ -32,8 +36,7 @@ export function ConsultationRoomPage() {
         setUrl(data.url)
         setRoomName(data.roomName)
       } catch (err) {
-        console.error('Failed to get LiveKit token', err)
-        navigate('/discover')
+        setConnectionError(getApiErrorMessage(err, 'Could not join the consultation room.'))
       } finally {
         setLoading(false)
       }
@@ -47,7 +50,7 @@ export function ConsultationRoomPage() {
       try {
         await sessionService.endSession(sessionId)
       } catch (err) {
-        console.error('Failed to end session', err)
+        setEndError(getApiErrorMessage(err, 'Session ended locally, but we could not update the server.'))
       }
     }
     navigate('/discover')
@@ -64,8 +67,15 @@ export function ConsultationRoomPage() {
     )
   }
 
-  if (!token || !url) {
-    return null
+  if (connectionError || !token || !url) {
+    return (
+      <RoomErrorScreen
+        title="Consultation unavailable"
+        message={connectionError || 'Could not join the consultation room.'}
+        backLabel="Back to Discover"
+        onBack={() => navigate('/discover')}
+      />
+    )
   }
 
   return (
@@ -79,22 +89,25 @@ export function ConsultationRoomPage() {
         data-lk-theme="default"
         style={{ height: '100dvh' }}
       >
-        <div className="absolute top-0 w-full z-20 flex justify-between items-center px-margin-desktop py-stack-md glass-panel-dark">
-          <div className="flex items-center gap-stack-sm">
-            <MaterialIcon name="videocam" className="text-tertiary-fixed" />
-            <span className="font-label-md text-label-md text-on-primary">Consultation Room: {roomName}</span>
-          </div>
-          
-          <div className="flex items-center gap-stack-sm">
-            <button 
-              type="button" 
+        <div className="absolute top-0 w-full z-20 flex flex-col gap-stack-sm px-margin-desktop py-stack-md glass-panel-dark safe-top">
+          <div className="flex justify-between items-center gap-stack-sm">
+            <div className="flex items-center gap-stack-sm min-w-0">
+              <MaterialIcon name="videocam" className="text-tertiary-fixed shrink-0" />
+              <span className="font-label-md text-label-md text-on-primary truncate">
+                Consultation Room: {roomName}
+              </span>
+            </div>
+
+            <button
+              type="button"
               onClick={handleEndSession}
-              className={`${btnDangerSolid} text-label-md px-4 py-2 rounded-full flex items-center gap-2`}
+              className={`${btnDangerSolid} text-label-md px-4 py-2 rounded-full flex items-center gap-2 shrink-0`}
             >
               <MaterialIcon name="call_end" className="text-sm" />
               END SESSION
             </button>
           </div>
+          {endError && <FormError>{endError}</FormError>}
         </div>
 
         <VideoConference />

@@ -4,7 +4,9 @@ import { MaterialIcon } from '../components/MaterialIcon'
 import { Logo } from '../components/Logo'
 import { PasswordInput } from '../components/PasswordInput'
 import { btnPrimary } from '../components/layout/buttonStyles'
+import { FormError } from '../components/layout/dashboard-ui'
 import { useAuth } from '../context/AuthContext'
+import { getApiErrorMessage } from '../utils/apiError'
 
 export function AdvisorApplyPage() {
   const [email, setEmail] = useState('')
@@ -34,8 +36,8 @@ export function AdvisorApplyPage() {
         }
       })
       navigate('/advisor')
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Application submission failed')
+    } catch (err: unknown) {
+      setError(getApiErrorMessage(err, 'Application submission failed'))
     } finally {
       setIsSubmitting(false)
     }
@@ -75,11 +77,7 @@ export function AdvisorApplyPage() {
             </p>
           </div>
 
-          {error && (
-            <div className="mb-stack-md p-stack-sm bg-error-container text-on-error-container rounded-lg text-label-md">
-              {error}
-            </div>
-          )}
+          {error && <FormError className="mb-stack-md">{error}</FormError>}
 
           <form className="grid grid-cols-1 md:grid-cols-2 gap-stack-md" onSubmit={handleSubmit}>
             <div className="col-span-2 md:col-span-1">

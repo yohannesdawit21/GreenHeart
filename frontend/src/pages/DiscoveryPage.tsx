@@ -2,13 +2,14 @@ import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AdvisorCard } from '../components/AdvisorCard'
 import { AppShell } from '../components/layout/AppShell'
-import { appShellMainClass } from '../components/layout/dashboard-ui'
+import { appShellMainClass, DashboardAlert } from '../components/layout/dashboard-ui'
 import { btnFilter, btnPrimary } from '../components/layout/buttonStyles'
 import { MaterialIcon } from '../components/MaterialIcon'
 import { userService } from '../api/user.service'
 import { searchService } from '../api/search.service'
 import { sessionService } from '../api/session.service'
 import { useAuth } from '../context/AuthContext'
+import { getApiErrorCode, getApiErrorMessage } from '../utils/apiError'
 import type { Advisor } from '../components/AdvisorCard'
 
 const filters = ['Mental Health', 'Relationship', 'Burnout Care']
@@ -22,12 +23,14 @@ export function DiscoveryPage({ aiPulse = false }: DiscoveryPageProps) {
   const [advisors, setAdvisors] = useState<Advisor[]>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
+  const [fetchError, setFetchError] = useState('')
   const [connectError, setConnectError] = useState('')
   const navigate = useNavigate()
   const { user } = useAuth()
 
   const fetchAdvisors = useCallback(async (query?: string) => {
     setLoading(true)
+    setFetchError('')
     try {
       if (query) {
         const data = await searchService.semanticSearch({ query })
@@ -37,7 +40,8 @@ export function DiscoveryPage({ aiPulse = false }: DiscoveryPageProps) {
         setAdvisors(data.advisors)
       }
     } catch (err) {
-      console.error('Failed to fetch advisors', err)
+      setFetchError(getApiErrorMessage(err, 'Could not load advisors. Please refresh the page.'))
+      setAdvisors([])
     } finally {
       setLoading(false)
     }
@@ -61,9 +65,9 @@ export function DiscoveryPage({ aiPulse = false }: DiscoveryPageProps) {
     try {
       const data = await sessionService.initiateSession({ advisorId })
       navigate(`/waiting?sessionId=${data.sessionId}`)
-    } catch (err: any) {
-      const code = err.response?.data?.error?.code as string | undefined
-      const message = err.response?.data?.error?.message as string | undefined
+    } catch (err: unknown) {
+      const code = getApiErrorCode(err)
+      const message = getApiErrorMessage(err, 'Could not start session. Please try again.')
       if (code === 'INSUFFICIENT_FUNDS') {
         setConnectError('Insufficient coins — add funds in your wallet first.')
       } else if (code === 'ADVISOR_OFFLINE') {
@@ -71,7 +75,7 @@ export function DiscoveryPage({ aiPulse = false }: DiscoveryPageProps) {
       } else if (code === 'ADVISOR_NOT_VERIFIED') {
         setConnectError('This advisor is not verified yet.')
       } else {
-        setConnectError(message || 'Could not start session. Please try again.')
+        setConnectError(message)
       }
     }
   }
@@ -130,11 +134,16 @@ export function DiscoveryPage({ aiPulse = false }: DiscoveryPageProps) {
           </p>
         </section>
 
+        {fetchError && (
+          <DashboardAlert variant="error" icon="error">
+            {fetchError}
+          </DashboardAlert>
+        )}
+
         {connectError && (
-          <div className="bg-error-container/20 border border-error text-on-error-container p-stack-md rounded-lg flex items-center gap-stack-sm">
-            <MaterialIcon name="error" filled className="text-error shrink-0" />
-            <p className="font-body-md text-body-md">{connectError}</p>
-          </div>
+          <DashboardAlert variant="error" icon="error">
+            {connectError}
+          </DashboardAlert>
         )}
 
         <section className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide -mx-margin-mobile px-margin-mobile md:mx-0 md:px-0">
@@ -176,7 +185,7 @@ export function DiscoveryPage({ aiPulse = false }: DiscoveryPageProps) {
                 onViewProfile={() => navigate(`/advisors/${advisor.id}`)}
               />
             ))}
-            {advisors.length === 0 && (
+            {advisors.length === 0 && !fetchError && (
               <div className="col-span-full text-center py-20 text-on-surface-variant">
                 No advisors found. Try a different search query.
               </div>

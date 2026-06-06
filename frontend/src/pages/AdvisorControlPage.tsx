@@ -15,6 +15,7 @@ import { sessionService } from '../api/session.service'
 import { walletService } from '../api/wallet.service'
 import { useAuth } from '../context/AuthContext'
 import { useSocket } from '../context/SocketContext'
+import { getApiErrorCode, getApiErrorMessage } from '../utils/apiError'
 import type { WalletBalance, TransactionDto } from '@shared/contracts/wallet.api'
 
 export function AdvisorControlPage() {
@@ -24,6 +25,7 @@ export function AdvisorControlPage() {
   const [balance, setBalance] = useState<WalletBalance | null>(null)
   const [transactions, setTransactions] = useState<TransactionDto[]>([])
   const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState('')
   const [presenceError, setPresenceError] = useState('')
 
   const verificationStatus = user?.profile?.verificationStatus
@@ -34,7 +36,7 @@ export function AdvisorControlPage() {
         setBalance(bal.wallet)
         setTransactions(tx.transactions)
       })
-      .catch(console.error)
+      .catch((err) => setLoadError(getApiErrorMessage(err, 'Could not load wallet data.')))
       .finally(() => setLoading(false))
   }, [])
 
@@ -45,15 +47,15 @@ export function AdvisorControlPage() {
     try {
       await sessionService.updatePresence({ online: newStatus })
       setOnline(newStatus)
-    } catch (err: any) {
-      const code = err.response?.data?.error?.code as string | undefined
-      const message = err.response?.data?.error?.message as string | undefined
+    } catch (err: unknown) {
+      const code = getApiErrorCode(err)
+      const message = getApiErrorMessage(err, 'Could not update online status.')
       if (code === 'ADVISOR_NOT_VERIFIED') {
         setPresenceError('You must be verified before going online.')
       } else if (code === 'SOCKET_NOT_CONNECTED' || !connected) {
         setPresenceError('Wait for the Live indicator in the header, then try again.')
       } else {
-        setPresenceError(message || 'Could not update online status.')
+        setPresenceError(message)
       }
     }
   }
@@ -94,6 +96,12 @@ export function AdvisorControlPage() {
         {verificationStatus === 'verified' && (
           <DashboardAlert variant="success" icon="verified" title="Verified advisor">
             You are approved to receive patients. Toggle online when you are ready for calls.
+          </DashboardAlert>
+        )}
+
+        {loadError && (
+          <DashboardAlert variant="error" icon="error">
+            {loadError}
           </DashboardAlert>
         )}
 

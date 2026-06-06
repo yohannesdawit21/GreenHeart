@@ -104,7 +104,7 @@ export default function App() {
       <Route
         path="/advisor"
         element={
-          <ProtectedRoute roles={['advisor', 'admin']}>
+          <ProtectedRoute roles={['advisor']}>
             <AdvisorControlPage />
           </ProtectedRoute>
         }
@@ -112,7 +112,7 @@ export default function App() {
       <Route
         path="/partner"
         element={
-          <ProtectedRoute roles={['partner_doctor', 'admin']}>
+          <ProtectedRoute roles={['partner_doctor']}>
             <PartnerDashboardPage />
           </ProtectedRoute>
         }
@@ -137,7 +137,7 @@ export default function App() {
       <Route
         path="/consultation"
         element={
-          <ProtectedRoute roles={['client', 'advisor', 'admin']}>
+          <ProtectedRoute roles={['client', 'advisor']}>
             <ConsultationRoomPage />
           </ProtectedRoute>
         }
@@ -145,7 +145,7 @@ export default function App() {
       <Route
         path="/verification/:interviewId"
         element={
-          <ProtectedRoute roles={['advisor', 'partner_doctor', 'admin']}>
+          <ProtectedRoute roles={['advisor', 'partner_doctor']}>
             <VerificationRoomPage />
           </ProtectedRoute>
         }

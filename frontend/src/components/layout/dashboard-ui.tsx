@@ -161,3 +161,44 @@ export function LoadingSpinner({ label = 'Loading…' }: { label?: string }) {
     </div>
   )
 }
+
+/** Compact inline error for forms, modals, and action areas */
+export function FormError({ children, className = '' }: { children?: ReactNode; className?: string }) {
+  if (!children) return null
+  return (
+    <div
+      role="alert"
+      className={`flex gap-stack-sm p-stack-sm rounded-lg border border-error/40 bg-error-container/25 text-on-error-container text-sm ${className}`}
+    >
+      <MaterialIcon name="error" filled className="shrink-0 text-base mt-0.5" />
+      <span className="min-w-0">{children}</span>
+    </div>
+  )
+}
+
+interface RoomErrorScreenProps {
+  title: string
+  message: string
+  backLabel: string
+  onBack: () => void
+}
+
+/** Full-screen error for video rooms when connection fails */
+export function RoomErrorScreen({ title, message, backLabel, onBack }: RoomErrorScreenProps) {
+  return (
+    <div className="bg-midnight min-h-[100dvh] w-full flex items-center justify-center text-on-primary p-margin-mobile">
+      <div className="max-w-md w-full bg-surface-container-lowest/10 border border-outline-variant/30 rounded-xl p-stack-lg text-center">
+        <MaterialIcon name="error" filled className="text-error text-5xl mb-stack-md mx-auto block" />
+        <h1 className="font-headline-md text-headline-md mb-stack-sm">{title}</h1>
+        <p className="font-body-md text-body-md text-surface-variant mb-stack-lg">{message}</p>
+        <button
+          type="button"
+          onClick={onBack}
+          className="bg-primary text-on-primary px-6 py-3 rounded-lg font-label-md hover:opacity-90 transition-opacity"
+        >
+          {backLabel}
+        </button>
+      </div>
+    </div>
+  )
+}

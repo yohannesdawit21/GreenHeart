@@ -1,7 +1,9 @@
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { MaterialIcon } from '../components/MaterialIcon'
 import { btnDanger, btnSecondary } from '../components/layout/buttonStyles'
+import { FormError } from '../components/layout/dashboard-ui'
 import { sessionService } from '../api/session.service'
+import { getApiErrorMessage } from '../utils/apiError'
 import { useState } from 'react'
 
 export function IncomingCallPage() {
@@ -11,15 +13,17 @@ export function IncomingCallPage() {
   const clientName = searchParams.get('clientName') || 'Unknown Client'
   const duration = searchParams.get('duration') || '30'
   const [isProcessing, setIsProcessing] = useState(false)
+  const [error, setError] = useState('')
 
   const handleAccept = async () => {
     if (!sessionId) return
     setIsProcessing(true)
+    setError('')
     try {
       await sessionService.acceptSession(sessionId)
       navigate(`/consultation?sessionId=${sessionId}`)
     } catch (err) {
-      console.error('Failed to accept session', err)
+      setError(getApiErrorMessage(err, 'Could not accept the call. Please try again.'))
       setIsProcessing(false)
     }
   }
@@ -27,11 +31,12 @@ export function IncomingCallPage() {
   const handleDecline = async () => {
     if (!sessionId) return
     setIsProcessing(true)
+    setError('')
     try {
       await sessionService.declineSession(sessionId)
       navigate('/advisor')
     } catch (err) {
-      console.error('Failed to decline session', err)
+      setError(getApiErrorMessage(err, 'Could not decline the call. Please try again.'))
       setIsProcessing(false)
     }
   }
@@ -84,7 +89,9 @@ export function IncomingCallPage() {
             </div>
           </div>
 
-          <div className="flex w-full gap-stack-md mt-auto">
+          <div className="flex w-full gap-stack-md mt-auto flex-col">
+            {error && <FormError>{error}</FormError>}
+            <div className="flex w-full gap-stack-md">
             <button
               type="button"
               disabled={isProcessing}
@@ -103,6 +110,7 @@ export function IncomingCallPage() {
               <MaterialIcon name="call" />
               ACCEPT
             </button>
+            </div>
           </div>
 
           <div className="absolute bottom-0 left-0 h-1 bg-surface-variant/30 w-full">

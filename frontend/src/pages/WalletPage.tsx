@@ -12,6 +12,7 @@ import {
 import { btnOutline, btnPackage, btnPrimary } from '../components/layout/buttonStyles'
 import { MaterialIcon } from '../components/MaterialIcon'
 import { walletService } from '../api/wallet.service'
+import { getApiErrorMessage } from '../utils/apiError'
 import type { WalletBalance, CoinPackageId, TransactionDto } from '@shared/contracts/wallet.api'
 
 const packages = [
@@ -29,7 +30,8 @@ export function WalletPage() {
   const [selectedPackage, setSelectedPackage] = useState<CoinPackageId>('growth')
   const [isPurchasing, setIsPurchasing] = useState(false)
   const [message, setMessage] = useState('')
-  const [error, setError] = useState('')
+  const [loadError, setLoadError] = useState('')
+  const [purchaseError, setPurchaseError] = useState('')
 
   const refreshWallet = async () => {
     const [balData, txData] = await Promise.all([walletService.getBalance(), walletService.getTransactions()])
@@ -39,7 +41,7 @@ export function WalletPage() {
 
   useEffect(() => {
     refreshWallet()
-      .catch(() => setError('Could not load wallet'))
+      .catch((err) => setLoadError(getApiErrorMessage(err, 'Could not load wallet')))
       .finally(() => setLoading(false))
   }, [])
 
@@ -54,12 +56,12 @@ export function WalletPage() {
         await refreshWallet()
         setSearchParams({})
       })
-      .catch(() => setError('Could not complete payment. Try purchasing again.'))
+      .catch((err) => setLoadError(getApiErrorMessage(err, 'Could not complete payment. Try purchasing again.')))
   }, [searchParams, setSearchParams])
 
   const handlePurchase = async () => {
     setIsPurchasing(true)
-    setError('')
+    setPurchaseError('')
     setMessage('')
     try {
       const data = await walletService.initiatePurchase({ packageId: selectedPackage })
@@ -70,8 +72,8 @@ export function WalletPage() {
         setMessage(`Added ${data.coins} coins to your wallet.`)
         await refreshWallet()
       }
-    } catch (err: any) {
-      setError(err.response?.data?.error?.message || 'Purchase failed')
+    } catch (err: unknown) {
+      setPurchaseError(getApiErrorMessage(err, 'Purchase failed'))
     } finally {
       setIsPurchasing(false)
     }
@@ -114,9 +116,9 @@ export function WalletPage() {
             {message}
           </DashboardAlert>
         )}
-        {error && (
+        {loadError && (
           <DashboardAlert variant="error" icon="error">
-            {error}
+            {loadError}
           </DashboardAlert>
         )}
 
@@ -145,7 +147,12 @@ export function WalletPage() {
               </button>
             ))}
           </div>
-          <div className="mt-stack-lg flex justify-end pb-2 md:pb-0">
+          <div className="mt-stack-lg flex flex-col items-end gap-stack-sm pb-2 md:pb-0">
+            {purchaseError && (
+              <div className="w-full sm:w-auto sm:min-w-[280px]">
+                <DashboardAlert variant="error" icon="error">{purchaseError}</DashboardAlert>
+              </div>
+            )}
             <button
               type="button"
               onClick={handlePurchase}

@@ -6,19 +6,23 @@ import {
   DashboardAlert,
   DashboardSection,
   EmptyState,
+  FormError,
   LoadingSpinner,
   VerificationStatusPill,
 } from '../components/layout/dashboard-ui'
 import { btnDanger, btnIconDanger, btnIconSuccess, btnOutline, btnPrimary, btnSuccess } from '../components/layout/buttonStyles'
 import { MaterialIcon } from '../components/MaterialIcon'
 import { verificationService } from '../api/verification.service'
+import { getApiErrorMessage } from '../utils/apiError'
 import type { PartnerDoctorDto, ApplicantDto, VerificationStatus } from '@shared/contracts/verification.api'
 
 export function AdminDashboardPage() {
   const [partners, setPartners] = useState<PartnerDoctorDto[]>([])
   const [applicants, setApplicants] = useState<ApplicantDto[]>([])
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
+  const [pageError, setPageError] = useState('')
+  const [modalError, setModalError] = useState('')
+  const [overrideError, setOverrideError] = useState('')
   const [showPartnerModal, setShowPartnerModal] = useState(false)
   const [partnerEmail, setPartnerEmail] = useState('')
   const [partnerName, setPartnerName] = useState('')
@@ -33,8 +37,8 @@ export function AdminDashboardPage() {
         ])
         setPartners(pData.partners)
         setApplicants(aData.applicants)
-      } catch {
-        setError('Failed to load admin data.')
+      } catch (err) {
+        setPageError(getApiErrorMessage(err, 'Failed to load admin data.'))
       } finally {
         setLoading(false)
       }
@@ -44,7 +48,7 @@ export function AdminDashboardPage() {
 
   const handleRegisterPartner = async (e: React.FormEvent) => {
     e.preventDefault()
-    setError('')
+    setModalError('')
     try {
       await verificationService.registerPartner({
         email: partnerEmail,
@@ -54,22 +58,29 @@ export function AdminDashboardPage() {
       const pData = await verificationService.getPartners()
       setPartners(pData.partners)
       setShowPartnerModal(false)
+      setModalError('')
       setPartnerEmail('')
       setPartnerName('')
       setPartnerPass('')
-    } catch {
-      setError('Failed to register partner doctor.')
+    } catch (err) {
+      setModalError(getApiErrorMessage(err, 'Failed to register partner doctor.'))
     }
   }
 
   const handleOverride = async (applicantId: string, status: VerificationStatus) => {
+    setOverrideError('')
     try {
       await verificationService.overrideStatus(applicantId, { status })
       const aData = await verificationService.getAdminAdvisors()
       setApplicants(aData.applicants)
-    } catch {
-      setError('Failed to update verification status.')
+    } catch (err) {
+      setOverrideError(getApiErrorMessage(err, 'Failed to update verification status.'))
     }
+  }
+
+  const openPartnerModal = () => {
+    setModalError('')
+    setShowPartnerModal(true)
   }
 
   return (
@@ -81,7 +92,7 @@ export function AdminDashboardPage() {
           action={
             <button
               type="button"
-              onClick={() => setShowPartnerModal(true)}
+              onClick={openPartnerModal}
               className={`${btnPrimary} text-sm py-3 px-6 flex items-center justify-center gap-2 w-full sm:w-auto`}
             >
               <MaterialIcon name="person_add" className="text-sm" />
@@ -90,9 +101,9 @@ export function AdminDashboardPage() {
           }
         />
 
-        {error && (
+        {pageError && (
           <DashboardAlert variant="error" icon="error">
-            {error}
+            {pageError}
           </DashboardAlert>
         )}
 
@@ -155,6 +166,11 @@ export function AdminDashboardPage() {
             </DashboardSection>
 
             <DashboardSection title="Verification overrides">
+              {overrideError && (
+                <div className="px-margin-mobile md:px-stack-lg pt-stack-md">
+                  <FormError>{overrideError}</FormError>
+                </div>
+              )}
               {applicants.length === 0 ? (
                 <EmptyState icon="person_search" title="No advisors yet" description="Advisor applications will appear here." />
               ) : (
@@ -246,6 +262,7 @@ export function AdminDashboardPage() {
                   Partner doctors review and verify advisor applicants via video interview.
                 </p>
                 <form onSubmit={handleRegisterPartner} className="flex flex-col gap-stack-md">
+                  {modalError && <FormError>{modalError}</FormError>}
                   <div>
                     <label className="block font-label-md text-on-surface-variant mb-unit">Full name</label>
                     <input
@@ -278,7 +295,10 @@ export function AdminDashboardPage() {
                   <div className="flex gap-stack-sm pt-2">
                     <button
                       type="button"
-                      onClick={() => setShowPartnerModal(false)}
+                      onClick={() => {
+                        setShowPartnerModal(false)
+                        setModalError('')
+                      }}
                       className={`${btnOutline} flex-1 py-3`}
                     >
                       Cancel

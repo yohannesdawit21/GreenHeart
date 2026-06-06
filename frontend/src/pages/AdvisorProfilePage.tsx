@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { AppShell } from '../components/layout/AppShell';
-import { appShellMainClass, LoadingSpinner } from '../components/layout/dashboard-ui';
+import { appShellMainClass, DashboardAlert, FormError, LoadingSpinner } from '../components/layout/dashboard-ui';
 import { btnPrimary } from '../components/layout/buttonStyles';
 import { MaterialIcon } from '../components/MaterialIcon';
 import { userService } from '../api/user.service';
 import { sessionService } from '../api/session.service';
 import { useAuth } from '../context/AuthContext';
+import { getApiErrorCode, getApiErrorMessage } from '../utils/apiError';
 import type { AdvisorCardDto } from '@shared/contracts/users.api';
 
 export function AdvisorProfilePage() {
@@ -36,11 +37,11 @@ export function AdvisorProfilePage() {
     try {
       const data = await sessionService.initiateSession({ advisorId: advisor.id });
       navigate(`/waiting?sessionId=${data.sessionId}`);
-    } catch (err: any) {
-      const code = err.response?.data?.error?.code;
-      if (code === 'INSUFFICIENT_FUNDS') setConnectError('Insufficient coins — visit your wallet first.');
-      else if (code === 'ADVISOR_OFFLINE') setConnectError('Advisor is offline.');
-      else setConnectError(err.response?.data?.error?.message || 'Could not connect.');
+    } catch (err: unknown) {
+      const code = getApiErrorCode(err)
+      if (code === 'INSUFFICIENT_FUNDS') setConnectError('Insufficient coins — visit your wallet first.')
+      else if (code === 'ADVISOR_OFFLINE') setConnectError('Advisor is offline.')
+      else setConnectError(getApiErrorMessage(err, 'Could not connect.'))
     }
   };
 
@@ -56,8 +57,8 @@ export function AdvisorProfilePage() {
     return (
       <AppShell showSearch={false}>
       <main className={`${appShellMainClass} max-w-2xl text-center`}>
-          <p className="text-on-surface-variant mb-4">{error || 'Not found'}</p>
-          <Link to="/discover" className="text-primary hover:underline">Back to Discover</Link>
+          <DashboardAlert variant="error" icon="error">{error || 'Advisor not found'}</DashboardAlert>
+          <Link to="/discover" className="text-primary hover:underline inline-block mt-stack-md">Back to Discover</Link>
         </main>
       </AppShell>
     );
@@ -126,7 +127,7 @@ export function AdvisorProfilePage() {
             )}
           </div>
 
-          {connectError && <p className="text-error text-sm mt-stack-md">{connectError}</p>}
+          {connectError && <FormError>{connectError}</FormError>}
         </div>
       </main>
     </AppShell>

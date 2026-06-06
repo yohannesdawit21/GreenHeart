@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import { AppShell } from '../components/layout/AppShell';
-import { appShellMainClass, DashboardHeader, DashboardAlert } from '../components/layout/dashboard-ui';
+import { appShellMainClass, DashboardHeader, DashboardAlert, FormError } from '../components/layout/dashboard-ui';
 import { btnPrimary } from '../components/layout/buttonStyles';
 import { MaterialIcon } from '../components/MaterialIcon';
 import { userService } from '../api/user.service';
 import { useAuth } from '../context/AuthContext';
+import { getApiErrorMessage } from '../utils/apiError';
 
 export function SettingsPage() {
   const { user, refreshUser } = useAuth();
@@ -42,8 +43,8 @@ export function SettingsPage() {
       });
       await refreshUser();
       setMessage('Profile updated successfully.');
-    } catch (err: any) {
-      setError(err.response?.data?.error?.message || 'Failed to update profile');
+    } catch (err: unknown) {
+      setError(getApiErrorMessage(err, 'Failed to update profile'));
     } finally {
       setSaving(false);
     }
@@ -58,14 +59,7 @@ export function SettingsPage() {
         />
 
         {message && (
-          <div className="mb-stack-md">
-            <DashboardAlert variant="success" icon="check_circle">{message}</DashboardAlert>
-          </div>
-        )}
-        {error && (
-          <div className="mb-stack-md">
-            <DashboardAlert variant="error" icon="error">{error}</DashboardAlert>
-          </div>
+          <DashboardAlert variant="success" icon="check_circle">{message}</DashboardAlert>
         )}
 
         <form onSubmit={handleSave} className="bg-surface-container-lowest border border-outline-variant rounded-xl p-stack-lg flex flex-col gap-stack-md">
@@ -129,6 +123,7 @@ export function SettingsPage() {
           >
             {saving ? 'Saving…' : 'Save changes'}
           </button>
+          {error && <FormError>{error}</FormError>}
         </form>
       </main>
     </AppShell>

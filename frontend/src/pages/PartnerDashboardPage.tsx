@@ -12,29 +12,34 @@ import {
 import { btnPrimary } from '../components/layout/buttonStyles'
 import { MaterialIcon } from '../components/MaterialIcon'
 import { verificationService } from '../api/verification.service'
+import { getApiErrorMessage } from '../utils/apiError'
 import type { ApplicantDto } from '@shared/contracts/verification.api'
 
 export function PartnerDashboardPage() {
   const [applicants, setApplicants] = useState<ApplicantDto[]>([])
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
+  const [loadError, setLoadError] = useState('')
+  const [actionError, setActionError] = useState('')
+  const [rowErrorId, setRowErrorId] = useState('')
   const navigate = useNavigate()
 
   useEffect(() => {
     verificationService
       .getApplicants()
       .then((data) => setApplicants(data.applicants))
-      .catch(() => setError('Failed to load applicants. Please try again.'))
+      .catch((err) => setLoadError(getApiErrorMessage(err, 'Failed to load applicants. Please try again.')))
       .finally(() => setLoading(false))
   }, [])
 
   const handleStartInterview = async (applicantId: string) => {
-    setError('')
+    setActionError('')
+    setRowErrorId('')
     try {
       const data = await verificationService.startInterview({ applicantId })
       navigate(`/verification/${data.interviewId}`)
-    } catch {
-      setError('Could not start interview. Please try again.')
+    } catch (err) {
+      setRowErrorId(applicantId)
+      setActionError(getApiErrorMessage(err, 'Could not start interview. Please try again.'))
     }
   }
 
@@ -56,9 +61,9 @@ export function PartnerDashboardPage() {
           After starting an interview, share the verification room URL with the applicant so they can join the call.
         </DashboardAlert>
 
-        {error && (
+        {loadError && (
           <DashboardAlert variant="error" icon="error">
-            {error}
+            {loadError}
           </DashboardAlert>
         )}
 
@@ -106,6 +111,9 @@ export function PartnerDashboardPage() {
                       <MaterialIcon name="videocam" className="text-sm" />
                       Start interview
                     </button>
+                    {rowErrorId === applicant.id && actionError && (
+                      <p className="text-error text-sm">{actionError}</p>
+                    )}
                   </div>
                 ))}
               </div>
@@ -138,14 +146,19 @@ export function PartnerDashboardPage() {
                           <p className="line-clamp-3 text-sm italic text-on-surface-variant">"{applicant.bio}"</p>
                         </td>
                         <td className="py-stack-md px-stack-lg text-right align-middle">
-                          <button
-                            type="button"
-                            onClick={() => handleStartInterview(applicant.id)}
-                            className={`${btnPrimary} text-xs py-2.5 px-4 inline-flex items-center gap-2`}
-                          >
-                            <MaterialIcon name="videocam" className="text-sm" />
-                            Start interview
-                          </button>
+                          <div className="flex flex-col items-end gap-2">
+                            <button
+                              type="button"
+                              onClick={() => handleStartInterview(applicant.id)}
+                              className={`${btnPrimary} text-xs py-2.5 px-4 inline-flex items-center gap-2`}
+                            >
+                              <MaterialIcon name="videocam" className="text-sm" />
+                              Start interview
+                            </button>
+                            {rowErrorId === applicant.id && actionError && (
+                              <p className="text-error text-xs max-w-xs text-right">{actionError}</p>
+                            )}
+                          </div>
                         </td>
                       </tr>
                     ))}

@@ -4,7 +4,9 @@ import { MaterialIcon } from '../components/MaterialIcon'
 import { Logo } from '../components/Logo'
 import { PasswordInput } from '../components/PasswordInput'
 import { btnPrimary } from '../components/layout/buttonStyles'
+import { FormError } from '../components/layout/dashboard-ui'
 import { useAuth } from '../context/AuthContext'
+import { getApiErrorMessage } from '../utils/apiError'
 import type { AuthUser } from '@shared/contracts/auth.api'
 
 type AuthMode = 'login' | 'signup'
@@ -53,9 +55,8 @@ export function AuthPage() {
       } else {
         navigate('/discover')
       }
-    } catch (err: any) {
-      const apiError = err.response?.data?.error
-      setError(apiError?.message || err.response?.data?.message || 'Authentication failed')
+    } catch (err: unknown) {
+      setError(getApiErrorMessage(err, 'Authentication failed'))
     } finally {
       setIsSubmitting(false)
     }
@@ -135,11 +136,7 @@ export function AuthPage() {
             </button>
           </div>
 
-          {error && (
-            <div className="mb-stack-md p-stack-sm bg-error-container text-on-error-container rounded-lg text-label-md">
-              {error}
-            </div>
-          )}
+          {error && <FormError className="mb-stack-md">{error}</FormError>}
 
           {mode === 'login' ? (
             <form className="flex flex-col gap-stack-md" onSubmit={handleSubmit}>

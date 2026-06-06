@@ -8,8 +8,10 @@ import {
 import '@livekit/components-styles'
 import { MaterialIcon } from '../components/MaterialIcon'
 import { btnDangerSolid, btnSecondary } from '../components/layout/buttonStyles'
+import { FormError, RoomErrorScreen } from '../components/layout/dashboard-ui'
 import { verificationService } from '../api/verification.service'
 import { useAuth } from '../context/AuthContext'
+import { getApiErrorMessage } from '../utils/apiError'
 
 export function VerificationRoomPage() {
   const navigate = useNavigate()
@@ -19,11 +21,16 @@ export function VerificationRoomPage() {
   const [url, setUrl] = useState<string | null>(null)
   const [roomName, setRoomName] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
+  const [connectionError, setConnectionError] = useState('')
+  const [actionError, setActionError] = useState('')
   const [isFinishing, setIsProcessing] = useState(false)
+
+  const isInterviewer = user?.role === 'partner_doctor'
+  const backPath = isInterviewer ? '/partner' : '/advisor'
 
   useEffect(() => {
     if (!interviewId) {
-      navigate('/partner')
+      navigate(backPath)
       return
     }
 
@@ -34,24 +41,24 @@ export function VerificationRoomPage() {
         setUrl(data.livekitUrl)
         setRoomName(data.roomName)
       } catch (err) {
-        console.error('Failed to get verification token', err)
-        navigate('/partner')
+        setConnectionError(getApiErrorMessage(err, 'Could not connect to the verification room.'))
       } finally {
         setLoading(false)
       }
     }
 
     fetchToken()
-  }, [interviewId, navigate])
+  }, [interviewId, navigate, backPath])
 
   const handleCompleteInterview = async (outcome: 'pass' | 'fail') => {
     if (!interviewId) return
     setIsProcessing(true)
+    setActionError('')
     try {
       await verificationService.completeInterview(interviewId, { outcome })
-      navigate('/partner')
+      navigate(backPath)
     } catch (err) {
-      console.error('Failed to complete interview', err)
+      setActionError(getApiErrorMessage(err, 'Could not save the interview result. Please try again.'))
       setIsProcessing(false)
     }
   }
@@ -67,9 +74,16 @@ export function VerificationRoomPage() {
     )
   }
 
-  if (!token || !url) return null
-
-  const isInterviewer = user?.role === 'partner_doctor' || user?.role === 'admin'
+  if (connectionError || !token || !url) {
+    return (
+      <RoomErrorScreen
+        title="Verification room unavailable"
+        message={connectionError || 'Could not connect to the verification room.'}
+        backLabel={isInterviewer ? 'Back to Partner Portal' : 'Back to Advisor Hub'}
+        onBack={() => navigate(backPath)}
+      />
+    )
+  }
 
   return (
     <div className="bg-midnight h-[100dvh] w-full overflow-hidden text-on-primary font-body-md relative">
@@ -78,7 +92,7 @@ export function VerificationRoomPage() {
         audio={true}
         token={token}
         serverUrl={url}
-        onDisconnected={() => navigate(isInterviewer ? '/partner' : '/advisor')}
+        onDisconnected={() => navigate(backPath)}
         data-lk-theme="default"
         style={{ height: '100dvh' }}
       >
@@ -91,25 +105,32 @@ export function VerificationRoomPage() {
           </div>
 
           {isInterviewer && (
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto shrink-0">
-              <button
-                type="button"
-                disabled={isFinishing}
-                onClick={() => handleCompleteInterview('fail')}
-                className={`${btnDangerSolid} text-xs px-4 py-2.5 flex items-center justify-center gap-2 w-full sm:w-auto`}
-              >
-                <MaterialIcon name="thumb_down" className="text-sm" />
-                Reject
-              </button>
-              <button
-                type="button"
-                disabled={isFinishing}
-                onClick={() => handleCompleteInterview('pass')}
-                className={`${btnSecondary} text-xs px-4 py-2.5 flex items-center justify-center gap-2 w-full sm:w-auto`}
-              >
-                <MaterialIcon name="thumb_up" className="text-sm" />
-                Verify
-              </button>
+            <div className="flex flex-col items-stretch sm:items-end gap-2 w-full sm:w-auto shrink-0">
+              {actionError && (
+                <div className="w-full sm:max-w-sm">
+                  <FormError>{actionError}</FormError>
+                </div>
+              )}
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
+                <button
+                  type="button"
+                  disabled={isFinishing}
+                  onClick={() => handleCompleteInterview('fail')}
+                  className={`${btnDangerSolid} text-xs px-4 py-2.5 flex items-center justify-center gap-2 w-full sm:w-auto`}
+                >
+                  <MaterialIcon name="thumb_down" className="text-sm" />
+                  Reject
+                </button>
+                <button
+                  type="button"
+                  disabled={isFinishing}
+                  onClick={() => handleCompleteInterview('pass')}
+                  className={`${btnSecondary} text-xs px-4 py-2.5 flex items-center justify-center gap-2 w-full sm:w-auto`}
+                >
+                  <MaterialIcon name="thumb_up" className="text-sm" />
+                  Verify
+                </button>
+              </div>
             </div>
           )}
 

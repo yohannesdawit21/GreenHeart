@@ -52,8 +52,6 @@ export function getNavLinksForRole(role: UserRole | undefined): NavLinkDef[] {
     case 'admin':
       return [
         { id: 'admin', label: 'Admin', icon: 'admin_panel_settings', to: '/admin' },
-        { id: 'partner', label: 'Partner Portal', icon: 'verified_user', to: '/partner' },
-        { id: 'advisor', label: 'Advisor Hub', icon: 'medical_services', to: '/advisor' },
         SETTINGS,
       ]
     default:
@@ -70,12 +68,12 @@ const ROUTE_ACCESS: Record<string, UserRole[] | 'public' | 'guest'> = {
   '/advisors': 'guest',
   '/wallet': ['client'],
   '/waiting': ['client'],
-  '/advisor': ['advisor', 'admin'],
-  '/partner': ['partner_doctor', 'admin'],
+  '/advisor': ['advisor'],
+  '/partner': ['partner_doctor'],
   '/admin': ['admin'],
   '/settings': ['client', 'advisor', 'partner_doctor', 'admin'],
-  '/consultation': ['client', 'advisor', 'admin'],
-  '/verification': ['advisor', 'partner_doctor', 'admin'],
+  '/consultation': ['client', 'advisor'],
+  '/verification': ['advisor', 'partner_doctor'],
   '/incoming-call': ['advisor'],
 }
 
