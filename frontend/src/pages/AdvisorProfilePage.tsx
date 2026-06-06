@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { AppShell } from '../components/layout/AppShell';
+import { appShellMainClass, LoadingSpinner } from '../components/layout/dashboard-ui';
 import { MaterialIcon } from '../components/MaterialIcon';
 import { userService } from '../api/user.service';
 import { sessionService } from '../api/session.service';
@@ -44,10 +45,8 @@ export function AdvisorProfilePage() {
 
   if (loading) {
     return (
-      <AppShell showSearch={false}>
-        <div className="flex justify-center py-20">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary" />
-        </div>
+      <AppShell activeNav="discover" showSearch={false}>
+        <LoadingSpinner />
       </AppShell>
     );
   }
@@ -55,7 +54,7 @@ export function AdvisorProfilePage() {
   if (!advisor || error) {
     return (
       <AppShell showSearch={false}>
-        <main className="text-center py-20">
+      <main className={`${appShellMainClass} max-w-2xl text-center`}>
           <p className="text-on-surface-variant mb-4">{error || 'Not found'}</p>
           <Link to="/discover" className="text-primary hover:underline">Back to Discover</Link>
         </main>
@@ -65,7 +64,7 @@ export function AdvisorProfilePage() {
 
   return (
     <AppShell showSearch={false}>
-      <main className="max-w-2xl mx-auto px-margin-mobile md:px-margin-desktop py-stack-lg">
+      <main className={`${appShellMainClass} max-w-2xl`}>
         <Link to="/discover" className="text-primary flex items-center gap-1 font-label-md mb-stack-md hover:underline">
           <MaterialIcon name="arrow_back" className="text-sm" />
           Back to Discover
@@ -96,14 +95,14 @@ export function AdvisorProfilePage() {
             ))}
           </div>
 
-          <div className="flex items-center justify-between border-t border-outline-variant pt-stack-md">
-            <div>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-stack-md border-t border-outline-variant pt-stack-md">
+            <div className="min-w-0">
               <span className="font-bold text-lg">{advisor.coinRatePerSession}</span>
               <span className="text-on-surface-variant ml-1">coins / session</span>
               <div className="text-sm text-on-surface-variant mt-1">
                 {advisor.isOnline ? (
                   <span className="text-secondary flex items-center gap-1">
-                    <span className="w-2 h-2 rounded-full bg-secondary" /> Online now
+                    <span className="w-2 h-2 rounded-full bg-secondary shrink-0" /> Online now
                   </span>
                 ) : (
                   'Currently offline'
@@ -114,9 +113,14 @@ export function AdvisorProfilePage() {
               <button
                 type="button"
                 onClick={handleConnect}
-                className="bg-primary text-on-primary px-6 py-3 rounded-lg font-label-md hover:bg-on-primary-fixed-variant"
+                disabled={!advisor.isOnline}
+                className={`w-full sm:w-auto px-6 py-3 rounded-lg font-label-md transition-colors ${
+                  advisor.isOnline
+                    ? 'bg-primary text-on-primary hover:bg-on-primary-fixed-variant'
+                    : 'bg-surface-container text-outline cursor-not-allowed'
+                }`}
               >
-                Connect Instantly
+                {advisor.isOnline ? 'Connect' : 'Advisor offline'}
               </button>
             )}
           </div>

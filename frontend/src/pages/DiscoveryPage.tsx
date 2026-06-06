@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AdvisorCard } from '../components/AdvisorCard'
 import { AppShell } from '../components/layout/AppShell'
+import { appShellMainClass } from '../components/layout/dashboard-ui'
 import { MaterialIcon } from '../components/MaterialIcon'
 import { userService } from '../api/user.service'
 import { searchService } from '../api/search.service'
@@ -81,7 +82,7 @@ export function DiscoveryPage({ aiPulse = false }: DiscoveryPageProps) {
       searchPlaceholder={aiPulse ? 'Describe your feelings...' : 'Describe what you are feeling inside...'}
       onSearch={handleSearch}
     >
-      <main className="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop py-stack-lg flex flex-col gap-stack-lg">
+      <main className={`${appShellMainClass} flex flex-col gap-stack-lg`}>
         <div className="relative md:hidden w-full">
           <MaterialIcon name="search" className="absolute left-4 top-1/2 -translate-y-1/2 text-outline" />
           <input
@@ -186,7 +187,7 @@ export function DiscoveryPage({ aiPulse = false }: DiscoveryPageProps) {
           </section>
         )}
 
-        <section className="mt-8 bg-surface-container-low rounded-xl border border-outline-variant p-stack-md flex flex-col md:flex-row items-center gap-stack-md">
+        <section className="mt-8 mb-2 bg-surface-container-low rounded-xl border border-outline-variant p-stack-md flex flex-col md:flex-row items-center gap-stack-md">
           <div className="w-12 h-12 rounded-full bg-primary-container flex items-center justify-center shrink-0">
             <MaterialIcon name="psychology" className="text-on-primary-container" />
           </div>

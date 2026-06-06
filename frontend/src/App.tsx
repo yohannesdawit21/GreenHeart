@@ -13,9 +13,10 @@ import { ConsultationRoomPage } from './pages/ConsultationRoomPage'
 import { DiscoveryAiPage, DiscoveryPage } from './pages/DiscoveryPage'
 import { IncomingCallPage } from './pages/IncomingCallPage'
 import { WalletPage } from './pages/WalletPage'
-import { ProtectedRoute } from './components/ProtectedRoute'
+import { ClientAreaRoute, GuestAuthRoute, ProtectedRoute } from './components/ProtectedRoute'
 import { useSocket } from './context/SocketContext'
 import { useAuth } from './context/AuthContext'
+import { getRoleHome } from './utils/roleAccess'
 import type { IncomingCallDispatchPayload } from '@shared/contracts/socket.events'
 
 export default function App() {
@@ -28,7 +29,7 @@ export default function App() {
 
     const handleIncomingCall = (payload: IncomingCallDispatchPayload) => {
       navigate(
-        `/incoming-call?sessionId=${payload.sessionId}&clientName=${encodeURIComponent(payload.clientName)}&duration=${payload.durationMinutes}`,
+        `/incoming-call?sessionId=${encodeURIComponent(payload.sessionId)}&clientName=${encodeURIComponent(payload.clientName)}&duration=${payload.durationMinutes}`,
       )
     }
 
@@ -40,13 +41,49 @@ export default function App() {
 
   return (
     <Routes>
-      <Route path="/" element={<Navigate to="/auth" replace />} />
-      <Route path="/auth" element={<AuthPage />} />
-      <Route path="/auth/advisor-apply" element={<AdvisorApplyPage />} />
+      <Route path="/" element={<Navigate to={user ? getRoleHome(user.role) : '/discover'} replace />} />
 
-      <Route path="/discover" element={<DiscoveryPage />} />
-      <Route path="/discover/ai" element={<DiscoveryAiPage />} />
-      <Route path="/advisors/:id" element={<AdvisorProfilePage />} />
+      <Route
+        path="/auth"
+        element={
+          <GuestAuthRoute>
+            <AuthPage />
+          </GuestAuthRoute>
+        }
+      />
+      <Route
+        path="/auth/advisor-apply"
+        element={
+          <GuestAuthRoute>
+            <AdvisorApplyPage />
+          </GuestAuthRoute>
+        }
+      />
+
+      <Route
+        path="/discover"
+        element={
+          <ClientAreaRoute>
+            <DiscoveryPage />
+          </ClientAreaRoute>
+        }
+      />
+      <Route
+        path="/discover/ai"
+        element={
+          <ClientAreaRoute>
+            <DiscoveryAiPage />
+          </ClientAreaRoute>
+        }
+      />
+      <Route
+        path="/advisors/:id"
+        element={
+          <ClientAreaRoute>
+            <AdvisorProfilePage />
+          </ClientAreaRoute>
+        }
+      />
 
       <Route
         path="/wallet"
@@ -59,7 +96,7 @@ export default function App() {
       <Route
         path="/settings"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute roles={['client', 'advisor', 'partner_doctor', 'admin']}>
             <SettingsPage />
           </ProtectedRoute>
         }
@@ -100,7 +137,7 @@ export default function App() {
       <Route
         path="/consultation"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute roles={['client', 'advisor', 'admin']}>
             <ConsultationRoomPage />
           </ProtectedRoute>
         }
@@ -108,7 +145,7 @@ export default function App() {
       <Route
         path="/verification/:interviewId"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute roles={['advisor', 'partner_doctor', 'admin']}>
             <VerificationRoomPage />
           </ProtectedRoute>
         }
@@ -122,7 +159,7 @@ export default function App() {
         }
       />
 
-      <Route path="*" element={<Navigate to="/auth" replace />} />
+      <Route path="*" element={<Navigate to={user ? getRoleHome(user.role) : '/discover'} replace />} />
     </Routes>
   )
 }

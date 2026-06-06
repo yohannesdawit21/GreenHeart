@@ -68,10 +68,10 @@ export function VerificationRoomPage() {
 
   if (!token || !url) return null
 
-  const isInterviewer = user?.role === 'partner_doctor'
+  const isInterviewer = user?.role === 'partner_doctor' || user?.role === 'admin'
 
   return (
-    <div className="bg-midnight h-screen w-screen overflow-hidden text-on-primary font-body-md relative">
+    <div className="bg-midnight h-[100dvh] w-full overflow-hidden text-on-primary font-body-md relative">
       <LiveKitRoom
         video={true}
         audio={true}
@@ -81,39 +81,41 @@ export function VerificationRoomPage() {
         data-lk-theme="default"
         style={{ height: '100dvh' }}
       >
-        <div className="absolute top-0 w-full z-20 flex justify-between items-center px-margin-desktop py-stack-md glass-panel-dark">
-          <div className="flex items-center gap-stack-sm">
-            <MaterialIcon name="verified_user" className="text-secondary" />
-            <span className="font-label-md text-label-md text-on-primary">Verification Session: {roomName}</span>
+        <div className="absolute top-0 left-0 right-0 z-20 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-stack-sm px-4 md:px-margin-desktop py-3 md:py-stack-md glass-panel-dark safe-top">
+          <div className="flex items-center gap-stack-sm min-w-0">
+            <MaterialIcon name="verified_user" className="text-secondary shrink-0" />
+            <span className="font-label-md text-label-md text-on-primary truncate">
+              Verification: {roomName}
+            </span>
           </div>
-          
+
           {isInterviewer && (
-            <div className="flex items-center gap-stack-md">
-              <button 
-                type="button" 
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto shrink-0">
+              <button
+                type="button"
                 disabled={isFinishing}
                 onClick={() => handleCompleteInterview('fail')}
-                className="bg-error/20 hover:bg-error border border-error text-white font-label-md text-xs px-4 py-2 rounded-lg transition-all shadow-lg flex items-center gap-2 disabled:opacity-50"
+                className="bg-error/20 hover:bg-error border border-error text-white font-label-md text-xs px-4 py-2.5 rounded-lg transition-all flex items-center justify-center gap-2 disabled:opacity-50"
               >
                 <MaterialIcon name="thumb_down" className="text-sm" />
-                FAIL / REJECT
+                Reject
               </button>
-              <button 
-                type="button" 
+              <button
+                type="button"
                 disabled={isFinishing}
                 onClick={() => handleCompleteInterview('pass')}
-                className="bg-secondary hover:bg-secondary/80 text-on-secondary font-label-md text-xs px-6 py-2 rounded-lg transition-all shadow-lg flex items-center gap-2 disabled:opacity-50"
+                className="bg-secondary hover:bg-secondary/80 text-on-secondary font-label-md text-xs px-4 py-2.5 rounded-lg transition-all flex items-center justify-center gap-2 disabled:opacity-50"
               >
                 <MaterialIcon name="thumb_up" className="text-sm" />
-                PASS / VERIFY
+                Verify
               </button>
             </div>
           )}
 
           {!isInterviewer && (
-            <div className="flex items-center gap-stack-sm">
-              <span className="font-label-md text-label-md text-secondary animate-pulse">Waiting for partner's assessment...</span>
-            </div>
+            <span className="font-label-md text-sm text-secondary animate-pulse text-center sm:text-left">
+              Waiting for partner assessment…
+            </span>
           )}
         </div>
 

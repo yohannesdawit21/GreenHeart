@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { AppShell } from '../components/layout/AppShell';
+import { appShellMainClass, DashboardHeader, DashboardAlert } from '../components/layout/dashboard-ui';
 import { MaterialIcon } from '../components/MaterialIcon';
 import { userService } from '../api/user.service';
 import { useAuth } from '../context/AuthContext';
@@ -49,19 +50,21 @@ export function SettingsPage() {
 
   return (
     <AppShell activeNav="settings" showSearch={false}>
-      <main className="max-w-xl mx-auto px-margin-mobile md:px-margin-desktop py-stack-lg">
-        <h1 className="font-display-md text-display-md text-on-background mb-stack-sm">Settings</h1>
-        <p className="font-body-md text-body-md text-on-surface-variant mb-stack-lg">
-          Manage your profile and account preferences.
-        </p>
+      <main className={`${appShellMainClass} max-w-xl flex flex-col gap-stack-lg`}>
+        <DashboardHeader
+          title="Settings"
+          description="Manage your profile and account preferences."
+        />
 
         {message && (
-          <div className="mb-stack-md p-stack-sm bg-secondary-container/30 text-on-secondary-container rounded-lg">
-            {message}
+          <div className="mb-stack-md">
+            <DashboardAlert variant="success" icon="check_circle">{message}</DashboardAlert>
           </div>
         )}
         {error && (
-          <div className="mb-stack-md p-stack-sm bg-error-container text-on-error-container rounded-lg">{error}</div>
+          <div className="mb-stack-md">
+            <DashboardAlert variant="error" icon="error">{error}</DashboardAlert>
+          </div>
         )}
 
         <form onSubmit={handleSave} className="bg-surface-container-lowest border border-outline-variant rounded-xl p-stack-lg flex flex-col gap-stack-md">
