@@ -34,8 +34,9 @@ export const config = {
     apiSecret: process.env.LIVEKIT_API_SECRET ?? '',
   },
 
-  openai: {
-    apiKey: process.env.OPENAI_API_KEY ?? '',
+  gemini: {
+    apiKey: process.env.GEMINI_API_KEY ?? '',
+    embeddingModel: process.env.GEMINI_EMBEDDING_MODEL ?? 'gemini-embedding-001',
   },
 
   payment: {
