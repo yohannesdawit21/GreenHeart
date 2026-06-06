@@ -18,7 +18,9 @@ frontend/
 
 - `shared/contracts/*` — import types only
 - `agent/modules/M1-frontend.md`
+- `agent/modules/M6-advisor-verification.md` (UI sections only)
 - `progress/modules/M1-frontend.md`
+- `progress/modules/M6-advisor-verification.md` (Role A tasks)
 
 ### Does NOT touch
 
@@ -29,7 +31,7 @@ frontend/
 
 | Module | Deliverable |
 |--------|-------------|
-| **M1** | Wire all 6 layouts to real APIs; Socket.io client; LiveKit room |
+| **M1** | Wire all 6 layouts to real APIs; Socket.io client; LiveKit room; admin/partner/advisor-apply UIs (M6) |
 
 ### Git branch naming
 
@@ -53,17 +55,23 @@ shared/contracts/auth.api.ts
 shared/contracts/users.api.ts
 shared/contracts/wallet.api.ts
 shared/contracts/models.user.ts
+shared/contracts/verification.api.ts
+backend/sql/004_advisor_verification.sql
+backend/sql/seed/001_admin.sql
+backend/src/modules/verification/
 agent/modules/M2-auth-users.md
 agent/modules/M3-wallet-ledger.md
+agent/modules/M6-advisor-verification.md
 progress/modules/M2-auth-users.md
 progress/modules/M3-wallet-ledger.md
+progress/modules/M6-advisor-verification.md
 ```
 
 ### Shared files — Role B is **maintainer**
 
 | File | Rule |
 |------|------|
-| `backend/src/app.ts` | Role B registers auth/users/wallet routes only |
+| `backend/src/app.ts` | Role B registers auth/users/wallet/**verification** routes only |
 | `backend/src/index.ts` | Role B sets up HTTP server bootstrap |
 | `backend/package.json` | Add deps for your modules; coordinate major bumps |
 | `backend/.env.example` | Add DATABASE_URL, JWT_*, PAYMENT_* vars |
@@ -72,12 +80,13 @@ progress/modules/M3-wallet-ledger.md
 
 | Module | Deliverable |
 |--------|-------------|
-| **M2** | JWT auth, user CRUD, role separation |
+| **M2** | JWT auth, user CRUD, role separation, admin seed |
 | **M3** | Ledger, escrow atomic ops, deposit webhook |
+| **M6** | Partner doctor RBAC, verification status, admin APIs |
 
 ### Git branch naming
 
-`feat/m2-*` / `feat/m3-*`
+`feat/m2-*` / `feat/m3-*` / `feat/m6-*`
 
 ---
 
@@ -113,6 +122,7 @@ progress/modules/M5-presence-sessions.md
 | `backend/src/app.ts` | Role C registers search/presence/session routes + attaches socket |
 | `backend/src/index.ts` | Role C initializes Socket.io on shared HTTP server |
 | `backend/.env.example` | Add PG_*, REDIS_*, LIVEKIT_*, OPENAI_* vars |
+| `backend/src/livekit/token.service.ts` | Role C — shared by M5 consultation + M6 verification rooms |
 
 ### Modules assigned
 
@@ -120,6 +130,7 @@ progress/modules/M5-presence-sessions.md
 |--------|-------------|
 | **M4** | Embedding pipeline + semantic search endpoint |
 | **M5** | Presence, call signaling, LiveKit token API |
+| **M6** | Verification interview LiveKit tokens; gate search/presence on verified |
 
 ### Git branch naming
 
@@ -151,10 +162,10 @@ app.use('/api/search', searchRouter);
 
 | Week | Role A | Role B | Role C |
 |------|--------|--------|--------|
-| 1 | M1: API client layer, auth forms → `/api/auth` | M2: Postgres pool + JWT + register | M4: pgvector + embeddings schema |
+| 1 | M1: API client layer, auth forms → `/api/auth` | M2: Postgres pool + JWT + register + admin seed | M4: pgvector + embeddings schema |
 | 2 | M1: Discovery + wallet UI wired | M3: Escrow + mock webhook | M5: Redis presence + socket hub |
-| 3 | M1: LiveKit + incoming call overlay | M3: Transaction history API | M5: Session initiate + LiveKit tokens |
-| 4 | Polish, E2E demo path | Hardening, tests | E2E call flow |
+| 3 | M1: LiveKit + incoming call overlay | M6: Partner/admin UIs + verification APIs | M5: Session initiate + LiveKit tokens |
+| 4 | M1: Advisor-apply + partner dashboards | M6: Video verification flow E2E | M5 + M4: Verified-only search & calls |
 
 ---
 

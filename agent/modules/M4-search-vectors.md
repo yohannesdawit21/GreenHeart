@@ -6,7 +6,7 @@
 
 ## Scope
 
-Advisor embedding storage, semantic search API, reindex on profile update. **Same Postgres DB** as M2 — JOIN on `users.id`.
+Advisor embedding storage, semantic search API, reindex on profile update. **Only `verification_status = verified` advisors** appear in results (M6 gate). Same Postgres DB as M2 — JOIN on `users.id`.
 
 ## Files to implement
 
@@ -32,6 +32,7 @@ FROM advisor_embeddings ae
 JOIN users u ON u.id = ae.user_id
 JOIN profiles p ON p.user_id = u.id
 WHERE u.role = 'advisor'
+  AND p.verification_status = 'verified'
   AND (ae.embedding <=> $1::vector) < 0.40
 ORDER BY distance ASC
 LIMIT 10;
@@ -41,7 +42,7 @@ Presence (`isOnline`) still comes from Redis at response assembly time.
 
 ## Reindex
 
-- `POST /api/search/reindex/:advisorId` — read bio + tags from `profiles`, embed, upsert `advisor_embeddings`
+- `POST /api/search/reindex/:advisorId` — only when `verification_status = verified`; read bio + tags from `profiles`, embed, upsert `advisor_embeddings`
 
 ## Do not implement here
 

@@ -37,6 +37,7 @@
 | `backend/src/modules/auth/` | Role B | JWT, login, register, cookies |
 | `backend/src/modules/users/` | Role B | Profiles, roles, advisor tags/rates |
 | `backend/src/modules/wallet/` | Role B | Balances, escrow, transactions, webhooks |
+| `backend/src/modules/verification/` | Role B | Partner doctor RBAC, verification interviews, admin override |
 | `backend/src/modules/search/` | Role C | Embeddings pipeline, pgvector queries |
 | `backend/src/modules/presence/` | Role C | Redis advisor online state |
 | `backend/src/modules/sessions/` | Role C | Initiate call, escrow trigger hook, LiveKit tokens |
@@ -46,6 +47,7 @@
 | `backend/sql/001_*.sql` | Role B | users, profiles, wallets, transactions |
 | `backend/sql/002_*.sql` | Role C | sessions |
 | `backend/sql/003_*.sql` | Role C | advisor_embeddings + pgvector |
+| `backend/sql/004_*.sql` | Role B | verification_status + verification_interviews |
 
 ## Critical workflows
 
@@ -53,8 +55,15 @@
 
 1. `POST /api/search/semantic` with `{ query: string }`
 2. Embed query → 1536-dim vector
-3. Postgres: vector distance + optional JOIN profiles for display fields
+3. Postgres: vector distance + JOIN profiles; **filter `verification_status = verified`**
 4. Return sorted advisor cards (single DB round-trip)
+
+### Advisor verification interview (M6)
+
+1. Partner doctor starts interview → `verification_interviews` row + LiveKit room (no escrow)
+2. Partner + applicant join `/verification/:interviewId`
+3. Partner completes with `pass` → `profiles.verification_status = verified` → M4 reindex
+4. Admin may override status (`suspended`, etc.) outside this flow
 
 ### Escrow (M3, called by M5)
 

@@ -6,7 +6,7 @@
 
 ## Scope
 
-Redis advisor presence, Socket.io signaling, session lifecycle, LiveKit room tokens, escrow orchestration via M3.
+Redis advisor presence, Socket.io signaling, session lifecycle, LiveKit room tokens, escrow orchestration via M3. **Only verified advisors** may go online or receive patient calls. LiveKit token service is **shared with M6** verification interviews (no escrow).
 
 ## Files to implement
 
@@ -42,7 +42,7 @@ backend/src/database/redis/
 
 ```
 POST /api/session/initiate { advisorId }
-  1. Validate client JWT + advisor online (Redis)
+  1. Validate client JWT + advisor **verified** (M6) + advisor online (Redis)
   2. Read advisor coinRatePerSession
   3. walletService.lockEscrow(clientId, rate)  ← M3
   4. Create session doc (status: ringing)

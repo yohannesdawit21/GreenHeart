@@ -7,11 +7,11 @@
 ## Tasks
 
 - [ ] Redis connection
-- [ ] PATCH `/api/presence/status`
+- [ ] PATCH `/api/presence/status` (verified advisors only)
 - [ ] GET `/api/presence/advisors`
 - [ ] Session repository (Postgres `sessions` table)
 - [ ] Run `backend/sql/002_sessions.sql`
-- [ ] POST `/api/session/initiate` (calls M3 lockEscrow)
+- [ ] POST `/api/session/initiate` (verified advisor only; calls M3 lockEscrow)
 - [ ] Socket.io server + JWT auth on connect
 - [ ] Handlers: incoming_call_dispatch, call_accepted, call_declined
 - [ ] LiveKit token service

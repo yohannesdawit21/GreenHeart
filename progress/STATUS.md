@@ -9,13 +9,16 @@
 | M3 | Wallet & Ledger | Role B | unassigned | not_started | M2 |
 | M4 | Search & Vectors | Role C | unassigned | not_started | M2 advisor profiles |
 | M5 | Presence & Sessions | Role C | unassigned | not_started | M2, M3 |
+| M6 | Advisor Verification & RBAC | B + A + C | unassigned | not_started | M2, M5 LiveKit reuse |
 
 ## Definition of done (MVP demo)
 
-- [ ] Client registers, buys coins (sandbox), searches advisors semantically
-- [ ] Client connects → advisor receives overlay → accept → video call
+- [ ] Client registers (patient path), buys coins (sandbox), searches **verified** advisors semantically
+- [ ] Doctor registers (advisor-apply path), partner doctor verifies via **video**, then appears in search
+- [ ] Admin (seed) registers partner doctors; can override verification status
+- [ ] Client connects → verified advisor receives overlay → accept → video call
 - [ ] Escrow locks and releases correctly
-- [ ] Advisor can go online/offline
+- [ ] Verified advisor can go online/offline
 
 ## How to claim work
 

@@ -34,8 +34,16 @@ Traditional clinical pathways are slow and rigid. People need immediate access t
 
 | Role | Primary surfaces |
 |------|------------------|
-| **Client** | Auth, Discovery, Wallet, Consultation room |
-| **Advisor** | Auth, Advisor Control Center, Incoming call overlay, Consultation room |
+| **Client (patient)** | Auth (patient path), Discovery, Wallet, Consultation room |
+| **Advisor (doctor applicant)** | Auth (advisor-apply path), application status, Consultation room (after verified) |
+| **Partner doctor** | Partner RBAC dashboard, verification video room, pass/fail applicants |
+| **Admin** | Admin dashboard — register partner doctors, override verification status |
+
+### Advisor verification (before marketplace)
+
+Doctors who want to offer services register on a **separate path** from patients. They start as `pending_review` and are **not** searchable until a **partner doctor** passes them in an **in-app video interview**. Admin can override status (e.g. `suspended`) from the platform side. First admin account is created via **DB seed**.
+
+See [modules/M6-advisor-verification.md](./modules/M6-advisor-verification.md).
 
 ## Design language
 
@@ -50,9 +58,10 @@ Fonts: Manrope (headlines), Source Sans 3 (body), Geist (labels). Implemented in
 
 ## Success criteria for MVP demo
 
-- [ ] Register/login as client or advisor (JWT)
+- [ ] Register/login as client (patient path) or advisor applicant (doctor path)
+- [ ] Admin (seed) registers partner doctor; partner verifies applicant via video
+- [ ] Only **verified** advisors appear in semantic search and can go online
 - [ ] Buy coins (mock or sandbox webhook)
-- [ ] Semantic search returns ranked advisors
-- [ ] Connect flow locks escrow and rings advisor
+- [ ] Connect flow locks escrow and rings verified advisor
 - [ ] Accept opens LiveKit room with A/V
-- [ ] Advisor toggles online/offline (Redis presence)
+- [ ] Verified advisor toggles online/offline (Redis presence)

@@ -9,7 +9,9 @@
 - [ ] Finalize Postgres pool in `backend/src/database/postgres/connection.ts`
 - [ ] Run `backend/sql/001_users_wallets.sql`
 - [ ] User repository (SQL) with wallet + profile joins
-- [ ] POST `/api/auth/register` (client + advisor roles)
+- [ ] POST `/api/auth/register` (client) + `/api/auth/register/advisor` (pending_review)
+- [ ] Extend roles: admin, partner_doctor, advisor, client
+- [ ] Run seed `backend/sql/seed/001_admin.sql`
 - [ ] POST `/api/auth/login` + JWT cookie
 - [ ] GET `/api/auth/me` + auth middleware
 - [ ] PATCH `/api/users/me/profile`

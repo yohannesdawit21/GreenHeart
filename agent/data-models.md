@@ -9,10 +9,12 @@ users (
   id UUID PK,
   email VARCHAR UNIQUE,
   password_hash VARCHAR,
-  role 'client' | 'advisor',
+  role 'client' | 'advisor' | 'partner_doctor' | 'admin',
   created_at TIMESTAMPTZ
 )
 ```
+
+First `admin` row is inserted by `backend/sql/seed/001_admin.sql` (not self-register).
 
 ## PostgreSQL — `profiles` (Role B)
 
@@ -22,9 +24,12 @@ profiles (
   username VARCHAR,
   bio TEXT,
   tags TEXT[],
-  coin_rate_per_session INT  -- advisors
+  coin_rate_per_session INT,  -- advisors (after verified)
+  verification_status 'pending_review' | 'verified' | 'rejected' | 'suspended'  -- advisors only; NULL for other roles
 )
 ```
+
+Advisor applicants default to `pending_review`. Partner doctor pass → `verified` (then M4 reindex). Admin may set any status.
 
 ## PostgreSQL — `wallets` (Role B)
 
@@ -66,6 +71,23 @@ sessions (
 )
 ```
 
+## PostgreSQL — `verification_interviews` (Role B — M6)
+
+```sql
+verification_interviews (
+  id UUID PK,
+  applicant_id UUID → users(id),      -- advisor role
+  partner_doctor_id UUID → users(id),
+  status scheduled | in_progress | completed,
+  outcome pass | fail,                -- set on complete
+  livekit_room VARCHAR,
+  notes TEXT,
+  created_at, started_at, completed_at TIMESTAMPTZ
+)
+```
+
+In-app video interview between partner doctor and advisor applicant. No escrow.
+
 ## PostgreSQL — `advisor_embeddings` (Role C)
 
 See `backend/sql/003_advisor_embeddings.sql`. `user_id` is UUID FK → `users(id)`.
@@ -82,6 +104,8 @@ See `backend/sql/003_advisor_embeddings.sql`. `user_id` is UUID FK → `users(id
 1. `backend/sql/001_users_wallets.sql` — Role B
 2. `backend/sql/002_sessions.sql` — Role C
 3. `backend/sql/003_advisor_embeddings.sql` — Role C (requires pgvector)
+4. `backend/sql/004_advisor_verification.sql` — Role B (M6)
+5. `backend/sql/seed/001_admin.sql` — Role B (first admin)
 
 ## TypeScript exports
 

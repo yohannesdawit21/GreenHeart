@@ -10,13 +10,26 @@ When implementing an endpoint or socket event, update the contract file **first*
 
 | Method | Path | Contract file | Status |
 |--------|------|---------------|--------|
-| POST | `/api/auth/register` | `auth.api.ts` | stub |
+| POST | `/api/auth/register` | `auth.api.ts` | stub — **client** path only |
+| POST | `/api/auth/register/advisor` | `auth.api.ts` | stub — doctor applicant → `pending_review` |
 | POST | `/api/auth/login` | `auth.api.ts` | stub |
 | POST | `/api/auth/logout` | `auth.api.ts` | stub |
 | GET | `/api/auth/me` | `auth.api.ts` | stub |
 | PATCH | `/api/users/me/profile` | `users.api.ts` | stub |
 | GET | `/api/users/advisors` | `users.api.ts` | stub |
 | GET | `/api/users/advisors/:id` | `users.api.ts` | stub |
+
+### Advisor verification & RBAC (Role B — M6, LiveKit Role C)
+
+| Method | Path | Contract file | Status |
+|--------|------|---------------|--------|
+| POST | `/api/admin/partner-doctors` | `verification.api.ts` | stub — admin only |
+| GET | `/api/admin/partner-doctors` | `verification.api.ts` | stub |
+| PATCH | `/api/admin/advisors/:id/verification-status` | `verification.api.ts` | stub — admin override |
+| GET | `/api/verification/applicants` | `verification.api.ts` | stub — partner doctor queue |
+| POST | `/api/verification/interviews` | `verification.api.ts` | stub — start video interview |
+| PATCH | `/api/verification/interviews/:id/complete` | `verification.api.ts` | stub — pass/fail |
+| GET | `/api/verification/interviews/:id/livekit-token` | `verification.api.ts` | stub — Role C |
 
 ### Wallet & Ledger (Role B — M3)
 
@@ -73,4 +86,4 @@ See `shared/contracts/socket.events.ts`.
 }
 ```
 
-Codes: `UNAUTHORIZED`, `INSUFFICIENT_FUNDS`, `ADVISOR_OFFLINE`, `SESSION_NOT_FOUND`, `VALIDATION_ERROR`.
+Codes: `UNAUTHORIZED`, `FORBIDDEN`, `INSUFFICIENT_FUNDS`, `ADVISOR_OFFLINE`, `ADVISOR_NOT_VERIFIED`, `SESSION_NOT_FOUND`, `VALIDATION_ERROR`.
