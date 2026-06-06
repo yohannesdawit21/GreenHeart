@@ -1,10 +1,11 @@
 import { useEffect } from 'react'
-import { Route, Routes, useNavigate } from 'react-router-dom'
+import { Navigate, Route, Routes, useNavigate } from 'react-router-dom'
 import { AdvisorControlPage } from './pages/AdvisorControlPage'
 import { AdvisorApplyPage } from './pages/AdvisorApplyPage'
 import { AdvisorProfilePage } from './pages/AdvisorProfilePage'
 import { PartnerDashboardPage } from './pages/PartnerDashboardPage'
-import { AdminDashboardPage } from './pages/AdminDashboardPage'
+import { AdminPartnersPage } from './pages/admin/AdminPartnersPage'
+import { AdminAdvisorsPage } from './pages/admin/AdminAdvisorsPage'
 import { VerificationRoomPage } from './pages/VerificationRoomPage'
 import { WaitingSessionPage } from './pages/WaitingSessionPage'
 import { SettingsPage } from './pages/SettingsPage'
@@ -126,7 +127,23 @@ export default function App() {
         path="/admin"
         element={
           <ProtectedRoute roles={['admin']}>
-            <AdminDashboardPage />
+            <Navigate to="/admin/partners" replace />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/partners"
+        element={
+          <ProtectedRoute roles={['admin']}>
+            <AdminPartnersPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/advisors"
+        element={
+          <ProtectedRoute roles={['admin']}>
+            <AdminAdvisorsPage />
           </ProtectedRoute>
         }
       />

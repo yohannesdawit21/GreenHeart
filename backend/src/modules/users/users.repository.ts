@@ -215,6 +215,46 @@ export async function listPendingApplicants(): Promise<ApplicantRow[]> {
   return rows;
 }
 
+export async function deletePartnerDoctor(userId: string): Promise<boolean> {
+  const user = await findUserById(userId);
+  if (!user || user.role !== 'partner_doctor') {
+    return false;
+  }
+  await getPool().query('DELETE FROM users WHERE id = $1', [userId]);
+  return true;
+}
+
+export async function updatePartnerDoctor(
+  userId: string,
+  updates: { email?: string; username?: string; passwordHash?: string },
+): Promise<UserWithProfileRow | null> {
+  const user = await findUserById(userId);
+  if (!user || user.role !== 'partner_doctor') {
+    return null;
+  }
+
+  if (updates.email !== undefined) {
+    await getPool().query('UPDATE users SET email = $1 WHERE id = $2', [
+      updates.email.toLowerCase(),
+      userId,
+    ]);
+  }
+  if (updates.passwordHash !== undefined) {
+    await getPool().query('UPDATE users SET password_hash = $1 WHERE id = $2', [
+      updates.passwordHash,
+      userId,
+    ]);
+  }
+  if (updates.username !== undefined) {
+    await getPool().query('UPDATE profiles SET username = $1 WHERE user_id = $2', [
+      updates.username,
+      userId,
+    ]);
+  }
+
+  return findUserById(userId);
+}
+
 export async function listPartnerDoctors(): Promise<ApplicantRow[]> {
   const { rows } = await getPool().query<ApplicantRow>(
     `SELECT u.id, u.email, p.username, p.bio, p.tags, p.coin_rate_per_session,

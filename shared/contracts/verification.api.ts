@@ -47,6 +47,16 @@ export interface PartnerDoctorDto {
   createdAt: string;
 }
 
+export interface UpdatePartnerDoctorRequest {
+  email?: string;
+  username?: string;
+  password?: string;
+}
+
+export interface PartnerDoctorResponse {
+  partner: PartnerDoctorDto;
+}
+
 export interface PartnerDoctorListResponse {
   partners: PartnerDoctorDto[];
 }

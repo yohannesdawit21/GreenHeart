@@ -1,6 +1,14 @@
 import type { UserRole } from '@shared/contracts/auth.api'
 
-export type NavItem = 'discover' | 'wallet' | 'advisor' | 'partner' | 'admin' | 'guide' | 'settings'
+export type NavItem =
+  | 'discover'
+  | 'wallet'
+  | 'advisor'
+  | 'partner'
+  | 'admin-partners'
+  | 'admin-advisors'
+  | 'guide'
+  | 'settings'
 
 export interface NavLinkDef {
   id: NavItem
@@ -52,7 +60,8 @@ export function getNavLinksForRole(role: UserRole | undefined): NavLinkDef[] {
     case 'admin':
       return [
         { id: 'guide', label: 'Demo Guide', icon: 'menu_book', to: '/workflow' },
-        { id: 'admin', label: 'Admin', icon: 'admin_panel_settings', to: '/admin' },
+        { id: 'admin-partners', label: 'Partners', icon: 'verified_user', to: '/admin/partners' },
+        { id: 'admin-advisors', label: 'Advisors', icon: 'medical_services', to: '/admin/advisors' },
         SETTINGS,
       ]
     default:
@@ -73,6 +82,8 @@ const ROUTE_ACCESS: Record<string, UserRole[] | 'public' | 'guest'> = {
   '/advisor': ['advisor'],
   '/partner': ['partner_doctor'],
   '/admin': ['admin'],
+  '/admin/partners': ['admin'],
+  '/admin/advisors': ['admin'],
   '/settings': ['client', 'advisor', 'partner_doctor', 'admin'],
   '/consultation': ['client', 'advisor'],
   '/verification': ['advisor', 'partner_doctor'],

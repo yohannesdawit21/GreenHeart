@@ -280,6 +280,62 @@ export async function listPartnerDoctors() {
   return rows.map(toPartnerDoctorDto);
 }
 
+export async function updatePartnerDoctor(
+  partnerId: string,
+  input: { email?: string; username?: string; password?: string },
+) {
+  const existing = await usersRepo.findUserById(partnerId);
+  if (!existing || existing.role !== 'partner_doctor') {
+    throw new AppError(404, 'VALIDATION_ERROR', 'Partner doctor not found');
+  }
+
+  if (input.email && input.email.toLowerCase() !== existing.email.toLowerCase()) {
+    const emailTaken = await usersRepo.findUserByEmail(input.email);
+    if (emailTaken) {
+      throw new AppError(409, 'VALIDATION_ERROR', 'Email already registered');
+    }
+  }
+
+  let passwordHash: string | undefined;
+  if (input.password) {
+    passwordHash = await bcrypt.hash(input.password, BCRYPT_ROUNDS);
+  }
+
+  const updated = await usersRepo.updatePartnerDoctor(partnerId, {
+    email: input.email,
+    username: input.username,
+    passwordHash,
+  });
+  if (!updated) {
+    throw new AppError(404, 'VALIDATION_ERROR', 'Partner doctor not found');
+  }
+
+  return toPartnerDoctorDto({
+    id: updated.id,
+    email: updated.email,
+    username: updated.username,
+    bio: updated.bio,
+    tags: updated.tags,
+    coin_rate_per_session: updated.coin_rate_per_session,
+    verification_status: updated.verification_status ?? 'pending_review',
+    created_at: updated.created_at,
+  });
+}
+
+export async function deletePartnerDoctor(partnerId: string) {
+  const existing = await usersRepo.findUserById(partnerId);
+  if (!existing || existing.role !== 'partner_doctor') {
+    throw new AppError(404, 'VALIDATION_ERROR', 'Partner doctor not found');
+  }
+
+  const deleted = await usersRepo.deletePartnerDoctor(partnerId);
+  if (!deleted) {
+    throw new AppError(404, 'VALIDATION_ERROR', 'Partner doctor not found');
+  }
+
+  return { id: partnerId, deleted: true as const };
+}
+
 export async function listAllAdvisorsForAdmin() {
   const rows = await usersRepo.listAllAdvisors();
   return rows.map(toApplicantDto);

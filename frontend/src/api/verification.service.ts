@@ -2,7 +2,10 @@ import { apiClient } from './client';
 import type {
   ApplicantListResponse,
   PartnerDoctorListResponse,
+  PartnerDoctorDto,
+  PartnerDoctorResponse,
   RegisterPartnerDoctorRequest,
+  UpdatePartnerDoctorRequest,
   StartInterviewRequest,
   StartInterviewResponse,
   CompleteInterviewRequest,
@@ -33,6 +36,15 @@ export const verificationService = {
 
   registerPartner: async (data: RegisterPartnerDoctorRequest): Promise<void> => {
     await apiClient.post('/admin/partner-doctors', data);
+  },
+
+  updatePartner: async (id: string, data: UpdatePartnerDoctorRequest): Promise<PartnerDoctorDto> => {
+    const response = await apiClient.patch<PartnerDoctorResponse>(`/admin/partner-doctors/${id}`, data);
+    return response.data.partner;
+  },
+
+  deletePartner: async (id: string): Promise<void> => {
+    await apiClient.delete(`/admin/partner-doctors/${id}`);
   },
 
   startInterview: async (data: StartInterviewRequest): Promise<StartInterviewResponse> => {

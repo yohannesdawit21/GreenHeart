@@ -11,6 +11,16 @@ export async function listPartnerDoctors(_req: Request, res: Response) {
   res.json({ partners });
 }
 
+export async function updatePartnerDoctor(req: Request, res: Response) {
+  const partner = await verificationService.updatePartnerDoctor(req.params.id as string, req.body);
+  res.json({ partner });
+}
+
+export async function deletePartnerDoctor(req: Request, res: Response) {
+  const result = await verificationService.deletePartnerDoctor(req.params.id as string);
+  res.json(result);
+}
+
 export async function listAdvisors(_req: Request, res: Response) {
   const applicants = await verificationService.listAllAdvisorsForAdmin();
   res.json({ applicants });
