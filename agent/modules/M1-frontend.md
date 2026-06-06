@@ -6,73 +6,76 @@
 
 ## Scope
 
-Implement all six UI layouts, integrate REST + WebSocket + LiveKit clients. No backend code.
+Implement all UI layouts, integrate REST + WebSocket + LiveKit clients. No backend code.
 
-## Directory structure (extend only inside `frontend/`)
+## Directory structure
 
 ```
 frontend/src/
 ├── api/              # HTTP client, typed from shared/contracts
-├── hooks/            # useAuth, useSocket, useWallet
-├── context/          # CallOverlayProvider, AuthProvider
+├── context/          # AuthContext, SocketContext
 ├── components/       # existing + livekit/, overlays/
-├── pages/            # route pages
+├── pages/            # route pages (see ui-routing.md)
 └── lib/              # env, constants
 ```
 
 ## Tasks
 
-### Phase 1 — API layer
+### Phase 1 — API layer ✅ (PR #2)
 
-- [ ] Add `frontend/src/api/client.ts` (fetch wrapper, JWT cookie/header)
-- [ ] Add `frontend/src/api/auth.ts`, `wallet.ts`, `search.ts`, `session.ts`
-- [ ] Copy/import types from `@codex/shared` or relative `../../shared/contracts`
+- [x] Add `frontend/src/api/client.ts` (fetch wrapper, credentials cookie)
+- [x] Add `auth.service.ts`, `wallet.service.ts`, `search.service.ts`, `session.service.ts`, `user.service.ts`
+- [x] Import types from `shared/contracts`
 
-### Phase 2 — Auth (Layout 1)
+### Phase 2 — Auth (Layout 1) ✅
 
-- [ ] Wire login/register to `POST /api/auth/*`
-- [ ] Persist JWT (httpOnly cookie preferred)
-- [ ] Advisor signup: tags + `coinRatePerSession` fields
-- [ ] Role-based redirect: client → `/discovery`, advisor → `/advisor/dashboard`
+- [x] Wire login/register to `POST /api/auth/*`
+- [x] AuthContext with JWT cookie
+- [ ] Role-based redirect: `client` → `/discover`, `advisor` → dashboard, `partner_doctor` → `/partner`, `admin` → `/admin`
 
-### Phase 3 — Discovery (Layout 2)
+### Phase 3 — Discovery (Layout 2) ✅
 
-- [ ] Wire search input to `POST /api/search/semantic`
-- [ ] Category filter chips (client-side or query param)
-- [ ] Show live indicator from presence API
-- [ ] **Connect Instantly** → `POST /api/session/initiate`
+- [x] Wire search to `POST /api/search/semantic`
+- [x] Connect Instantly → `POST /api/session/initiate`
+- [ ] Show live indicator from presence API (when M5 ready)
+- [ ] Only show verified advisors (when M4 filter ready)
 
-### Phase 4 — Wallet (Layout 3)
+### Phase 4 — Wallet (Layout 3) ✅
 
-- [ ] Display balance from `GET /api/wallet/balance`
-- [ ] Package selection → `POST /api/wallet/purchase/initiate`
-- [ ] Transaction history list
+- [x] Balance from `GET /api/wallet/balance`
+- [x] Package selection → `POST /api/wallet/purchase/initiate`
+- [ ] Transaction history list (API exists on backend)
 
-### Phase 5 — Advisor dashboard (Layout 4)
+### Phase 5 — Advisor dashboard (Layout 4) ✅
 
-- [ ] Metrics from wallet + session stats endpoints
-- [ ] Online toggle → `PATCH /api/presence/status`
+- [x] Online toggle → `PATCH /api/presence/status`
+- [ ] Disable toggle when `verification_status !== verified`
+- [ ] Show verification status banner for pending/rejected advisors
 
-### Phase 6 — Realtime (Layouts 5 & 6)
+### Phase 6 — Realtime (Layouts 5 & 6) ✅
 
-- [ ] Socket.io client singleton in `frontend/src/lib/socket.ts`
-- [ ] Global incoming call overlay (Layout 5)
-- [ ] Accept/decline → socket events + navigation
-- [ ] LiveKit `<LiveKitRoom>` on `/consultation/:sessionId`
-- [ ] Session timer, mute, end call
+- [x] Socket.io client in SocketContext
+- [x] Incoming call listener + navigation
+- [x] LiveKit room on `/consultation?sessionId=...`
+
+### Phase 7 — M6 verification UIs (Sprint 2)
+
+- [ ] `/auth/advisor-apply` — doctor registration (separate from patient `/auth`)
+- [ ] `/partner` — partner doctor dashboard (queue, start interview, pass/fail)
+- [ ] `/verification/:interviewId` — LiveKit verification room (no escrow UI)
+- [ ] `/admin` — register partner doctors, list partners, override verification status
+- [ ] Add `frontend/src/api/verification.service.ts`
 
 ## Dependencies on other modules
 
 | Need | From | Blocked until |
 |------|------|---------------|
-| Auth API | M2 | login works |
-| Wallet API | M3 | balance display |
-| Search API | M4 | semantic discovery |
+| Auth API | M2 | ✅ login works |
+| Wallet API | M3 | ✅ balance works |
+| Search API | M4 | semantic results |
 | Session + Socket + LiveKit | M5 | full call flow |
-
-## Mock mode
-
-Until APIs exist, keep `VITE_USE_MOCKS=true` in `.env` with local mock handlers in `frontend/src/api/mocks/`.
+| Verification APIs | M6 (Role B) | advisor-apply, partner, admin |
+| Verification LiveKit token | M6 (Role C) | verification room |
 
 ## Do not edit
 

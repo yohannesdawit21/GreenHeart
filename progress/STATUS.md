@@ -1,7 +1,7 @@
 # Sprint Status
 
 **Last updated:** 2026-06-06  
-**Sprint 2 assignments:** [agent/modules/SPRINT-2-role-assignments.md](../agent/modules/SPRINT-2-role-assignments.md)
+**Sprint 2 tasks:** [agent/team-roles.md](../agent/team-roles.md) — each role has ✅ done + 📋 next tasks
 
 ## Merged PRs (what's on `main`)
 
@@ -35,9 +35,9 @@
 
 | Role | Start here |
 |------|------------|
-| **A** | [Sprint 2 — Role A tasks](../agent/modules/SPRINT-2-role-assignments.md#role-a--frontend-lead) |
-| **B** | [Sprint 2 — Role B tasks](../agent/modules/SPRINT-2-role-assignments.md#role-b--backend-core-identity--ledger) |
-| **C** | [Sprint 2 — Role C tasks](../agent/modules/SPRINT-2-role-assignments.md#role-c--backend-realtime--intelligence) |
+| **A** | [team-roles.md → Role A](../agent/team-roles.md#role-a--frontend-lead) · [M1 progress](./modules/M1-frontend.md) |
+| **B** | [team-roles.md → Role B](../agent/team-roles.md#role-b--backend-core-identity--ledger) · [M2 progress](./modules/M2-auth-users.md) |
+| **C** | [team-roles.md → Role C](../agent/team-roles.md#role-c--backend-realtime--intelligence) · [M4 progress](./modules/M4-search-vectors.md) |
 
 ## How to claim work
 

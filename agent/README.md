@@ -24,7 +24,7 @@ Living specification for **Project Codex** (GreenHeart). AI agents and human tea
 | M4 | Role C | [search-vectors](./modules/M4-search-vectors.md) | [progress/modules/M4-search-vectors.md](../progress/modules/M4-search-vectors.md) |
 | M5 | Role C | [presence-sessions](./modules/M5-presence-sessions.md) | [progress/modules/M5-presence-sessions.md](../progress/modules/M5-presence-sessions.md) |
 | M6 | B + A + C | [advisor-verification](./modules/M6-advisor-verification.md) | [progress/modules/M6-advisor-verification.md](../progress/modules/M6-advisor-verification.md) |
-| — | **All** | **[Sprint 2 role assignments](./modules/SPRINT-2-role-assignments.md)** | [progress/STATUS.md](../progress/STATUS.md) |
+| — | **All** | **[Team roles & Sprint 2 tasks](./team-roles.md)** | [progress/STATUS.md](../progress/STATUS.md) |
 
 ## Repo layout
 
@@ -49,9 +49,11 @@ GreenHeart/
 
 | Area | Status |
 |------|--------|
-| Frontend UI (Stitch screens) | Scaffolded — static/mock data |
-| Backend API | Scaffold only — modules stubbed |
-| MongoDB / Postgres / Redis | Postgres schema defined; not connected |
-| Socket.io / LiveKit | Not connected |
-| Payment webhook | Not implemented |
-| Semantic search | Not implemented |
+| Frontend UI + API wiring (M1) | **Mostly done** — PR #2 merged |
+| Backend auth/users/wallet (M2/M3) | **Implemented** — smoke tests pass |
+| Advisor verification (M6) | **Spec only** — Sprint 2 priority |
+| Search / presence / sessions (M4/M5) | **Stubs** — Role C, rebase onto main |
+| Socket.io / LiveKit | Frontend wired; backend stubs |
+| End-to-end demo | Blocked on M4 + M5 + M6 |
+
+See **[Sprint 2 assignments](./modules/SPRINT-2-role-assignments.md)** for per-role next tasks.

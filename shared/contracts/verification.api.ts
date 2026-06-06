@@ -1,19 +1,75 @@
 /**
- * Verification API contracts — Owner: Role B (APIs) + Role C (LiveKit tokens)
+ * Verification & RBAC API contracts — Owner: Role B + Role C (LiveKit)
+ * @see agent/api-contracts.md
+ * @see agent/modules/M6-advisor-verification.md
  */
 
 export type VerificationStatus = 'pending_review' | 'verified' | 'rejected' | 'suspended';
 
-export type VerificationInterviewStatus = 'scheduled' | 'in_progress' | 'completed';
-export type VerificationOutcome = 'pass' | 'fail';
+export type InterviewOutcome = 'pass' | 'fail';
 
-export interface VerificationInterviewLiveKitResponse {
-  interviewId: string;
-  roomName: string;
-  url: string;
-  token: string;
+export interface ApplicantDto {
+  id: string;
+  username: string;
+  email: string;
+  bio: string;
+  tags: string[];
+  coinRatePerSession: number;
+  verificationStatus: VerificationStatus;
+  createdAt: string;
 }
 
+export interface ApplicantListResponse {
+  applicants: ApplicantDto[];
+}
+
+export interface RegisterPartnerDoctorRequest {
+  email: string;
+  password: string;
+  username: string;
+}
+
+export interface PartnerDoctorDto {
+  id: string;
+  email: string;
+  username: string;
+  createdAt: string;
+}
+
+export interface PartnerDoctorListResponse {
+  partners: PartnerDoctorDto[];
+}
+
+export interface StartInterviewRequest {
+  applicantId: string;
+}
+
+export interface StartInterviewResponse {
+  interviewId: string;
+  livekitRoom?: string;
+}
+
+export interface CompleteInterviewRequest {
+  outcome: InterviewOutcome;
+}
+
+export interface CompleteInterviewResponse {
+  applicantId: string;
+  verificationStatus: VerificationStatus;
+}
+
+export interface OverrideVerificationStatusRequest {
+  status: VerificationStatus;
+}
+
+/** GET /api/verification/interviews/:id/livekit-token — Role C implements token service */
+export interface VerificationLiveKitTokenResponse {
+  token: string;
+  livekitUrl: string;
+  roomName: string;
+}
+
+/** Role C helper — tokens for partner + applicant when interview starts (Role B calls livekit service) */
 export interface VerificationInterviewTokensForRoleB {
   roomName: string;
   url: string;
