@@ -1,6 +1,6 @@
 import { apiClient } from './client';
-import type { 
-  ApplicantListResponse, 
+import type {
+  ApplicantListResponse,
   PartnerDoctorListResponse,
   RegisterPartnerDoctorRequest,
   StartInterviewRequest,
@@ -8,7 +8,7 @@ import type {
   CompleteInterviewRequest,
   CompleteInterviewResponse,
   OverrideVerificationStatusRequest,
-  VerificationLiveKitTokenResponse
+  VerificationLiveKitTokenResponse,
 } from '@shared/contracts/verification.api';
 
 export const verificationService = {
@@ -17,31 +17,45 @@ export const verificationService = {
     return response.data;
   },
 
+  /** Admin — all advisors with verification status */
+  getAdminAdvisors: async (): Promise<ApplicantListResponse> => {
+    const response = await apiClient.get<ApplicantListResponse>('/admin/advisors');
+    return response.data;
+  },
+
   getPartners: async (): Promise<PartnerDoctorListResponse> => {
-    const response = await apiClient.get<PartnerDoctorListResponse>('/verification/partners');
+    const response = await apiClient.get<PartnerDoctorListResponse>('/admin/partner-doctors');
     return response.data;
   },
 
   registerPartner: async (data: RegisterPartnerDoctorRequest): Promise<void> => {
-    await apiClient.post('/verification/partners', data);
+    await apiClient.post('/admin/partner-doctors', data);
   },
 
   startInterview: async (data: StartInterviewRequest): Promise<StartInterviewResponse> => {
-    const response = await apiClient.post<StartInterviewResponse>('/verification/interview/start', data);
+    const response = await apiClient.post<StartInterviewResponse>('/verification/interviews', data);
     return response.data;
   },
 
   getInterviewToken: async (interviewId: string): Promise<VerificationLiveKitTokenResponse> => {
-    const response = await apiClient.get<VerificationLiveKitTokenResponse>(`/verification/interview/${interviewId}/token`);
+    const response = await apiClient.get<VerificationLiveKitTokenResponse>(
+      `/verification/interviews/${interviewId}/livekit-token`,
+    );
     return response.data;
   },
 
-  completeInterview: async (interviewId: string, data: CompleteInterviewRequest): Promise<CompleteInterviewResponse> => {
-    const response = await apiClient.post<CompleteInterviewResponse>(`/verification/interview/${interviewId}/complete`, data);
+  completeInterview: async (
+    interviewId: string,
+    data: CompleteInterviewRequest,
+  ): Promise<CompleteInterviewResponse> => {
+    const response = await apiClient.patch<CompleteInterviewResponse>(
+      `/verification/interviews/${interviewId}/complete`,
+      data,
+    );
     return response.data;
   },
 
-  overrideStatus: async (applicantId: string, data: OverrideVerificationStatusRequest): Promise<void> => {
-    await apiClient.post(`/verification/applicants/${applicantId}/override`, data);
+  overrideStatus: async (advisorId: string, data: OverrideVerificationStatusRequest): Promise<void> => {
+    await apiClient.patch(`/admin/advisors/${advisorId}/verification-status`, data);
   },
 };

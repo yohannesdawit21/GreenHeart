@@ -13,6 +13,7 @@ export function AdvisorControlPage() {
   const [balance, setBalance] = useState<WalletBalance | null>(null)
   const [transactions, setTransactions] = useState<TransactionDto[]>([])
   const [loading, setLoading] = useState(true)
+  const [presenceError, setPresenceError] = useState('')
 
   useEffect(() => {
     const fetchData = async () => {
@@ -34,12 +35,21 @@ export function AdvisorControlPage() {
 
   const handlePresenceToggle = async () => {
     if (user?.profile?.verificationStatus !== 'verified') return
+    setPresenceError('')
     const newStatus = !online
     try {
       await sessionService.updatePresence({ online: newStatus })
       setOnline(newStatus)
-    } catch (err) {
-      console.error('Failed to update presence', err)
+    } catch (err: any) {
+      const code = err.response?.data?.error?.code as string | undefined
+      const message = err.response?.data?.error?.message as string | undefined
+      if (code === 'ADVISOR_NOT_VERIFIED') {
+        setPresenceError('You must be verified before going online.')
+      } else if (code === 'SOCKET_NOT_CONNECTED') {
+        setPresenceError('Realtime connection required — refresh the page and try again.')
+      } else {
+        setPresenceError(message || 'Could not update online status.')
+      }
     }
   }
 
@@ -115,6 +125,13 @@ export function AdvisorControlPage() {
           <div className="bg-secondary/10 border border-secondary text-secondary-container p-stack-sm rounded-lg mb-stack-lg flex items-center justify-center gap-stack-sm text-xs font-label-md uppercase tracking-[0.2em]">
             <MaterialIcon name="verified" filled className="text-[16px]" />
             Verified Medical Advisor
+          </div>
+        )}
+
+        {presenceError && (
+          <div className="bg-error-container/20 border border-error text-on-error-container p-stack-sm rounded-lg mb-stack-lg flex items-center gap-stack-sm">
+            <MaterialIcon name="error" filled className="text-error shrink-0" />
+            <p className="font-body-md text-body-md">{presenceError}</p>
           </div>
         )}
 

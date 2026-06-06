@@ -140,6 +140,11 @@ export async function listPartnerDoctors() {
   return rows.map(toPartnerDoctorDto);
 }
 
+export async function listAllAdvisorsForAdmin() {
+  const rows = await usersRepo.listAllAdvisors();
+  return rows.map(toApplicantDto);
+}
+
 export async function overrideAdvisorVerificationStatus(advisorId: string, status: VerificationStatus) {
   const advisor = await usersRepo.findUserById(advisorId);
   if (!advisor || advisor.role !== 'advisor') {

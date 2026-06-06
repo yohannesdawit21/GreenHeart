@@ -20,7 +20,7 @@ export function AdminDashboardPage() {
       try {
         const [pData, aData] = await Promise.all([
           verificationService.getPartners(),
-          verificationService.getApplicants()
+          verificationService.getAdminAdvisors(),
         ])
         setPartners(pData.partners)
         setApplicants(aData.applicants)
@@ -55,7 +55,7 @@ export function AdminDashboardPage() {
   const handleOverride = async (applicantId: string, status: any) => {
     try {
       await verificationService.overrideStatus(applicantId, { status })
-      const aData = await verificationService.getApplicants()
+      const aData = await verificationService.getAdminAdvisors()
       setApplicants(aData.applicants)
     } catch (err) {
       console.error('Failed to override status', err)

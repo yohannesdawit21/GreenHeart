@@ -20,6 +20,7 @@ router.use(requireAuth, requireRole('admin'));
 
 router.post('/partner-doctors', validateBody(partnerDoctorSchema), adminController.registerPartnerDoctor);
 router.get('/partner-doctors', adminController.listPartnerDoctors);
+router.get('/advisors', adminController.listAdvisors);
 router.patch(
   '/advisors/:id/verification-status',
   validateBody(overrideStatusSchema),

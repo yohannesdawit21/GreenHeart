@@ -19,6 +19,7 @@ export interface ApplicantDto {
   createdAt: string;
 }
 
+/** GET /api/admin/advisors — admin list of all advisors + verification status */
 export interface ApplicantListResponse {
   applicants: ApplicantDto[];
 }

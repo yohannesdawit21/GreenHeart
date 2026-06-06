@@ -89,12 +89,14 @@ async function main() {
   if (me.status === 200) ok('GET /api/auth/me');
   else fail('GET /api/auth/me', JSON.stringify(me.body));
 
+  const advisorUsername = `DrSmoke_${ts}`;
+
   // Register advisor applicant (pending_review — not in public list)
   const advReg = await req('POST', '/api/auth/register/advisor', {
     body: {
       email: advisorEmail,
       password: 'password123',
-      profile: { username: 'DrSmoke', bio: 'Test advisor', tags: ['stress'], coinRatePerSession: 10 },
+      profile: { username: advisorUsername, bio: 'Test advisor', tags: ['stress'], coinRatePerSession: 10 },
     },
   });
   const advisorId = (advReg.body as { user?: { id?: string } }).user?.id ?? '';
@@ -108,8 +110,8 @@ async function main() {
 
   // List advisors — pending applicant must NOT appear
   const advisors = await req('GET', '/api/users/advisors');
-  const list = (advisors.body as { advisors?: { username?: string }[] }).advisors ?? [];
-  if (advisors.status === 200 && !list.some((a) => a.username === 'DrSmoke')) {
+  const list = (advisors.body as { advisors?: { id?: string }[] }).advisors ?? [];
+  if (advisors.status === 200 && !list.some((a) => a.id === advisorId)) {
     ok('GET /api/users/advisors (excludes pending)');
   } else fail('GET /api/users/advisors', JSON.stringify(advisors.body));
 

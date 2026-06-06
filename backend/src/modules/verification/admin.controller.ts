@@ -11,6 +11,11 @@ export async function listPartnerDoctors(_req: Request, res: Response) {
   res.json({ partners });
 }
 
+export async function listAdvisors(_req: Request, res: Response) {
+  const applicants = await verificationService.listAllAdvisorsForAdmin();
+  res.json({ applicants });
+}
+
 export async function overrideVerificationStatus(req: Request, res: Response) {
   const result = await verificationService.overrideAdvisorVerificationStatus(
     req.params.id as string,

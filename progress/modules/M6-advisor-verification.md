@@ -10,19 +10,20 @@
 - [x] Seed script `backend/scripts/seed-admin.ts` (`npm run db:seed`)
 - [x] Split register: client vs advisor-apply paths
 - [x] Admin: register/list partner doctors + status override APIs
+- [x] Admin: GET `/api/admin/advisors` — list all advisors for override UI
 - [x] Partner: list pending applicants, start/complete interview APIs
 - [x] Create `shared/contracts/verification.api.ts`
 - [x] Update `auth.api.ts` + `models.user.ts`
 
 ## Tasks — Role A
 
-- [ ] `/auth/advisor-apply` — doctor registration (distinct from patient)
-- [ ] Role-based redirect after login
-- [ ] Advisor dashboard — verification status banner
-- [ ] `/partner` — queue, start interview, pass/fail UI
-- [ ] `/verification/:interviewId` — LiveKit verification room
-- [ ] `/admin` — partner doctor registration + status override
-- [ ] `frontend/src/api/verification.service.ts`
+- [x] `/auth/advisor-apply` — doctor registration (distinct from patient)
+- [x] Role-based redirect after login
+- [x] Advisor dashboard — verification status banner
+- [x] `/partner` — queue, start interview, pass/fail UI
+- [x] `/verification/:interviewId` — LiveKit verification room
+- [x] `/admin` — partner doctor registration + status override
+- [x] `frontend/src/api/verification.service.ts`
 
 ## Tasks — Role C
 
@@ -33,4 +34,4 @@
 
 ## Blocked by
 
-None — Role B verification module merged with Role C LiveKit tokens on `main`.
+None — all roles merged on `main`.

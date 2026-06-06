@@ -19,6 +19,7 @@ export function DiscoveryPage({ aiPulse = false }: DiscoveryPageProps) {
   const [advisors, setAdvisors] = useState<Advisor[]>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
+  const [connectError, setConnectError] = useState('')
   const navigate = useNavigate()
 
   const fetchAdvisors = useCallback(async (query?: string) => {
@@ -48,12 +49,22 @@ export function DiscoveryPage({ aiPulse = false }: DiscoveryPageProps) {
   }
 
   const handleConnect = async (advisorId: string) => {
+    setConnectError('')
     try {
       const data = await sessionService.initiateSession({ advisorId })
       navigate(`/consultation?sessionId=${data.sessionId}`)
-    } catch (err) {
-      console.error('Failed to initiate session', err)
-      // Optionally show a toast or redirect to wallet if insufficient funds
+    } catch (err: any) {
+      const code = err.response?.data?.error?.code as string | undefined
+      const message = err.response?.data?.error?.message as string | undefined
+      if (code === 'INSUFFICIENT_FUNDS') {
+        setConnectError('Insufficient coins — add funds in your wallet first.')
+      } else if (code === 'ADVISOR_OFFLINE') {
+        setConnectError('This advisor is offline. Try another advisor or check back later.')
+      } else if (code === 'ADVISOR_NOT_VERIFIED') {
+        setConnectError('This advisor is not verified yet.')
+      } else {
+        setConnectError(message || 'Could not start session. Please try again.')
+      }
     }
   }
 
@@ -110,6 +121,13 @@ export function DiscoveryPage({ aiPulse = false }: DiscoveryPageProps) {
             }
           </p>
         </section>
+
+        {connectError && (
+          <div className="bg-error-container/20 border border-error text-on-error-container p-stack-md rounded-lg flex items-center gap-stack-sm">
+            <MaterialIcon name="error" filled className="text-error shrink-0" />
+            <p className="font-body-md text-body-md">{connectError}</p>
+          </div>
+        )}
 
         <section className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide -mx-margin-mobile px-margin-mobile md:mx-0 md:px-0">
           {filters.map((filter) => (

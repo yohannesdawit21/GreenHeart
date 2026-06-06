@@ -12,7 +12,7 @@
 - [x] POST `/api/auth/register` (clients only)
 - [x] POST `/api/auth/register/advisor` (pending_review flow — M6)
 - [x] Extend roles: admin, partner_doctor, advisor, client
-- [x] Run seed `backend/sql/seed/001_admin.sql` (`npm run db:seed`)
+- [x] Run seed `backend/scripts/seed-admin.ts` (`npm run db:seed`)
 - [x] POST `/api/auth/login` + JWT cookie
 - [x] GET `/api/auth/me` + auth middleware (+ verificationStatus for advisors)
 - [x] PATCH `/api/users/me/profile`

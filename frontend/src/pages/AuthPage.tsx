@@ -29,15 +29,14 @@ export function AuthPage() {
         const response = await login(email, password)
         user = response
       } else {
-        const response = await register({ 
-          email, 
-          password, 
-          role: 'client', // Registration form is for clients
+        const response = await register({
+          email,
+          password,
           profile: {
             username: email.split('@')[0],
             tags: [],
-            coinRatePerSession: 0
-          }
+            coinRatePerSession: 0,
+          },
         })
         user = response
       }
@@ -53,7 +52,8 @@ export function AuthPage() {
         navigate('/discover')
       }
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Authentication failed')
+      const apiError = err.response?.data?.error
+      setError(apiError?.message || err.response?.data?.message || 'Authentication failed')
     } finally {
       setIsSubmitting(false)
     }

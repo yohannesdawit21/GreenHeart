@@ -38,11 +38,11 @@ Full spec: [modules/M6-advisor-verification.md](./modules/M6-advisor-verificatio
 | ID | Name | Owner | Spec | Progress board | Status on `main` |
 |----|------|-------|------|----------------|------------------|
 | **M1** | Frontend | Role A | [M1-frontend.md](./modules/M1-frontend.md) | [progress](../progress/modules/M1-frontend.md) | Phase 1–6 **done** (PR #2) |
-| **M2** | Auth & Users | Role B | [M2-auth-users.md](./modules/M2-auth-users.md) | [progress](../progress/modules/M2-auth-users.md) | Core **done** — M6 extensions pending |
+| **M2** | Auth & Users | Role B | [M2-auth-users.md](./modules/M2-auth-users.md) | [progress](../progress/modules/M2-auth-users.md) | **Done** |
 | **M3** | Wallet & Ledger | Role B | [M3-wallet-ledger.md](./modules/M3-wallet-ledger.md) | [progress](../progress/modules/M3-wallet-ledger.md) | **Done** |
-| **M4** | Search & Vectors | Role C | [M4-search-vectors.md](./modules/M4-search-vectors.md) | [progress](../progress/modules/M4-search-vectors.md) | **Done** — PR `feat/m5-presence-sessions` (awaiting merge) |
-| **M5** | Presence & Sessions | Role C | [M5-presence-sessions.md](./modules/M5-presence-sessions.md) | [progress](../progress/modules/M5-presence-sessions.md) | **Done** — PR `feat/m5-presence-sessions` (awaiting merge) |
-| **M6** | Advisor Verification | B + A + C | [M6-advisor-verification.md](./modules/M6-advisor-verification.md) | [progress](../progress/modules/M6-advisor-verification.md) | Role C LiveKit **done** — PR `feat/m6-verification-livekit`; Role B/A pending |
+| **M4** | Search & Vectors | Role C | [M4-search-vectors.md](./modules/M4-search-vectors.md) | [progress](../progress/modules/M4-search-vectors.md) | **Done** |
+| **M5** | Presence & Sessions | Role C | [M5-presence-sessions.md](./modules/M5-presence-sessions.md) | [progress](../progress/modules/M5-presence-sessions.md) | **Done** |
+| **M6** | Advisor Verification | B + A + C | [M6-advisor-verification.md](./modules/M6-advisor-verification.md) | [progress](../progress/modules/M6-advisor-verification.md) | **Done** |
 
 ---
 

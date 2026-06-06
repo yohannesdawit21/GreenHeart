@@ -1,6 +1,6 @@
 /**
  * M5 smoke test — run: npm run test:smoke:m5
- * Requires .env with DATABASE_URL, REDIS_URL, JWT_SECRET, LiveKit keys optional for token step
+ * Requires .env with DATABASE_URL, REDIS_URL, JWT_SECRET
  */
 import dotenv from 'dotenv';
 dotenv.config();
@@ -73,7 +73,6 @@ async function main() {
     body: JSON.stringify({
       email: `m5-client-${ts}@test.com`,
       password: 'password123',
-      role: 'client',
     }),
   });
   const clientBody = (await clientReg.json()) as { user?: { id?: string } };
@@ -81,13 +80,12 @@ async function main() {
   if (clientReg.status === 201) ok('Register client');
   else fail('Register client', JSON.stringify(clientBody));
 
-  const advisorReg = await fetch(`${BASE}/api/auth/register`, {
+  const advisorReg = await fetch(`${BASE}/api/auth/register/advisor`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       email: `m5-advisor-${ts}@test.com`,
       password: 'password123',
-      role: 'advisor',
       profile: {
         username: `DrM5_${ts}`,
         bio: 'Stress and sleep coaching',
@@ -99,29 +97,33 @@ async function main() {
   const advisorBody = (await advisorReg.json()) as { user?: { id?: string } };
   advisorCookie = extractCookie(advisorReg.headers.get('set-cookie') ?? undefined);
   advisorId = advisorBody.user?.id ?? '';
-  if (advisorReg.status === 201 && advisorId) ok('Register advisor');
-  else fail('Register advisor', JSON.stringify(advisorBody));
+  if (advisorReg.status === 201 && advisorId) ok('Register advisor applicant');
+  else fail('Register advisor applicant', JSON.stringify(advisorBody));
 
   const offlineInit = await req('POST', '/api/session/initiate', {
     cookie: clientCookie,
     body: { advisorId },
   });
-  if (offlineInit.status === 409) ok('Initiate while advisor offline → ADVISOR_OFFLINE');
-  else fail('Initiate while offline', JSON.stringify(offlineInit.body));
+  const initCode = (offlineInit.body as { error?: { code?: string } }).error?.code;
+  if (offlineInit.status === 403 && initCode === 'ADVISOR_NOT_VERIFIED') {
+    ok('Initiate blocked for unverified advisor → ADVISOR_NOT_VERIFIED');
+  } else fail('Initiate while unverified', JSON.stringify(offlineInit.body));
 
   const onlineTry = await req('PATCH', '/api/presence/status', {
     cookie: advisorCookie,
     body: { online: true },
   });
-  if (onlineTry.status === 409) ok('Go online requires socket connection');
-  else fail('Go online without socket', JSON.stringify(onlineTry.body));
+  const onlineCode = (onlineTry.body as { error?: { code?: string } }).error?.code;
+  if (onlineTry.status === 403 && onlineCode === 'ADVISOR_NOT_VERIFIED') {
+    ok('Go online blocked until verified → ADVISOR_NOT_VERIFIED');
+  } else fail('Go online while unverified', JSON.stringify(onlineTry.body));
 
   const onlineList = await req('GET', '/api/presence/advisors');
   if (onlineList.status === 200) ok('GET /api/presence/advisors');
   else fail('GET /api/presence/advisors', JSON.stringify(onlineList.body));
 
   console.log(`\nResults: ${passed} passed, ${failed} failed`);
-  console.log('Note: full call flow requires Socket.io client + funded client wallet (see test:smoke for M2/M3).');
+  console.log('Note: full call flow requires verified advisor — see npm run test:functional.');
   process.exit(failed > 0 ? 1 : 0);
 }
 

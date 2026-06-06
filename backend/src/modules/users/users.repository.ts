@@ -191,6 +191,18 @@ export async function findAdvisorById(advisorId: string): Promise<AdvisorRow | n
   return rows[0] ?? null;
 }
 
+export async function listAllAdvisors(): Promise<ApplicantRow[]> {
+  const { rows } = await getPool().query<ApplicantRow>(
+    `SELECT u.id, u.email, p.username, p.bio, p.tags, p.coin_rate_per_session,
+            p.verification_status, u.created_at
+     FROM users u
+     JOIN profiles p ON p.user_id = u.id
+     WHERE u.role = 'advisor'
+     ORDER BY u.created_at DESC`,
+  );
+  return rows;
+}
+
 export async function listPendingApplicants(): Promise<ApplicantRow[]> {
   const { rows } = await getPool().query<ApplicantRow>(
     `SELECT u.id, u.email, p.username, p.bio, p.tags, p.coin_rate_per_session,

@@ -107,18 +107,17 @@ async function main() {
   }
 
   const clientReg = await req('POST', '/api/auth/register', {
-    body: { email: `fn-client-${ts}@test.com`, password: 'password123', role: 'client' },
+    body: { email: `fn-client-${ts}@test.com`, password: 'password123' },
   });
   clientCookie = extractCookie(clientReg.setCookie);
   const clientId = (clientReg.body as { user?: { id?: string } }).user?.id ?? '';
   if (clientReg.status === 201 && clientId) ok('Register client');
   else fail('Register client', JSON.stringify(clientReg.body));
 
-  const advisorReg = await req('POST', '/api/auth/register', {
+  const advisorReg = await req('POST', '/api/auth/register/advisor', {
     body: {
       email: `fn-advisor-${ts}@test.com`,
       password: 'password123',
-      role: 'advisor',
       profile: {
         username: `DrFn_${ts}`,
         bio: 'Anxiety and mindfulness coaching for sleep and stress relief',
@@ -129,8 +128,28 @@ async function main() {
   });
   advisorCookie = extractCookie(advisorReg.setCookie);
   advisorId = (advisorReg.body as { user?: { id?: string } }).user?.id ?? '';
-  if (advisorReg.status === 201 && advisorId) ok('Register advisor');
-  else fail('Register advisor', JSON.stringify(advisorReg.body));
+  if (advisorReg.status === 201 && advisorId) ok('Register advisor applicant');
+  else fail('Register advisor applicant', JSON.stringify(advisorReg.body));
+
+  const adminEmail = process.env.ADMIN_SEED_EMAIL ?? 'admin@greenheart.dev';
+  const adminPass = process.env.ADMIN_SEED_PASSWORD ?? 'AdminChangeMe123!';
+  const adminLogin = await req('POST', '/api/auth/login', {
+    body: { email: adminEmail, password: adminPass },
+  });
+  const adminCookie = extractCookie(adminLogin.setCookie);
+  if (adminLogin.status !== 200) {
+    fail('Admin login (run npm run db:seed)', JSON.stringify(adminLogin.body));
+    console.log('\nResults: aborted — seed admin with npm run db:seed');
+    process.exit(1);
+  }
+  ok('Admin login');
+
+  const verifyAdvisor = await req('PATCH', `/api/admin/advisors/${advisorId}/verification-status`, {
+    cookie: adminCookie,
+    body: { status: 'verified' },
+  });
+  if (verifyAdvisor.status === 200) ok('Admin verifies advisor');
+  else fail('Admin verifies advisor', JSON.stringify(verifyAdvisor.body));
 
   const purchase = await req('POST', '/api/wallet/purchase/initiate', {
     cookie: clientCookie,

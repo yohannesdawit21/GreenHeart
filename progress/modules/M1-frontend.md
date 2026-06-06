@@ -2,8 +2,7 @@
 
 **Owner:** Role A  
 **Agent:** Gemini CLI  
-**Spec:** [agent/modules/M1-frontend.md](../../agent/modules/M1-frontend.md)  
-**Sprint 2:** [SPRINT-2-role-assignments.md](../../agent/modules/SPRINT-2-role-assignments.md#role-a--frontend-lead)
+**Spec:** [agent/modules/M1-frontend.md](../../agent/modules/M1-frontend.md)
 
 ## Phase 1 — Done (PR #2)
 
@@ -18,18 +17,18 @@
 - [x] Add LiveKit room on `/consultation?sessionId=...`
 - [x] Remove hardcoded mock advisors when API ready
 
-## Phase 2 — Sprint 2 (M6 + polish)
+## Phase 2 — M6 + polish (Done)
 
-- [ ] Role-based redirect after login (client / advisor / partner_doctor / admin)
-- [ ] `/auth/advisor-apply` — doctor registration (separate from patient)
-- [ ] Advisor dashboard: show `verification_status` (pending / verified / rejected)
-- [ ] `/partner` — partner doctor queue + start interview + pass/fail
-- [ ] `/verification/:interviewId` — LiveKit verification room
-- [ ] `/admin` — register partner doctors + verification override
-- [ ] Disable online toggle when advisor not verified
-- [ ] Handle API errors: `ADVISOR_NOT_VERIFIED`, `FORBIDDEN`
+- [x] Role-based redirect after login (client / advisor / partner_doctor / admin)
+- [x] `/auth/advisor-apply` — doctor registration (separate from patient)
+- [x] Advisor dashboard: show `verification_status` (pending / verified / rejected)
+- [x] `/partner` — partner doctor queue + start interview + pass/fail
+- [x] `/verification/:interviewId` — LiveKit verification room
+- [x] `/admin` — register partner doctors + verification override
+- [x] Disable online toggle when advisor not verified
+- [x] Handle API errors: `ADVISOR_NOT_VERIFIED`, `ADVISOR_OFFLINE`, `INSUFFICIENT_FUNDS`
+- [x] `frontend/src/api/verification.service.ts` aligned with backend routes
 
 ## Notes
 
-Stitch UI already implemented. Phase 1 build verified with `npm run build`.  
-Phase 2 depends on Role B (M6 APIs) and Role C (M4/M5/LiveKit verification tokens).
+Stitch UI implemented. Build verified with `npm run build`.
