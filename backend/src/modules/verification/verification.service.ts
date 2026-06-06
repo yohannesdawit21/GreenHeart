@@ -213,6 +213,15 @@ export async function completeInterview(
     await triggerReindex(completed.applicant_id);
   }
 
+  const io = getIO();
+  const completedPayload = {
+    interviewId,
+    outcome,
+    verificationStatus: newStatus,
+  };
+  io?.to(`user:${completed.applicant_id}`).emit('verification_interview_completed', completedPayload);
+  io?.to(`user:${partnerDoctorId}`).emit('verification_interview_completed', completedPayload);
+
   return {
     applicantId: completed.applicant_id,
     verificationStatus: newStatus,

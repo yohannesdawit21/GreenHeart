@@ -47,6 +47,12 @@ export interface VerificationInterviewDeclinedPayload {
   applicantName: string;
 }
 
+export interface VerificationInterviewCompletedPayload {
+  interviewId: string;
+  outcome: 'pass' | 'fail';
+  verificationStatus: 'verified' | 'rejected';
+}
+
 /** Server → Client/Advisor */
 export interface ServerToClientEvents {
   incoming_call_dispatch: (payload: IncomingCallDispatchPayload) => void;
@@ -55,6 +61,7 @@ export interface ServerToClientEvents {
   verification_interview_started: (payload: VerificationInterviewStartedPayload) => void;
   verification_interview_accepted: (payload: VerificationInterviewAcceptedPayload) => void;
   verification_interview_declined: (payload: VerificationInterviewDeclinedPayload) => void;
+  verification_interview_completed: (payload: VerificationInterviewCompletedPayload) => void;
 }
 
 /** Client/Advisor → Server */
