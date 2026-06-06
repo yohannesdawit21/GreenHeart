@@ -9,10 +9,10 @@ import { useSocket } from '../../context/SocketContext'
 import { getNavLinksForRole, getRoleHome, type NavItem } from '../../utils/roleAccess'
 
 const SIDEBAR_STORAGE_KEY = 'greenheart-sidebar-collapsed'
-const SIDEBAR_TOGGLE_OFFSET = '0.875rem'
-const SIDEBAR_TOGGLE_TOP = 'calc(var(--app-header-h) + 2rem)'
 const SIDEBAR_EXPANDED = '16rem'
 const SIDEBAR_COLLAPSED = '4.5rem'
+
+const sidebarToggleClass = `${btnIcon} h-8 w-8 items-center justify-center rounded-full border border-outline-variant bg-surface-container-lowest shadow-[0_2px_10px_rgba(13,92,96,0.14)] hover:border-primary/40 hover:text-primary hover:shadow-[0_4px_14px_rgba(13,92,96,0.2)] transition-[box-shadow,border-color,color,transform] duration-200 ease-in-out`
 
 interface AppShellProps {
   children: React.ReactNode
@@ -159,58 +159,59 @@ export function AppShell({
         </div>
       </header>
 
-      <nav
-        aria-label="Sidebar"
-        aria-expanded={!sidebarCollapsed}
-        className={`bg-surface border-r border-outline-variant fixed left-0 top-0 h-full hidden md:flex flex-col py-stack-lg z-40 transition-[width] duration-300 ease-in-out overflow-hidden ${
-          sidebarCollapsed ? 'w-[4.5rem] px-2' : 'w-64 px-stack-md'
-        }`}
+      <div
+        className="hidden md:block fixed left-0 top-0 h-full z-40 transition-[width] duration-300 ease-in-out pointer-events-none"
+        style={{ width: 'var(--app-sidebar-w)' }}
       >
-        <div className={`shrink-0 mb-4 ${sidebarCollapsed ? 'px-1' : 'px-2'}`}>
-          <Link to={getRoleHome(role)} title="Green Heart home">
-            <BrandLockup collapsed={sidebarCollapsed} />
-          </Link>
-        </div>
+        <nav
+          aria-label="Sidebar"
+          aria-expanded={!sidebarCollapsed}
+          className={`bg-surface border-r border-outline-variant h-full flex flex-col py-stack-lg pointer-events-auto overflow-hidden ${
+            sidebarCollapsed ? 'w-[4.5rem] px-2' : 'w-64 px-stack-md'
+          }`}
+        >
+          <div className={`shrink-0 mb-5 ${sidebarCollapsed ? 'px-1' : 'px-2'}`}>
+            <Link to={getRoleHome(role)} title="Green Heart home" className="block max-w-full">
+              <BrandLockup collapsed={sidebarCollapsed} />
+            </Link>
+          </div>
 
-        <div className="flex flex-col gap-2 flex-1 overflow-y-auto overflow-x-hidden scrollbar-hide mt-2">
-          {navLinks.map((item) => renderNavLink(item, false, sidebarCollapsed))}
-        </div>
+          <div className="flex flex-col gap-2 flex-1 overflow-y-auto overflow-x-hidden scrollbar-hide min-h-0">
+            {navLinks.map((item) => renderNavLink(item, false, sidebarCollapsed))}
+          </div>
 
-        <div className={`shrink-0 pt-4 border-t border-outline-variant ${sidebarCollapsed ? 'px-1' : 'px-2'}`}>
-          {user && (
-            <div
-              className={`text-sm text-on-surface-variant ${sidebarCollapsed ? 'flex justify-center py-1' : 'px-2 pb-1'}`}
-              title={sidebarCollapsed ? user.email : undefined}
-            >
-              {sidebarCollapsed ? (
-                <span className="w-9 h-9 rounded-full bg-primary-container text-on-primary-container font-label-md flex items-center justify-center text-sm">
-                  {user.profile?.username?.[0]?.toUpperCase() ?? '?'}
-                </span>
-              ) : (
-                <>
-                  <p className="font-label-md truncate">{user.email}</p>
-                  <p className="text-xs capitalize opacity-70">{user.role.replace('_', ' ')}</p>
-                </>
-              )}
-            </div>
-          )}
-        </div>
-      </nav>
+          <div className={`shrink-0 pt-4 border-t border-outline-variant ${sidebarCollapsed ? 'px-1' : 'px-2'}`}>
+            {user && (
+              <div
+                className={`text-sm text-on-surface-variant ${sidebarCollapsed ? 'flex justify-center py-1' : 'px-2 pb-1'}`}
+                title={sidebarCollapsed ? user.email : undefined}
+              >
+                {sidebarCollapsed ? (
+                  <span className="w-9 h-9 rounded-full bg-primary-container text-on-primary-container font-label-md flex items-center justify-center text-sm">
+                    {user.profile?.username?.[0]?.toUpperCase() ?? '?'}
+                  </span>
+                ) : (
+                  <>
+                    <p className="font-label-md truncate">{user.email}</p>
+                    <p className="text-xs capitalize opacity-70">{user.role.replace('_', ' ')}</p>
+                  </>
+                )}
+              </div>
+            )}
+          </div>
+        </nav>
 
-      <button
-        type="button"
-        onClick={() => setSidebarCollapsed((v) => !v)}
-        style={{
-          top: SIDEBAR_TOGGLE_TOP,
-          left: `calc(var(--app-sidebar-w) + ${SIDEBAR_TOGGLE_OFFSET})`,
-        }}
-        className={`${btnIcon} hidden md:flex fixed z-[45] h-9 w-9 items-center justify-center rounded-full border border-outline-variant bg-surface-container-lowest shadow-[0_2px_10px_rgba(13,92,96,0.12)] hover:border-primary/40 hover:text-primary hover:shadow-[0_4px_14px_rgba(13,92,96,0.18)] transition-[left,box-shadow,border-color,color,transform] duration-300 ease-in-out mb-6`}
-        aria-label={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-        aria-expanded={!sidebarCollapsed}
-        title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-      >
-        <MaterialIcon name={sidebarCollapsed ? 'chevron_right' : 'chevron_left'} className="text-[18px]" />
-      </button>
+        <button
+          type="button"
+          onClick={() => setSidebarCollapsed((v) => !v)}
+          className={`${sidebarToggleClass} pointer-events-auto absolute top-[1.75rem] right-0 translate-x-1/2 flex z-50`}
+          aria-label={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          aria-expanded={!sidebarCollapsed}
+          title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+        >
+          <MaterialIcon name={sidebarCollapsed ? 'chevron_right' : 'chevron_left'} className="text-[16px]" />
+        </button>
+      </div>
 
       <nav
         aria-label="Primary"
