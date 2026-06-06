@@ -1,10 +1,16 @@
+import { useEffect, useState, type CSSProperties } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { Logo } from '../Logo'
 import { UserMenu } from '../UserMenu'
 import { MaterialIcon } from '../MaterialIcon'
+import { btnIcon } from './buttonStyles'
 import { useAuth } from '../../context/AuthContext'
 import { useSocket } from '../../context/SocketContext'
 import { getNavLinksForRole, getRoleHome, type NavItem } from '../../utils/roleAccess'
+
+const SIDEBAR_STORAGE_KEY = 'greenheart-sidebar-collapsed'
+const SIDEBAR_EXPANDED = '16rem'
+const SIDEBAR_COLLAPSED = '4.5rem'
 
 interface AppShellProps {
   children: React.ReactNode
@@ -26,6 +32,14 @@ export function AppShell({
   const location = useLocation()
   const { user } = useAuth()
   const { connected } = useSocket()
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
+    if (typeof window === 'undefined') return false
+    return window.localStorage.getItem(SIDEBAR_STORAGE_KEY) === 'true'
+  })
+
+  useEffect(() => {
+    window.localStorage.setItem(SIDEBAR_STORAGE_KEY, String(sidebarCollapsed))
+  }, [sidebarCollapsed])
 
   const role = user?.role
   const isClient = role === 'client'
@@ -33,10 +47,23 @@ export function AppShell({
   const showLiveIndicator = role === 'advisor' || role === 'partner_doctor'
   const showSearchBar = showSearch && (isClient || !user)
 
-  const navLinkClass = (active: boolean, mobile = false) => {
+  const shellStyle = {
+    '--app-header-h': '4rem',
+    '--app-bottom-nav-h': '4.75rem',
+    '--app-sidebar-w': sidebarCollapsed ? SIDEBAR_COLLAPSED : SIDEBAR_EXPANDED,
+  } as CSSProperties
+
+  const navLinkClass = (active: boolean, mobile = false, collapsed = false) => {
     if (mobile) {
       return `flex flex-col items-center justify-center rounded-xl px-3 py-2 min-w-[4.25rem] shrink-0 transition-transform ${
         active ? 'bg-primary-container text-on-primary-container scale-95 shadow-sm' : 'text-on-surface-variant hover:bg-surface-container-low hover:text-primary'
+      }`
+    }
+    if (collapsed) {
+      return `flex items-center justify-center rounded-lg p-3 font-label-md text-label-md transition-colors ${
+        active
+          ? 'bg-secondary-container text-on-secondary-container hover:shadow-sm'
+          : 'text-on-surface-variant hover:bg-surface-container-high hover:text-primary'
       }`
     }
     return `flex items-center gap-stack-sm rounded-lg px-4 py-3 font-label-md text-label-md transition-colors ${
@@ -46,16 +73,22 @@ export function AppShell({
     }`
   }
 
-  const renderNavLink = (item: (typeof navLinks)[0], mobile = false) => {
+  const renderNavLink = (item: (typeof navLinks)[0], mobile = false, collapsed = false) => {
     const active = activeNav === item.id || location.pathname === item.to
     const mobileLabel = item.label.includes(' ') ? item.label.split(' ')[0] : item.label
     return (
-      <Link key={item.id} to={item.to} className={navLinkClass(active, mobile)}>
+      <Link
+        key={item.id}
+        to={item.to}
+        title={collapsed && !mobile ? item.label : undefined}
+        aria-label={collapsed && !mobile ? item.label : undefined}
+        className={navLinkClass(active, mobile, collapsed)}
+      >
         <MaterialIcon name={item.icon} className={active ? 'filled' : ''} />
         {mobile ? (
           <span className="font-label-md text-[10px] mt-1 leading-tight max-w-[4rem] truncate">{mobileLabel}</span>
         ) : (
-          item.label
+          !collapsed && <span className="truncate">{item.label}</span>
         )}
       </Link>
     )
@@ -63,15 +96,10 @@ export function AppShell({
 
   return (
     <div
-      className="text-on-background font-body-md antialiased min-h-screen bg-background md:pl-64 overflow-x-hidden"
-      style={
-        {
-          '--app-header-h': '4rem',
-          '--app-bottom-nav-h': '4.75rem',
-        } as React.CSSProperties
-      }
+      className="text-on-background font-body-md antialiased min-h-screen bg-background overflow-x-hidden transition-[padding] duration-300 ease-in-out md:pl-[var(--app-sidebar-w)]"
+      style={shellStyle}
     >
-      <header className="bg-surface-container-lowest border-b border-outline-variant fixed top-0 left-0 right-0 z-50 flex justify-between items-center px-4 md:px-margin-desktop h-16 md:left-64 md:w-[calc(100%-16rem)]">
+      <header className="bg-surface-container-lowest border-b border-outline-variant fixed top-0 left-0 right-0 z-50 flex justify-between items-center px-4 md:px-margin-desktop h-16 md:left-[var(--app-sidebar-w)] md:w-[calc(100%-var(--app-sidebar-w))] transition-[left,width] duration-300 ease-in-out">
         <div className="flex items-center gap-3 w-full max-w-2xl mx-auto md:mx-0 min-w-0">
           <Link
             to={getRoleHome(role)}
@@ -130,26 +158,68 @@ export function AppShell({
         </div>
       </header>
 
-      <nav className="bg-surface border-r border-outline-variant fixed left-0 top-0 h-full w-64 hidden md:flex flex-col py-stack-lg px-stack-md z-40">
-        <div className="flex items-center gap-3 px-4 mb-8 shrink-0">
-          <Logo className="w-10 h-10 shrink-0" />
-          <div className="min-w-0">
-            <Link
-              to={getRoleHome(role)}
-              className="font-headline-md text-headline-md font-extrabold text-primary leading-tight block truncate"
+      <nav
+        aria-label="Sidebar"
+        aria-expanded={!sidebarCollapsed}
+        className={`bg-surface border-r border-outline-variant fixed left-0 top-0 h-full hidden md:flex flex-col py-stack-lg z-40 transition-[width] duration-300 ease-in-out overflow-hidden ${
+          sidebarCollapsed ? 'w-[4.5rem] px-2' : 'w-64 px-stack-md'
+        }`}
+      >
+        <div
+          className={`flex items-center shrink-0 mb-6 ${sidebarCollapsed ? 'flex-col gap-3 px-1' : 'gap-3 px-4 justify-between'}`}
+        >
+          <Link
+            to={getRoleHome(role)}
+            className={`flex items-center min-w-0 ${sidebarCollapsed ? 'justify-center' : 'gap-3 flex-1'}`}
+            title="Green Heart home"
+          >
+            <Logo className="w-10 h-10 shrink-0" />
+            {!sidebarCollapsed && (
+              <div className="min-w-0">
+                <span className="font-headline-md text-headline-md font-extrabold text-primary leading-tight block truncate">
+                  Green Heart
+                </span>
+                <p className="font-label-md text-label-md text-on-surface-variant">Holistic Health</p>
+              </div>
+            )}
+          </Link>
+          {!sidebarCollapsed && (
+            <button
+              type="button"
+              onClick={() => setSidebarCollapsed(true)}
+              className={`${btnIcon} shrink-0 border border-outline-variant/60 bg-surface-container-lowest hover:border-primary/30`}
+              aria-label="Collapse sidebar"
+              title="Collapse sidebar"
             >
-              Green Heart
-            </Link>
-            <p className="font-label-md text-label-md text-on-surface-variant">Holistic Health</p>
-          </div>
+              <MaterialIcon name="chevron_left" className="text-[20px]" />
+            </button>
+          )}
         </div>
-        <div className="flex flex-col gap-2 flex-1 overflow-y-auto">{navLinks.map((item) => renderNavLink(item))}</div>
-        {user && (
-          <div className="px-4 pt-4 border-t border-outline-variant text-sm text-on-surface-variant shrink-0">
-            <p className="font-label-md truncate">{user.email}</p>
-            <p className="text-xs capitalize opacity-70">{user.role.replace('_', ' ')}</p>
-          </div>
-        )}
+
+        <div className="flex flex-col gap-2 flex-1 overflow-y-auto overflow-x-hidden scrollbar-hide">
+          {navLinks.map((item) => renderNavLink(item, false, sidebarCollapsed))}
+        </div>
+
+        <div className={`shrink-0 pt-4 border-t border-outline-variant ${sidebarCollapsed ? 'px-1' : 'px-2'}`}>
+          {sidebarCollapsed ? (
+            <button
+              type="button"
+              onClick={() => setSidebarCollapsed(false)}
+              className={`${btnIcon} w-full flex items-center justify-center border border-outline-variant/60 bg-surface-container-lowest hover:border-primary/30`}
+              aria-label="Expand sidebar"
+              title="Expand sidebar"
+            >
+              <MaterialIcon name="chevron_right" className="text-[20px]" />
+            </button>
+          ) : (
+            user && (
+              <div className="px-2 pb-1 text-sm text-on-surface-variant">
+                <p className="font-label-md truncate">{user.email}</p>
+                <p className="text-xs capitalize opacity-70">{user.role.replace('_', ' ')}</p>
+              </div>
+            )
+          )}
+        </div>
       </nav>
 
       <nav
