@@ -1,8 +1,39 @@
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { MaterialIcon } from '../components/MaterialIcon'
+import { sessionService } from '../api/session.service'
+import { useState } from 'react'
 
 export function IncomingCallPage() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const sessionId = searchParams.get('sessionId')
+  const clientName = searchParams.get('clientName') || 'Unknown Client'
+  const duration = searchParams.get('duration') || '30'
+  const [isProcessing, setIsProcessing] = useState(false)
+
+  const handleAccept = async () => {
+    if (!sessionId) return
+    setIsProcessing(true)
+    try {
+      await sessionService.acceptSession(sessionId)
+      navigate(`/consultation?sessionId=${sessionId}`)
+    } catch (err) {
+      console.error('Failed to accept session', err)
+      setIsProcessing(false)
+    }
+  }
+
+  const handleDecline = async () => {
+    if (!sessionId) return
+    setIsProcessing(true)
+    try {
+      await sessionService.declineSession(sessionId)
+      navigate('/advisor')
+    } catch (err) {
+      console.error('Failed to decline session', err)
+      setIsProcessing(false)
+    }
+  }
 
   return (
     <div className="bg-background text-on-background font-body-md h-screen w-screen overflow-hidden relative">
@@ -36,12 +67,12 @@ export function IncomingCallPage() {
 
           <div className="bg-surface-variant/10 border border-outline/30 rounded-lg p-stack-md w-full mb-stack-lg text-left grid grid-cols-2 gap-gutter">
             <div>
-              <p className="font-label-md text-label-md text-outline mb-unit">Subject ID</p>
-              <p className="font-body-md text-body-md text-surface-container-lowest font-mono">USR-8829-X</p>
+              <p className="font-label-md text-label-md text-outline mb-unit">Subject</p>
+              <p className="font-body-md text-body-md text-surface-container-lowest font-mono uppercase">{clientName}</p>
             </div>
             <div>
-              <p className="font-label-md text-label-md text-outline mb-unit">Location</p>
-              <p className="font-body-md text-body-md text-surface-container-lowest">Sector 4, Zone B</p>
+              <p className="font-label-md text-label-md text-outline mb-unit">Duration</p>
+              <p className="font-body-md text-body-md text-surface-container-lowest">{duration} Minutes</p>
             </div>
             <div className="col-span-2">
               <p className="font-label-md text-label-md text-outline mb-unit">Signal Type</p>
@@ -55,16 +86,18 @@ export function IncomingCallPage() {
           <div className="flex w-full gap-stack-md mt-auto">
             <button
               type="button"
-              onClick={() => navigate('/advisor')}
-              className="flex-1 py-4 px-6 border-2 border-error text-error rounded-lg font-label-md text-label-md uppercase tracking-wider hover:bg-error/10 transition-colors flex items-center justify-center gap-stack-sm"
+              disabled={isProcessing}
+              onClick={handleDecline}
+              className="flex-1 py-4 px-6 border-2 border-error text-error rounded-lg font-label-md text-label-md uppercase tracking-wider hover:bg-error/10 transition-colors flex items-center justify-center gap-stack-sm disabled:opacity-50"
             >
               <MaterialIcon name="close" />
               DECLINE
             </button>
             <button
               type="button"
-              onClick={() => navigate('/consultation')}
-              className="flex-1 py-4 px-6 bg-secondary text-on-secondary rounded-lg font-label-md text-label-md uppercase tracking-wider hover:bg-secondary/90 transition-colors flex items-center justify-center gap-stack-sm shadow-lg"
+              disabled={isProcessing}
+              onClick={handleAccept}
+              className="flex-1 py-4 px-6 bg-secondary text-on-secondary rounded-lg font-label-md text-label-md uppercase tracking-wider hover:bg-secondary/90 transition-colors flex items-center justify-center gap-stack-sm shadow-lg disabled:opacity-50"
             >
               <MaterialIcon name="call" />
               ACCEPT

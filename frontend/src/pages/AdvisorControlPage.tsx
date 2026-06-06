@@ -1,17 +1,46 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { MaterialIcon } from '../components/MaterialIcon'
 import { Logo } from '../components/Logo'
-
-const performanceLogs = [
-  { date: 'Oct 24, 2023', sessionId: '#SD-8921', duration: '45 mins', coins: 15 },
-  { date: 'Oct 22, 2023', sessionId: '#SD-8840', duration: '120 mins', coins: 40 },
-  { date: 'Oct 20, 2023', sessionId: '#SD-8799', duration: '30 mins', coins: 10 },
-  { date: 'Oct 18, 2023', sessionId: '#SD-8652', duration: '60 mins', coins: 20 },
-]
+import { sessionService } from '../api/session.service'
+import { walletService } from '../api/wallet.service'
+import { useAuth } from '../context/AuthContext'
+import type { WalletBalance, TransactionDto } from '@shared/contracts/wallet.api'
 
 export function AdvisorControlPage() {
+  const { user } = useAuth()
   const [online, setOnline] = useState(false)
+  const [balance, setBalance] = useState<WalletBalance | null>(null)
+  const [transactions, setTransactions] = useState<TransactionDto[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [balanceData, transData] = await Promise.all([
+          walletService.getBalance(),
+          walletService.getTransactions()
+        ])
+        setBalance(balanceData.wallet)
+        setTransactions(transData.transactions)
+      } catch (err) {
+        console.error('Failed to fetch advisor data', err)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchData()
+  }, [])
+
+  const handlePresenceToggle = async () => {
+    const newStatus = !online
+    try {
+      await sessionService.updatePresence({ online: newStatus })
+      setOnline(newStatus)
+    } catch (err) {
+      console.error('Failed to update presence', err)
+    }
+  }
 
   return (
     <div className="text-on-surface antialiased bg-background min-h-screen">
@@ -44,12 +73,12 @@ export function AdvisorControlPage() {
           <MaterialIcon name="explore" />
           <span className="font-label-md text-label-md">Discover</span>
         </Link>
-        <Link to="/wallet" className="flex items-center gap-stack-sm bg-secondary-container text-on-secondary-container rounded-lg px-4 py-3 transition-transform scale-95">
+        <Link to="/wallet" className="flex items-center gap-stack-sm text-on-surface-variant px-4 py-3 hover:bg-surface-container-high rounded-lg transition-transform hover:scale-95">
           <MaterialIcon name="account_balance_wallet" />
           <span className="font-label-md text-label-md">WALLET</span>
         </Link>
-        <Link to="/advisor" className="flex items-center gap-stack-sm text-on-surface-variant px-4 py-3 hover:bg-surface-container-high rounded-lg transition-transform hover:scale-95">
-          <MaterialIcon name="history" />
+        <Link to="/advisor" className="flex items-center gap-stack-sm bg-secondary-container text-on-secondary-container rounded-lg px-4 py-3 scale-[0.98] transition-transform">
+          <MaterialIcon name="history" filled />
           <span className="font-label-md text-label-md">Logs</span>
         </Link>
         <span className="flex items-center gap-stack-sm text-on-surface-variant px-4 py-3 hover:bg-surface-container-high rounded-lg transition-transform hover:scale-95 cursor-pointer">
@@ -73,7 +102,7 @@ export function AdvisorControlPage() {
             <button
               type="button"
               aria-pressed={online}
-              onClick={() => setOnline(!online)}
+              onClick={handlePresenceToggle}
               className={`w-12 h-6 rounded-full relative transition-colors duration-300 focus:outline-none ${
                 online ? 'bg-secondary' : 'bg-surface-variant'
               }`}
@@ -94,14 +123,14 @@ export function AdvisorControlPage() {
                 <MaterialIcon name="account_balance_wallet" filled className="text-secondary" />
               </div>
               <span className="bg-surface-container px-3 py-1 rounded-full font-label-md text-label-md text-on-surface-variant">
-                Available Balance
+                Total Earnings
               </span>
             </div>
             <div>
               <h2 className="font-stat-xl text-stat-xl text-on-surface mb-unit">
-                450 <span className="font-headline-md text-headline-md text-on-surface-variant font-normal">Coins</span>
+                {loading ? '...' : balance?.coinBalance || 0} <span className="font-headline-md text-headline-md text-on-surface-variant font-normal">Coins</span>
               </h2>
-              <p className="font-body-md text-body-md text-on-surface-variant">Ready for transfer</p>
+              <p className="font-body-md text-body-md text-on-surface-variant">Available for withdrawal</p>
             </div>
           </div>
 
@@ -111,14 +140,14 @@ export function AdvisorControlPage() {
                 <MaterialIcon name="schedule" filled className="text-primary" />
               </div>
               <span className="bg-surface-container px-3 py-1 rounded-full font-label-md text-label-md text-on-surface-variant">
-                Active Time
+                Escrow Balance
               </span>
             </div>
             <div>
               <h2 className="font-stat-xl text-stat-xl text-on-surface mb-unit">
-                1,240 <span className="font-headline-md text-headline-md text-on-surface-variant font-normal">Mins</span>
+                {loading ? '...' : balance?.escrowBalance || 0} <span className="font-headline-md text-headline-md text-on-surface-variant font-normal">Coins</span>
               </h2>
-              <p className="font-body-md text-body-md text-on-surface-variant">+12% from last month</p>
+              <p className="font-body-md text-body-md text-on-surface-variant">Pending session completion</p>
             </div>
           </div>
 
@@ -133,23 +162,16 @@ export function AdvisorControlPage() {
             </div>
             <div>
               <h2 className="font-stat-xl text-stat-xl text-on-surface mb-unit">
-                4.9 <span className="font-headline-md text-headline-md text-on-surface-variant font-normal">/ 5.0</span>
+                {user?.profile?.coinRatePerSession ? `Rate: ${user.profile.coinRatePerSession}` : '4.9'} <span className="font-headline-md text-headline-md text-on-surface-variant font-normal">/ 5.0</span>
               </h2>
-              <p className="font-body-md text-body-md text-on-surface-variant">Based on 84 reviews</p>
+              <p className="font-body-md text-body-md text-on-surface-variant">Based on recent performance</p>
             </div>
           </div>
         </div>
 
-        <div className="mb-stack-md">
-          <span className="inline-flex items-center gap-unit bg-secondary/10 border border-secondary/20 text-secondary px-4 py-2 rounded-full font-label-md text-label-md">
-            <MaterialIcon name="check_circle" filled className="text-[18px]" />
-            Cash-Out Requested
-          </span>
-        </div>
-
         <div className="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-[0_1px_3px_rgba(0,0,0,0.05)]">
           <div className="px-stack-lg py-stack-md border-b border-outline-variant bg-surface-bright flex justify-between items-center">
-            <h3 className="font-headline-md text-headline-md text-on-surface">Performance Logs</h3>
+            <h3 className="font-headline-md text-headline-md text-on-surface">Recent Activity</h3>
             <button type="button" className="flex items-center gap-unit text-primary hover:text-primary-container transition-colors">
               <span className="font-label-md text-label-md">Download CSV</span>
               <MaterialIcon name="download" className="text-[18px]" />
@@ -160,27 +182,32 @@ export function AdvisorControlPage() {
               <thead>
                 <tr className="border-b border-outline-variant/50">
                   <th className="py-stack-sm px-stack-lg font-label-md text-label-md text-on-surface-variant">Date</th>
-                  <th className="py-stack-sm px-stack-lg font-label-md text-label-md text-on-surface-variant">Session ID</th>
-                  <th className="py-stack-sm px-stack-lg font-label-md text-label-md text-on-surface-variant">Duration</th>
+                  <th className="py-stack-sm px-stack-lg font-label-md text-label-md text-on-surface-variant">Type</th>
                   <th className="py-stack-sm px-stack-lg font-label-md text-label-md text-on-surface-variant text-right">
-                    Coins Earned
+                    Amount (Coins)
                   </th>
                 </tr>
               </thead>
               <tbody className="font-body-md text-body-md text-on-surface">
-                {performanceLogs.map((log, i) => (
+                {transactions.map((tx, i) => (
                   <tr
-                    key={log.sessionId}
+                    key={tx.id}
                     className={`hover:bg-surface transition-colors border-b border-outline-variant/30 ${
                       i % 2 === 1 ? 'bg-[#F8F9FA]' : 'bg-surface-container-lowest'
                     }`}
                   >
-                    <td className="py-stack-sm px-stack-lg">{log.date}</td>
-                    <td className="py-stack-sm px-stack-lg text-on-surface-variant">{log.sessionId}</td>
-                    <td className="py-stack-sm px-stack-lg">{log.duration}</td>
-                    <td className="py-stack-sm px-stack-lg text-right font-label-md text-label-md">{log.coins}</td>
+                    <td className="py-stack-sm px-stack-lg">{new Date(tx.timestamp).toLocaleDateString()}</td>
+                    <td className="py-stack-sm px-stack-lg text-on-surface-variant uppercase text-xs tracking-wider">{tx.type.replace('_', ' ')}</td>
+                    <td className={`py-stack-sm px-stack-lg text-right font-label-md text-label-md ${tx.amountCoins > 0 ? 'text-secondary' : 'text-error'}`}>
+                      {tx.amountCoins > 0 ? '+' : ''}{tx.amountCoins}
+                    </td>
                   </tr>
                 ))}
+                {!loading && transactions.length === 0 && (
+                  <tr>
+                    <td colSpan={3} className="py-10 text-center text-on-surface-variant">No recent activity</td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>
@@ -192,12 +219,12 @@ export function AdvisorControlPage() {
           <MaterialIcon name="explore" />
           <span className="font-label-md text-label-md text-[10px]">Discover</span>
         </Link>
-        <Link to="/wallet" className="flex flex-col items-center justify-center bg-primary-container text-on-primary-container rounded-xl p-2 transition-transform scale-95">
-          <MaterialIcon name="account_balance_wallet" filled />
+        <Link to="/wallet" className="flex flex-col items-center justify-center text-on-surface-variant p-2 hover:text-primary transition-transform scale-95">
+          <MaterialIcon name="account_balance_wallet" />
           <span className="font-label-md text-label-md text-[10px]">Wallet</span>
         </Link>
-        <Link to="/advisor" className="flex flex-col items-center justify-center text-on-surface-variant p-2 hover:text-primary transition-transform scale-95">
-          <MaterialIcon name="history" />
+        <Link to="/advisor" className="flex flex-col items-center justify-center bg-secondary-container text-on-secondary-container rounded-xl p-2 scale-95 transition-transform">
+          <MaterialIcon name="history" filled />
           <span className="font-label-md text-label-md text-[10px]">Logs</span>
         </Link>
         <span className="flex flex-col items-center justify-center text-on-surface-variant p-2 hover:text-primary transition-transform scale-95 cursor-pointer">

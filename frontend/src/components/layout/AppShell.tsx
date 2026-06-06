@@ -9,6 +9,7 @@ interface AppShellProps {
   showSearch?: boolean
   searchPlaceholder?: string
   searchClassName?: string
+  onSearch?: (query: string) => void
 }
 
 const navItems: { id: NavItem; label: string; icon: string; to: string }[] = [
@@ -24,6 +25,7 @@ export function AppShell({
   showSearch = true,
   searchPlaceholder = 'Describe what you are feeling inside...',
   searchClassName = '',
+  onSearch,
 }: AppShellProps) {
   const location = useLocation()
 
@@ -44,6 +46,11 @@ export function AppShell({
                 className={`w-full bg-surface-container-low border border-outline-variant rounded-full py-2 pl-10 pr-4 text-body-md focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all shadow-sm ${searchClassName}`}
                 placeholder={searchPlaceholder}
                 type="text"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && onSearch) {
+                    onSearch((e.target as HTMLInputElement).value)
+                  }
+                }}
               />
             </div>
           )}
