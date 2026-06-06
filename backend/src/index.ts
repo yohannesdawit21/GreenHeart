@@ -4,8 +4,10 @@ import { config } from './config/index.js';
 import { connectPostgres, disconnectPostgres } from './database/postgres/connection.js';
 import { connectRedis, disconnectRedis } from './database/redis/connection.js';
 import { initSocket } from './socket/index.js';
+import { logCorsMode } from './shared/middleware/cors.middleware.js';
 
 async function main() {
+  logCorsMode();
   await connectPostgres();
   await connectRedis();
 

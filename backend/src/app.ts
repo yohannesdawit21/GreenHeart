@@ -1,7 +1,5 @@
 import cookieParser from 'cookie-parser';
-import cors from 'cors';
 import express from 'express';
-import { config } from './config/index.js';
 import { authRouter } from './modules/auth/auth.routes.js';
 import { presenceRouter } from './modules/presence/presence.routes.js';
 import { searchRouter } from './modules/search/search.routes.js';
@@ -13,26 +11,13 @@ import { walletRouter } from './modules/wallet/wallet.routes.js';
 import { verificationLiveKitRouter } from './livekit/verification.routes.js';
 import { errorHandler } from './shared/middleware/errorHandler.js';
 import { notFoundHandler } from './shared/middleware/notFoundHandler.js';
+import { createCorsMiddleware, corsErrorHeaders } from './shared/middleware/cors.middleware.js';
 
 export function createApp() {
   const app = express();
 
-  app.use(
-    cors(
-      config.corsAllowAll
-        ? { origin: true, credentials: true }
-        : {
-            origin(origin, callback) {
-              if (!origin || config.corsOrigins.includes(origin)) {
-                callback(null, true);
-                return;
-              }
-              callback(null, false);
-            },
-            credentials: true,
-          },
-    ),
-  );
+  app.use(createCorsMiddleware());
+  app.use(corsErrorHeaders);
   app.use(express.json());
   app.use(cookieParser());
 
