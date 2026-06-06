@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { MaterialIcon } from '../components/MaterialIcon';
+import { btnPrimary, btnTextDanger } from '../components/layout/buttonStyles';
 import { sessionService } from '../api/session.service';
 import { useSocket } from '../context/SocketContext';
 import type { SessionReadyPayload } from '@shared/contracts/socket.events';
@@ -65,7 +66,7 @@ export function WaitingSessionPage() {
             <button
               type="button"
               onClick={() => navigate('/discover')}
-              className="bg-primary text-on-primary px-6 py-3 rounded-lg font-label-md"
+              className={`${btnPrimary} px-6 py-3`}
             >
               Back to Discover
             </button>
@@ -83,7 +84,7 @@ export function WaitingSessionPage() {
             <button
               type="button"
               onClick={handleCancel}
-              className="text-error font-label-md hover:underline"
+              className={btnTextDanger}
             >
               Cancel request
             </button>

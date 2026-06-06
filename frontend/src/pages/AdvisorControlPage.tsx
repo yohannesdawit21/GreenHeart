@@ -9,6 +9,7 @@ import {
   LoadingSpinner,
   EmptyState,
 } from '../components/layout/dashboard-ui'
+import { btnGhost, btnToggle } from '../components/layout/buttonStyles'
 import { MaterialIcon } from '../components/MaterialIcon'
 import { sessionService } from '../api/session.service'
 import { walletService } from '../api/wallet.service'
@@ -122,9 +123,9 @@ export function AdvisorControlPage() {
               disabled={verificationStatus !== 'verified'}
               aria-pressed={online}
               onClick={handlePresenceToggle}
-              className={`w-14 h-7 rounded-full relative transition-colors shrink-0 ${
+              className={`w-14 h-7 ${btnToggle} shrink-0 ${
                 online ? 'bg-secondary' : 'bg-surface-variant'
-              } ${verificationStatus !== 'verified' ? 'opacity-40 cursor-not-allowed' : ''}`}
+              } ${verificationStatus !== 'verified' ? 'opacity-40' : ''}`}
             >
               <span
                 className={`absolute top-1 w-5 h-5 rounded-full bg-white transition-all ${
@@ -166,7 +167,7 @@ export function AdvisorControlPage() {
               <button
                 type="button"
                 onClick={handleDownloadCsv}
-                className="flex items-center gap-1 text-primary hover:text-on-primary-fixed-variant font-label-md text-sm"
+                className={`${btnGhost} text-sm flex items-center gap-1 px-2 py-1`}
               >
                 <MaterialIcon name="download" className="text-[18px]" />
                 CSV

@@ -7,6 +7,7 @@ import {
 } from '@livekit/components-react'
 import '@livekit/components-styles'
 import { MaterialIcon } from '../components/MaterialIcon'
+import { btnDangerSolid } from '../components/layout/buttonStyles'
 import { sessionService } from '../api/session.service'
 
 export function ConsultationRoomPage() {
@@ -88,7 +89,7 @@ export function ConsultationRoomPage() {
             <button 
               type="button" 
               onClick={handleEndSession}
-              className="bg-error hover:bg-error/80 text-white font-label-md text-label-md px-4 py-2 rounded-full flex items-center gap-2 transition-all shadow-lg"
+              className={`${btnDangerSolid} text-label-md px-4 py-2 rounded-full flex items-center gap-2`}
             >
               <MaterialIcon name="call_end" className="text-sm" />
               END SESSION

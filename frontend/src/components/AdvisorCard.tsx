@@ -1,4 +1,5 @@
 import { MaterialIcon } from './MaterialIcon'
+import { btnCoral, btnSoft } from './layout/buttonStyles'
 import type { AdvisorCardDto } from '@shared/contracts/users.api'
 
 export type Advisor = AdvisorCardDto & {
@@ -91,7 +92,7 @@ export function AdvisorCard({ advisor, onConnect, onViewProfile }: AdvisorCardPr
           <button
             type="button"
             onClick={onConnect}
-            className="bg-vibrant-coral hover:bg-[#ff5252] text-white font-label-md text-label-md px-4 py-2 rounded-lg transition-colors shadow-sm flex items-center gap-2"
+            className={`${btnCoral} text-label-md px-4 py-2 flex items-center gap-2`}
           >
             Connect Instantly
             <MaterialIcon name="arrow_forward" className="text-[18px]" />
@@ -100,7 +101,7 @@ export function AdvisorCard({ advisor, onConnect, onViewProfile }: AdvisorCardPr
           <button
             type="button"
             onClick={onViewProfile ?? onConnect}
-            className="bg-secondary-container hover:bg-secondary-fixed text-on-secondary-container font-label-md text-label-md px-4 py-2 rounded-lg transition-colors border border-transparent"
+            className={`${btnSoft} text-label-md px-4 py-2`}
           >
             View Profile
           </button>

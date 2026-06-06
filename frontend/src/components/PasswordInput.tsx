@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { MaterialIcon } from './MaterialIcon'
+import { btnIcon } from './layout/buttonStyles'
 
 interface PasswordInputProps {
   id?: string
@@ -38,7 +39,7 @@ export function PasswordInput({
       <button
         type="button"
         onClick={() => setVisible((v) => !v)}
-        className="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-on-surface-variant hover:text-primary rounded-full transition-colors"
+        className={`absolute right-2 top-1/2 -translate-y-1/2 ${btnIcon}`}
         aria-label={visible ? 'Hide password' : 'Show password'}
         tabIndex={-1}
       >

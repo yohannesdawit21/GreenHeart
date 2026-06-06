@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { AdvisorCard } from '../components/AdvisorCard'
 import { AppShell } from '../components/layout/AppShell'
 import { appShellMainClass } from '../components/layout/dashboard-ui'
+import { btnFilter, btnPrimary } from '../components/layout/buttonStyles'
 import { MaterialIcon } from '../components/MaterialIcon'
 import { userService } from '../api/user.service'
 import { searchService } from '../api/search.service'
@@ -145,11 +146,7 @@ export function DiscoveryPage({ aiPulse = false }: DiscoveryPageProps) {
                 setActiveFilter(filter)
                 handleSearch(filter)
               }}
-              className={`whitespace-nowrap px-4 py-2 rounded-full font-label-md text-label-md transition-colors border ${
-                activeFilter === filter
-                  ? 'bg-primary text-on-primary border-transparent'
-                  : 'bg-surface-container-lowest text-on-surface-variant hover:bg-surface-container hover:text-primary border-outline-variant'
-              }`}
+              className={btnFilter(activeFilter === filter)}
             >
               {filter}
             </button>
@@ -157,7 +154,7 @@ export function DiscoveryPage({ aiPulse = false }: DiscoveryPageProps) {
           <button
             type="button"
             onClick={() => handleSearch(activeFilter)}
-            className="whitespace-nowrap px-4 py-2 rounded-full bg-surface-container-lowest text-on-surface-variant hover:bg-surface-container hover:text-primary font-label-md text-label-md transition-colors border border-outline-variant flex items-center gap-1"
+            className={`${btnFilter(false)} flex items-center gap-1`}
             title="Re-apply current filters"
           >
             <MaterialIcon name="tune" className="text-[18px]" />
@@ -200,7 +197,7 @@ export function DiscoveryPage({ aiPulse = false }: DiscoveryPageProps) {
           <button
             type="button"
             onClick={() => navigate('/discover/ai')}
-            className="bg-primary hover:bg-on-primary-fixed-variant text-on-primary font-label-md text-label-md px-6 py-2 rounded-lg transition-colors whitespace-nowrap"
+            className={`${btnPrimary} text-label-md px-6 py-2 whitespace-nowrap flex items-center gap-2`}
           >
             Start Matching
           </button>

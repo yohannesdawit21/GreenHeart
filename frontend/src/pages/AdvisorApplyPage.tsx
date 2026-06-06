@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { MaterialIcon } from '../components/MaterialIcon'
 import { Logo } from '../components/Logo'
 import { PasswordInput } from '../components/PasswordInput'
+import { btnPrimary } from '../components/layout/buttonStyles'
 import { useAuth } from '../context/AuthContext'
 
 export function AdvisorApplyPage() {
@@ -136,7 +137,7 @@ export function AdvisorApplyPage() {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full bg-primary text-on-primary font-label-md text-label-md py-4 rounded-lg hover:bg-on-primary-fixed-variant transition-colors flex justify-center items-center gap-stack-sm disabled:opacity-50 shadow-lg"
+                className={`${btnPrimary} text-label-md py-4 w-full flex justify-center items-center gap-stack-sm shadow-lg`}
               >
                 {isSubmitting ? 'SUBMITTING APPLICATION...' : 'SUBMIT APPLICATION'}
                 <MaterialIcon name="send" className="text-[18px]" />

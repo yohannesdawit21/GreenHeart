@@ -36,13 +36,13 @@ export function AppShell({
   const navLinkClass = (active: boolean, mobile = false) => {
     if (mobile) {
       return `flex flex-col items-center justify-center rounded-xl px-3 py-2 min-w-[4.25rem] shrink-0 transition-transform ${
-        active ? 'bg-primary-container text-on-primary-container scale-95' : 'text-on-surface-variant'
+        active ? 'bg-primary-container text-on-primary-container scale-95 shadow-sm' : 'text-on-surface-variant hover:bg-surface-container-low hover:text-primary'
       }`
     }
     return `flex items-center gap-stack-sm rounded-lg px-4 py-3 font-label-md text-label-md transition-colors ${
       active
-        ? 'bg-secondary-container text-on-secondary-container'
-        : 'text-on-surface-variant hover:bg-surface-container-high'
+        ? 'bg-secondary-container text-on-secondary-container hover:shadow-sm'
+        : 'text-on-surface-variant hover:bg-surface-container-high hover:text-primary'
     }`
   }
 

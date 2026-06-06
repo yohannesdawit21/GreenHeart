@@ -9,6 +9,7 @@ import {
   LoadingSpinner,
   EmptyState,
 } from '../components/layout/dashboard-ui'
+import { btnOutline, btnPackage, btnPrimary } from '../components/layout/buttonStyles'
 import { MaterialIcon } from '../components/MaterialIcon'
 import { walletService } from '../api/wallet.service'
 import type { WalletBalance, CoinPackageId, TransactionDto } from '@shared/contracts/wallet.api'
@@ -86,7 +87,7 @@ export function WalletPage() {
             <button
               type="button"
               onClick={() => setShowHistory((v) => !v)}
-              className="w-full sm:w-auto bg-surface-container-lowest border border-outline-variant text-primary px-5 py-3 rounded-lg font-label-md text-sm hover:bg-surface-container flex items-center justify-center gap-2"
+              className={`${btnOutline} text-sm px-5 py-3 flex items-center justify-center gap-2 w-full sm:w-auto`}
             >
               <MaterialIcon name="history" className="text-sm" />
               {showHistory ? 'Hide history' : 'Transaction history'}
@@ -127,11 +128,7 @@ export function WalletPage() {
                 key={pkg.id}
                 type="button"
                 onClick={() => setSelectedPackage(pkg.id)}
-                className={`text-left bg-surface-container-lowest rounded-xl p-stack-md border transition-all ${
-                  selectedPackage === pkg.id
-                    ? 'border-primary ring-2 ring-primary/20 shadow-ambient'
-                    : 'border-outline-variant hover:border-primary/40'
-                }`}
+                className={btnPackage(selectedPackage === pkg.id)}
               >
                 {pkg.featured && (
                   <span className="text-[10px] uppercase tracking-wider bg-primary text-on-primary px-2 py-0.5 rounded-full">
@@ -153,7 +150,7 @@ export function WalletPage() {
               type="button"
               onClick={handlePurchase}
               disabled={isPurchasing}
-              className="w-full sm:w-auto bg-primary text-on-primary font-label-md px-8 py-3 rounded-lg hover:bg-on-primary-fixed-variant disabled:opacity-50 flex items-center justify-center gap-2"
+              className={`${btnPrimary} px-8 py-3 w-full sm:w-auto flex items-center justify-center gap-2`}
             >
               {isPurchasing ? 'Processing…' : 'Buy coins (sandbox)'}
               <MaterialIcon name="arrow_forward" className="text-sm" />

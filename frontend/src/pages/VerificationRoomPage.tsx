@@ -7,6 +7,7 @@ import {
 } from '@livekit/components-react'
 import '@livekit/components-styles'
 import { MaterialIcon } from '../components/MaterialIcon'
+import { btnDangerSolid, btnSecondary } from '../components/layout/buttonStyles'
 import { verificationService } from '../api/verification.service'
 import { useAuth } from '../context/AuthContext'
 
@@ -95,7 +96,7 @@ export function VerificationRoomPage() {
                 type="button"
                 disabled={isFinishing}
                 onClick={() => handleCompleteInterview('fail')}
-                className="bg-error/20 hover:bg-error border border-error text-white font-label-md text-xs px-4 py-2.5 rounded-lg transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                className={`${btnDangerSolid} text-xs px-4 py-2.5 flex items-center justify-center gap-2 w-full sm:w-auto`}
               >
                 <MaterialIcon name="thumb_down" className="text-sm" />
                 Reject
@@ -104,7 +105,7 @@ export function VerificationRoomPage() {
                 type="button"
                 disabled={isFinishing}
                 onClick={() => handleCompleteInterview('pass')}
-                className="bg-secondary hover:bg-secondary/80 text-on-secondary font-label-md text-xs px-4 py-2.5 rounded-lg transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                className={`${btnSecondary} text-xs px-4 py-2.5 flex items-center justify-center gap-2 w-full sm:w-auto`}
               >
                 <MaterialIcon name="thumb_up" className="text-sm" />
                 Verify

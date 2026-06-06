@@ -9,6 +9,7 @@ import {
   EmptyState,
   LoadingSpinner,
 } from '../components/layout/dashboard-ui'
+import { btnPrimary } from '../components/layout/buttonStyles'
 import { MaterialIcon } from '../components/MaterialIcon'
 import { verificationService } from '../api/verification.service'
 import type { ApplicantDto } from '@shared/contracts/verification.api'
@@ -100,7 +101,7 @@ export function PartnerDashboardPage() {
                     <button
                       type="button"
                       onClick={() => handleStartInterview(applicant.id)}
-                      className="w-full bg-primary text-on-primary font-label-md text-sm py-3 px-4 rounded-lg hover:bg-on-primary-fixed-variant flex items-center justify-center gap-2"
+                      className={`${btnPrimary} text-sm py-3 px-4 w-full flex items-center justify-center gap-2`}
                     >
                       <MaterialIcon name="videocam" className="text-sm" />
                       Start interview
@@ -140,7 +141,7 @@ export function PartnerDashboardPage() {
                           <button
                             type="button"
                             onClick={() => handleStartInterview(applicant.id)}
-                            className="bg-primary text-on-primary font-label-md text-xs py-2.5 px-4 rounded-lg hover:bg-on-primary-fixed-variant inline-flex items-center gap-2"
+                            className={`${btnPrimary} text-xs py-2.5 px-4 inline-flex items-center gap-2`}
                           >
                             <MaterialIcon name="videocam" className="text-sm" />
                             Start interview

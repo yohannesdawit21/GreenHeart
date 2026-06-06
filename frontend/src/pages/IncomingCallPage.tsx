@@ -1,5 +1,6 @@
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { MaterialIcon } from '../components/MaterialIcon'
+import { btnDanger, btnSecondary } from '../components/layout/buttonStyles'
 import { sessionService } from '../api/session.service'
 import { useState } from 'react'
 
@@ -88,7 +89,7 @@ export function IncomingCallPage() {
               type="button"
               disabled={isProcessing}
               onClick={handleDecline}
-              className="flex-1 py-4 px-6 border-2 border-error text-error rounded-lg font-label-md text-label-md uppercase tracking-wider hover:bg-error/10 transition-colors flex items-center justify-center gap-stack-sm disabled:opacity-50"
+              className={`${btnDanger} flex-1 py-4 px-6 text-label-md uppercase tracking-wider flex items-center justify-center gap-stack-sm`}
             >
               <MaterialIcon name="close" />
               DECLINE
@@ -97,7 +98,7 @@ export function IncomingCallPage() {
               type="button"
               disabled={isProcessing}
               onClick={handleAccept}
-              className="flex-1 py-4 px-6 bg-secondary text-on-secondary rounded-lg font-label-md text-label-md uppercase tracking-wider hover:bg-secondary/90 transition-colors flex items-center justify-center gap-stack-sm shadow-lg disabled:opacity-50"
+              className={`${btnSecondary} flex-1 py-4 px-6 text-label-md uppercase tracking-wider flex items-center justify-center gap-stack-sm shadow-lg`}
             >
               <MaterialIcon name="call" />
               ACCEPT

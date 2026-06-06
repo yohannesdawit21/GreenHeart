@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { AppShell } from '../components/layout/AppShell';
 import { appShellMainClass, DashboardHeader, DashboardAlert } from '../components/layout/dashboard-ui';
+import { btnPrimary } from '../components/layout/buttonStyles';
 import { MaterialIcon } from '../components/MaterialIcon';
 import { userService } from '../api/user.service';
 import { useAuth } from '../context/AuthContext';
@@ -124,7 +125,7 @@ export function SettingsPage() {
           <button
             type="submit"
             disabled={saving}
-            className="bg-primary text-on-primary py-3 rounded-lg font-label-md disabled:opacity-50"
+            className={`${btnPrimary} py-3 w-full`}
           >
             {saving ? 'Saving…' : 'Save changes'}
           </button>

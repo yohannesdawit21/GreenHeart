@@ -33,7 +33,7 @@ export function UserMenu() {
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="w-10 h-10 rounded-full bg-primary text-on-primary font-bold flex items-center justify-center border border-outline-variant hover:ring-2 hover:ring-primary/30 transition-all shrink-0"
+        className="w-10 h-10 rounded-full bg-primary text-on-primary font-bold flex items-center justify-center border border-outline-variant hover:ring-2 hover:ring-primary/30 hover:shadow-md transition-all shrink-0"
         aria-label="Account menu"
         aria-expanded={open}
       >
@@ -51,7 +51,7 @@ export function UserMenu() {
               key={link.id}
               to={link.to}
               onClick={() => setOpen(false)}
-              className="flex items-center gap-2 px-4 py-2.5 hover:bg-surface-container text-on-surface font-body-md text-body-md"
+              className="flex items-center gap-2 px-4 py-2.5 hover:bg-surface-container text-on-surface font-body-md text-body-md transition-colors"
             >
               <MaterialIcon name={link.icon} className="text-[18px]" />
               {link.label}
@@ -68,7 +68,7 @@ export function UserMenu() {
           <button
             type="button"
             onClick={handleLogout}
-            className="w-full flex items-center gap-2 px-4 py-2.5 hover:bg-error-container/20 text-error font-body-md text-body-md border-t border-outline-variant/30 mt-1"
+            className="w-full flex items-center gap-2 px-4 py-2.5 hover:bg-error-container/20 text-error font-body-md text-body-md border-t border-outline-variant/30 mt-1 transition-colors"
           >
             <MaterialIcon name="logout" className="text-[18px]" />
             Log out

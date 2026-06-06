@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { AppShell } from '../components/layout/AppShell';
 import { appShellMainClass, LoadingSpinner } from '../components/layout/dashboard-ui';
+import { btnPrimary } from '../components/layout/buttonStyles';
 import { MaterialIcon } from '../components/MaterialIcon';
 import { userService } from '../api/user.service';
 import { sessionService } from '../api/session.service';
@@ -114,10 +115,10 @@ export function AdvisorProfilePage() {
                 type="button"
                 onClick={handleConnect}
                 disabled={!advisor.isOnline}
-                className={`w-full sm:w-auto px-6 py-3 rounded-lg font-label-md transition-colors ${
+                className={`w-full sm:w-auto px-6 py-3 font-label-md ${
                   advisor.isOnline
-                    ? 'bg-primary text-on-primary hover:bg-on-primary-fixed-variant'
-                    : 'bg-surface-container text-outline cursor-not-allowed'
+                    ? `${btnPrimary}`
+                    : 'cursor-not-allowed bg-surface-container text-outline rounded-lg opacity-70'
                 }`}
               >
                 {advisor.isOnline ? 'Connect' : 'Advisor offline'}

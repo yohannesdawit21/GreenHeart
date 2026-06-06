@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { MaterialIcon } from '../components/MaterialIcon'
 import { Logo } from '../components/Logo'
 import { PasswordInput } from '../components/PasswordInput'
+import { btnPrimary } from '../components/layout/buttonStyles'
 import { useAuth } from '../context/AuthContext'
 import type { AuthUser } from '@shared/contracts/auth.api'
 
@@ -113,10 +114,10 @@ export function AuthPage() {
             <button
               type="button"
               onClick={() => setMode('login')}
-              className={`flex-1 py-2 text-center font-label-md text-label-md rounded-md transition-all ${
+              className={`flex-1 py-2 text-center font-label-md text-label-md rounded-md transition-all cursor-pointer ${
                 mode === 'login'
-                  ? 'bg-surface-container-lowest text-primary shadow-sm'
-                  : 'text-on-surface-variant hover:text-primary'
+                  ? 'bg-surface-container-lowest text-primary shadow-sm hover:shadow-md'
+                  : 'text-on-surface-variant hover:text-primary hover:bg-surface-container/50'
               }`}
             >
               Login
@@ -124,10 +125,10 @@ export function AuthPage() {
             <button
               type="button"
               onClick={() => setMode('signup')}
-              className={`flex-1 py-2 text-center font-label-md text-label-md rounded-md transition-all ${
+              className={`flex-1 py-2 text-center font-label-md text-label-md rounded-md transition-all cursor-pointer ${
                 mode === 'signup'
-                  ? 'bg-surface-container-lowest text-primary shadow-sm'
-                  : 'text-on-surface-variant hover:text-primary'
+                  ? 'bg-surface-container-lowest text-primary shadow-sm hover:shadow-md'
+                  : 'text-on-surface-variant hover:text-primary hover:bg-surface-container/50'
               }`}
             >
               Sign Up
@@ -177,7 +178,7 @@ export function AuthPage() {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="mt-stack-sm w-full bg-primary text-on-primary font-label-md text-label-md py-3 rounded-lg hover:bg-on-primary-fixed-variant transition-colors flex justify-center items-center gap-stack-sm disabled:opacity-50"
+                className={`mt-stack-sm ${btnPrimary} text-label-md py-3 w-full flex justify-center items-center gap-stack-sm`}
               >
                 {isSubmitting ? 'PROCESSING...' : 'CONTINUE TO PLATFORM'}
                 <MaterialIcon name="arrow_forward" className="text-[18px]" />
@@ -242,7 +243,7 @@ export function AuthPage() {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="mt-stack-sm w-full bg-primary text-on-primary font-label-md text-label-md py-3 rounded-lg hover:bg-on-primary-fixed-variant transition-colors flex justify-center items-center gap-stack-sm disabled:opacity-50"
+                className={`mt-stack-sm ${btnPrimary} text-label-md py-3 w-full flex justify-center items-center gap-stack-sm`}
               >
                 {isSubmitting ? 'CREATING...' : 'CREATE ACCOUNT'}
                 <MaterialIcon name="arrow_forward" className="text-[18px]" />

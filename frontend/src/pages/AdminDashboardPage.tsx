@@ -9,6 +9,7 @@ import {
   LoadingSpinner,
   VerificationStatusPill,
 } from '../components/layout/dashboard-ui'
+import { btnDanger, btnIconDanger, btnIconSuccess, btnOutline, btnPrimary, btnSuccess } from '../components/layout/buttonStyles'
 import { MaterialIcon } from '../components/MaterialIcon'
 import { verificationService } from '../api/verification.service'
 import type { PartnerDoctorDto, ApplicantDto, VerificationStatus } from '@shared/contracts/verification.api'
@@ -81,7 +82,7 @@ export function AdminDashboardPage() {
             <button
               type="button"
               onClick={() => setShowPartnerModal(true)}
-              className="w-full sm:w-auto bg-primary text-on-primary font-label-md text-sm py-3 px-6 rounded-lg hover:bg-on-primary-fixed-variant transition-colors flex items-center justify-center gap-2"
+              className={`${btnPrimary} text-sm py-3 px-6 flex items-center justify-center gap-2 w-full sm:w-auto`}
             >
               <MaterialIcon name="person_add" className="text-sm" />
               Register partner
@@ -171,7 +172,7 @@ export function AdminDashboardPage() {
                           <button
                             type="button"
                             onClick={() => handleOverride(a.id, 'verified')}
-                            className="flex-1 py-2.5 bg-secondary/10 text-secondary rounded-lg font-label-md text-sm flex items-center justify-center gap-1"
+                            className={`${btnSuccess} flex-1 py-2.5 text-sm flex items-center justify-center gap-1`}
                           >
                             <MaterialIcon name="verified" className="text-[18px]" />
                             Verify
@@ -179,7 +180,7 @@ export function AdminDashboardPage() {
                           <button
                             type="button"
                             onClick={() => handleOverride(a.id, 'rejected')}
-                            className="flex-1 py-2.5 bg-error/10 text-error rounded-lg font-label-md text-sm flex items-center justify-center gap-1"
+                            className={`${btnDanger} flex-1 py-2.5 text-sm flex items-center justify-center gap-1`}
                           >
                             <MaterialIcon name="cancel" className="text-[18px]" />
                             Reject
@@ -210,7 +211,7 @@ export function AdminDashboardPage() {
                                 <button
                                   type="button"
                                   onClick={() => handleOverride(a.id, 'verified')}
-                                  className="p-2 hover:bg-secondary/10 text-secondary rounded-lg transition-colors"
+                                  className={btnIconSuccess}
                                   title="Force verify"
                                 >
                                   <MaterialIcon name="verified" className="text-[20px]" />
@@ -218,7 +219,7 @@ export function AdminDashboardPage() {
                                 <button
                                   type="button"
                                   onClick={() => handleOverride(a.id, 'rejected')}
-                                  className="p-2 hover:bg-error/10 text-error rounded-lg transition-colors"
+                                  className={btnIconDanger}
                                   title="Force reject"
                                 >
                                   <MaterialIcon name="cancel" className="text-[20px]" />
@@ -278,11 +279,11 @@ export function AdminDashboardPage() {
                     <button
                       type="button"
                       onClick={() => setShowPartnerModal(false)}
-                      className="flex-1 py-3 border border-outline-variant rounded-lg font-label-md"
+                      className={`${btnOutline} flex-1 py-3`}
                     >
                       Cancel
                     </button>
-                    <button type="submit" className="flex-1 py-3 bg-primary text-on-primary rounded-lg font-label-md">
+                    <button type="submit" className={`${btnPrimary} flex-1 py-3`}>
                       Register
                     </button>
                   </div>

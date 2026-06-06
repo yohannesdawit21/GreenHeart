@@ -247,4 +247,17 @@
   .safe-top {
     padding-top: max(0.75rem, env(safe-area-inset-top, 0px));
   }
+
+  /* Global interactive affordance for buttons */
+  button:not(:disabled) {
+    cursor: pointer;
+  }
+
+  button:disabled {
+    cursor: not-allowed;
+  }
+
+  a[href]:not([aria-disabled='true']) {
+    cursor: pointer;
+  }
 }
