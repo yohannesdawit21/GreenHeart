@@ -1,6 +1,6 @@
 import type { UserRole } from '@shared/contracts/auth.api'
 
-export type NavItem = 'discover' | 'wallet' | 'advisor' | 'partner' | 'admin' | 'settings'
+export type NavItem = 'discover' | 'wallet' | 'advisor' | 'partner' | 'admin' | 'guide' | 'settings'
 
 export interface NavLinkDef {
   id: NavItem
@@ -15,7 +15,7 @@ export function getRoleHome(role: UserRole | undefined): string {
   if (!role) return '/discover'
   switch (role) {
     case 'admin':
-      return '/admin'
+      return '/workflow'
     case 'partner_doctor':
       return '/partner'
     case 'advisor':
@@ -51,6 +51,7 @@ export function getNavLinksForRole(role: UserRole | undefined): NavLinkDef[] {
       ]
     case 'admin':
       return [
+        { id: 'guide', label: 'Demo Guide', icon: 'menu_book', to: '/workflow' },
         { id: 'admin', label: 'Admin', icon: 'admin_panel_settings', to: '/admin' },
         SETTINGS,
       ]
@@ -63,6 +64,7 @@ export function getNavLinksForRole(role: UserRole | undefined): NavLinkDef[] {
 const ROUTE_ACCESS: Record<string, UserRole[] | 'public' | 'guest'> = {
   '/auth': 'public',
   '/auth/advisor-apply': 'public',
+  '/workflow': 'public',
   '/discover': 'guest',
   '/discover/ai': 'guest',
   '/advisors': 'guest',

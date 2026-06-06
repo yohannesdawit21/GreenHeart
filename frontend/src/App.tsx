@@ -13,6 +13,7 @@ import { ConsultationRoomPage } from './pages/ConsultationRoomPage'
 import { DiscoveryAiPage, DiscoveryPage } from './pages/DiscoveryPage'
 import { IncomingCallPage } from './pages/IncomingCallPage'
 import { WalletPage } from './pages/WalletPage'
+import { WorkflowGuidePage } from './pages/WorkflowGuidePage'
 import { ClientAreaRoute, GuestAuthRoute, ProtectedRoute } from './components/ProtectedRoute'
 import { HomeRedirect, NotFoundRedirect, TrailingSlashRedirect } from './components/RouteRedirects'
 import { useSocket } from './context/SocketContext'
@@ -61,6 +62,7 @@ export default function App() {
           </GuestAuthRoute>
         }
       />
+      <Route path="/workflow" element={<WorkflowGuidePage />} />
 
       <Route
         path="/discover"

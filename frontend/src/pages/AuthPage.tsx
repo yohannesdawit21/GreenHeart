@@ -3,10 +3,11 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { MaterialIcon } from '../components/MaterialIcon'
 import { Logo } from '../components/Logo'
 import { PasswordInput } from '../components/PasswordInput'
-import { btnPrimary } from '../components/layout/buttonStyles'
+import { btnOutline, btnPrimary } from '../components/layout/buttonStyles'
 import { FormError } from '../components/layout/dashboard-ui'
 import { getPostAuthPath } from '../components/RouteRedirects'
 import { useAuth } from '../context/AuthContext'
+import { DEMO_ADMIN_EMAIL, DEMO_ADMIN_PASSWORD } from '../constants/demoAccess'
 import { getApiErrorMessage } from '../utils/apiError'
 import type { AuthUser } from '@shared/contracts/auth.api'
 
@@ -24,6 +25,13 @@ export function AuthPage() {
   const navigate = useNavigate()
   const location = useLocation()
   const redirectFrom = (location.state as { from?: string } | null)?.from
+
+  const fillDemoAdmin = () => {
+    setMode('login')
+    setEmail(DEMO_ADMIN_EMAIL)
+    setPassword(DEMO_ADMIN_PASSWORD)
+    setError('')
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -133,6 +141,47 @@ export function AuthPage() {
           </div>
 
           {error && <FormError className="mb-stack-md">{error}</FormError>}
+
+          {mode === 'login' && (
+            <div className="mb-stack-lg rounded-xl border border-secondary/30 bg-secondary-container/10 p-stack-md">
+              <div className="flex items-start gap-stack-sm mb-stack-sm">
+                <MaterialIcon name="admin_panel_settings" className="text-secondary shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-label-md text-label-md font-bold text-on-surface">Hackathon — demo admin</p>
+                  <p className="text-sm text-on-surface-variant mt-1">
+                    Log in as platform admin to run the full workflow. After login you&apos;ll see the step-by-step guide.
+                  </p>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-stack-sm text-sm">
+                <div className="bg-surface rounded-lg px-3 py-2 border border-outline-variant/50">
+                  <span className="text-on-surface-variant text-xs uppercase tracking-wide">Email</span>
+                  <p className="font-mono text-on-background truncate">{DEMO_ADMIN_EMAIL}</p>
+                </div>
+                <div className="bg-surface rounded-lg px-3 py-2 border border-outline-variant/50">
+                  <span className="text-on-surface-variant text-xs uppercase tracking-wide">Password</span>
+                  <p className="font-mono text-on-background">{DEMO_ADMIN_PASSWORD}</p>
+                </div>
+              </div>
+              <div className="flex flex-col sm:flex-row gap-2">
+                <button
+                  type="button"
+                  onClick={fillDemoAdmin}
+                  className={`${btnPrimary} text-sm py-2.5 px-4 flex-1 flex items-center justify-center gap-2`}
+                >
+                  <MaterialIcon name="content_paste" className="text-sm" />
+                  Use demo credentials
+                </button>
+                <Link
+                  to="/workflow"
+                  className={`${btnOutline} text-sm py-2.5 px-4 flex-1 flex items-center justify-center gap-2`}
+                >
+                  <MaterialIcon name="menu_book" className="text-sm" />
+                  View workflow guide
+                </Link>
+              </div>
+            </div>
+          )}
 
           {mode === 'login' ? (
             <form className="flex flex-col gap-stack-md" onSubmit={handleSubmit}>
