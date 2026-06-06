@@ -18,6 +18,7 @@ const router = Router();
 router.use(requireAuth);
 
 router.get('/applicants', requireRole('partner_doctor'), verificationController.listApplicants);
+router.get('/my-interview', requireRole('advisor'), verificationController.getMyInterview);
 router.post(
   '/interviews',
   requireRole('partner_doctor'),

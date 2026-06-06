@@ -10,21 +10,21 @@ export async function register(req: Request, res: Response) {
   const user = await authService.registerClient(req.body);
   const token = signAuthToken({ userId: user.id, email: user.email, role: user.role });
   setAuthCookie(res, token);
-  res.status(201).json({ user });
+  res.status(201).json({ user, token });
 }
 
 export async function registerAdvisor(req: Request, res: Response) {
   const user = await authService.registerAdvisor(req.body);
   const token = signAuthToken({ userId: user.id, email: user.email, role: user.role });
   setAuthCookie(res, token);
-  res.status(201).json({ user });
+  res.status(201).json({ user, token });
 }
 
 export async function login(req: Request, res: Response) {
   const user = await authService.login(req.body);
   const token = signAuthToken({ userId: user.id, email: user.email, role: user.role });
   setAuthCookie(res, token);
-  res.json({ user });
+  res.json({ user, token });
 }
 
 export function logout(_req: Request, res: Response) {
@@ -34,5 +34,10 @@ export function logout(_req: Request, res: Response) {
 
 export async function me(req: Request, res: Response) {
   const user = await authService.getMe(req.auth!.userId);
-  res.json({ user });
+  const token = signAuthToken({
+    userId: req.auth!.userId,
+    email: req.auth!.email,
+    role: req.auth!.role,
+  });
+  res.json({ user, token });
 }

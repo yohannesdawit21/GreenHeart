@@ -16,15 +16,16 @@ const SOCKET_URL =
   'http://localhost:4000';
 
 export function SocketProvider({ children }: { children: React.ReactNode }) {
-  const { user } = useAuth();
+  const { user, authToken } = useAuth();
   const [socket, setSocket] = useState<Socket<ServerToClientEvents, ClientToServerEvents> | null>(null);
   const [connected, setConnected] = useState(false);
 
   useEffect(() => {
-    if (!user) {
+    if (!user || !authToken) {
       if (socket) {
         socket.disconnect();
         setSocket(null);
+        setConnected(false);
       }
       return;
     }
@@ -32,16 +33,19 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
     const newSocket: Socket<ServerToClientEvents, ClientToServerEvents> = io(SOCKET_URL, {
       withCredentials: true,
       transports: ['websocket'],
+      auth: { token: authToken },
     });
 
     newSocket.on('connect', () => {
       setConnected(true);
-      console.log('Socket connected');
     });
 
     newSocket.on('disconnect', () => {
       setConnected(false);
-      console.log('Socket disconnected');
+    });
+
+    newSocket.on('connect_error', () => {
+      setConnected(false);
     });
 
     setSocket(newSocket);
@@ -49,7 +53,7 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
     return () => {
       newSocket.disconnect();
     };
-  }, [user]);
+  }, [user, authToken]);
 
   return (
     <SocketContext.Provider value={{ socket, connected }}>

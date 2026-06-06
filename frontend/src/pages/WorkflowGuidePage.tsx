@@ -57,7 +57,7 @@ const WORKFLOW_STEPS: WorkflowStep[] = [
     steps: [
       'Log in as the partner doctor you registered in Phase 0.',
       'Open Partner Portal → Start Interview on the applicant.',
-      'Share the verification room URL with the doctor applicant.',
+      'The applicant is notified automatically — they should stay on Advisor Hub.',
       'Partner joins the call and clicks Verify or Reject.',
     ],
     tip: 'Shortcut: Admin can force-verify from /admin without a video call.',

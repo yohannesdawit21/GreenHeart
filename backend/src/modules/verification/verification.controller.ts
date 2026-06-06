@@ -14,6 +14,11 @@ export async function startInterview(req: Request, res: Response) {
   res.status(201).json(result);
 }
 
+export async function getMyInterview(req: Request, res: Response) {
+  const result = await verificationService.getMyActiveInterview(req.auth!.userId);
+  res.json(result);
+}
+
 export async function completeInterview(req: Request, res: Response) {
   const result = await verificationService.completeInterview(
     req.auth!.userId,

@@ -13,14 +13,17 @@ import { btnGhost, btnToggle } from '../components/layout/buttonStyles'
 import { MaterialIcon } from '../components/MaterialIcon'
 import { sessionService } from '../api/session.service'
 import { walletService } from '../api/wallet.service'
+import { verificationService } from '../api/verification.service'
 import { useAuth } from '../context/AuthContext'
 import { useSocket } from '../context/SocketContext'
 import { getApiErrorCode, getApiErrorMessage } from '../utils/apiError'
 import type { WalletBalance, TransactionDto } from '@shared/contracts/wallet.api'
+import { useNavigate } from 'react-router-dom'
 
 export function AdvisorControlPage() {
   const { user } = useAuth()
   const { connected } = useSocket()
+  const navigate = useNavigate()
   const [online, setOnline] = useState(false)
   const [balance, setBalance] = useState<WalletBalance | null>(null)
   const [transactions, setTransactions] = useState<TransactionDto[]>([])
@@ -29,6 +32,8 @@ export function AdvisorControlPage() {
   const [presenceError, setPresenceError] = useState('')
 
   const verificationStatus = user?.profile?.verificationStatus
+  const awaitingVerification =
+    verificationStatus !== 'verified' && verificationStatus !== 'rejected'
 
   useEffect(() => {
     Promise.all([walletService.getBalance(), walletService.getTransactions()])
@@ -39,6 +44,25 @@ export function AdvisorControlPage() {
       .catch((err) => setLoadError(getApiErrorMessage(err, 'Could not load wallet data.')))
       .finally(() => setLoading(false))
   }, [])
+
+  useEffect(() => {
+    if (!awaitingVerification) return
+
+    const joinIfActive = async () => {
+      try {
+        const data = await verificationService.getMyInterview()
+        if (data.interviewId) {
+          navigate(`/verification/${data.interviewId}`)
+        }
+      } catch {
+        /* polling fallback — ignore transient errors */
+      }
+    }
+
+    void joinIfActive()
+    const poll = setInterval(joinIfActive, 3000)
+    return () => clearInterval(poll)
+  }, [awaitingVerification, navigate])
 
   const handlePresenceToggle = async () => {
     if (verificationStatus !== 'verified') return
@@ -81,9 +105,11 @@ export function AdvisorControlPage() {
           description="Manage your availability, earnings, and incoming patient sessions."
         />
 
-        {verificationStatus === 'pending_review' && (
+        {awaitingVerification && verificationStatus === 'pending_review' && (
           <DashboardAlert variant="warning" icon="hourglass_top" title="Application under review">
-            A partner doctor will review your credentials. You cannot go online until verified.
+            {connected
+              ? 'Stay on this page — when a partner doctor starts your verification interview, you will be connected to the video room automatically.'
+              : 'Connecting to realtime server… Keep this page open. You will join the verification call automatically once Live connects and the partner starts the interview.'}
           </DashboardAlert>
         )}
 

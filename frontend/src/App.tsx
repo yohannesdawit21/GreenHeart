@@ -18,7 +18,7 @@ import { ClientAreaRoute, GuestAuthRoute, ProtectedRoute } from './components/Pr
 import { HomeRedirect, NotFoundRedirect, TrailingSlashRedirect } from './components/RouteRedirects'
 import { useSocket } from './context/SocketContext'
 import { useAuth } from './context/AuthContext'
-import type { IncomingCallDispatchPayload } from '@shared/contracts/socket.events'
+import type { IncomingCallDispatchPayload, VerificationInterviewStartedPayload } from '@shared/contracts/socket.events'
 
 export default function App() {
   const { socket } = useSocket()
@@ -34,9 +34,15 @@ export default function App() {
       )
     }
 
+    const handleVerificationInterview = (payload: VerificationInterviewStartedPayload) => {
+      navigate(`/verification/${payload.interviewId}`)
+    }
+
     socket.on('incoming_call_dispatch', handleIncomingCall)
+    socket.on('verification_interview_started', handleVerificationInterview)
     return () => {
       socket.off('incoming_call_dispatch', handleIncomingCall)
+      socket.off('verification_interview_started', handleVerificationInterview)
     }
   }, [socket, user, navigate])
 

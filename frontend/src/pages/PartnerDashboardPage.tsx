@@ -58,7 +58,7 @@ export function PartnerDashboardPage() {
         />
 
         <DashboardAlert variant="info" icon="info">
-          After starting an interview, share the verification room URL with the applicant so they can join the call.
+          When you start an interview, the applicant is notified in real time and joins the verification room automatically if they are on Advisor Hub.
         </DashboardAlert>
 
         {loadError && (

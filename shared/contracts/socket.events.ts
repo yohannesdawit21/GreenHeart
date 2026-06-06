@@ -32,11 +32,17 @@ export interface CallProcessingPayload {
   status: 'ringing' | 'connecting';
 }
 
+export interface VerificationInterviewStartedPayload {
+  interviewId: string;
+  partnerName: string;
+}
+
 /** Server → Client/Advisor */
 export interface ServerToClientEvents {
   incoming_call_dispatch: (payload: IncomingCallDispatchPayload) => void;
   session_ready: (payload: SessionReadyPayload) => void;
   call_processing: (payload: CallProcessingPayload) => void;
+  verification_interview_started: (payload: VerificationInterviewStartedPayload) => void;
 }
 
 /** Client/Advisor → Server */

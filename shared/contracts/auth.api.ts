@@ -57,4 +57,5 @@ export interface AuthResponse {
 
 export interface MeResponse {
   user: AuthUser;
+  token?: string;
 }

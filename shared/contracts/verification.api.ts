@@ -50,6 +50,12 @@ export interface StartInterviewResponse {
   livekitRoom?: string;
 }
 
+/** GET /api/verification/my-interview — active interview for logged-in advisor applicant */
+export interface MyVerificationInterviewResponse {
+  interviewId: string | null;
+  partnerName?: string;
+}
+
 export interface CompleteInterviewRequest {
   outcome: InterviewOutcome;
 }

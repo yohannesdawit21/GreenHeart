@@ -7,6 +7,7 @@ import type {
   StartInterviewResponse,
   CompleteInterviewRequest,
   CompleteInterviewResponse,
+  MyVerificationInterviewResponse,
   OverrideVerificationStatusRequest,
   VerificationLiveKitTokenResponse,
 } from '@shared/contracts/verification.api';
@@ -41,6 +42,11 @@ export const verificationService = {
     const response = await apiClient.get<VerificationLiveKitTokenResponse>(
       `/verification/interviews/${interviewId}/livekit-token`,
     );
+    return response.data;
+  },
+
+  getMyInterview: async (): Promise<MyVerificationInterviewResponse> => {
+    const response = await apiClient.get<MyVerificationInterviewResponse>('/verification/my-interview');
     return response.data;
   },
 

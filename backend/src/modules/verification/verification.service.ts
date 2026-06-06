@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import { config } from '../../config/index.js';
 import { AppError } from '../../shared/errors/AppError.js';
 import type { InterviewOutcome, VerificationStatus } from '../../shared/types/contracts.js';
+import { getIO } from '../../socket/index.js';
 import { toApplicantDto, toPartnerDoctorDto } from '../users/users.mapper.js';
 import * as usersRepo from '../users/users.repository.js';
 import * as verificationRepo from './verification.repository.js';
@@ -16,6 +17,21 @@ async function triggerReindex(advisorId: string): Promise<void> {
   } catch {
     // M4 may not be implemented yet — non-fatal
   }
+}
+
+async function notifyApplicantInterviewStarted(
+  applicantId: string,
+  interviewId: string,
+  partnerDoctorId: string,
+): Promise<void> {
+  const io = getIO();
+  if (!io) return;
+
+  const partner = await usersRepo.findUserById(partnerDoctorId);
+  io.to(`user:${applicantId}`).emit('verification_interview_started', {
+    interviewId,
+    partnerName: partner?.username ?? 'Partner Doctor',
+  });
 }
 
 export async function listApplicants() {
@@ -34,6 +50,7 @@ export async function startInterview(partnerDoctorId: string, applicantId: strin
 
   const existing = await verificationRepo.findInProgressInterviewForApplicant(applicantId);
   if (existing) {
+    await notifyApplicantInterviewStarted(applicantId, existing.id, partnerDoctorId);
     return {
       interviewId: existing.id,
       livekitRoom: existing.livekit_room,
@@ -47,9 +64,24 @@ export async function startInterview(partnerDoctorId: string, applicantId: strin
     livekitRoom,
   });
 
+  await notifyApplicantInterviewStarted(applicantId, interview.id, partnerDoctorId);
+
   return {
     interviewId: interview.id,
     livekitRoom: interview.livekit_room,
+  };
+}
+
+export async function getMyActiveInterview(applicantId: string) {
+  const interview = await verificationRepo.findInProgressInterviewForApplicant(applicantId);
+  if (!interview) {
+    return { interviewId: null as string | null };
+  }
+
+  const partner = await usersRepo.findUserById(interview.partner_doctor_id);
+  return {
+    interviewId: interview.id,
+    partnerName: partner?.username ?? 'Partner Doctor',
   };
 }
 
