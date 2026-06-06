@@ -47,8 +47,8 @@ When implementing an endpoint or socket event, update the contract file **first*
 
 | Method | Path | Contract file | Status |
 |--------|------|---------------|--------|
-| POST | `/api/search/semantic` | `search.api.ts` | stub |
-| POST | `/api/search/reindex/:advisorId` | `search.api.ts` | stub (advisor onboarding) |
+| POST | `/api/search/semantic` | `search.api.ts` | implemented |
+| POST | `/api/search/reindex/:advisorId` | `search.api.ts` | implemented |
 
 ### Sessions & Presence (Role C — M5)
 
