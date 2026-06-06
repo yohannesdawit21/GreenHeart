@@ -1,10 +1,11 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { MaterialIcon } from '../components/MaterialIcon'
 import { Logo } from '../components/Logo'
 import { PasswordInput } from '../components/PasswordInput'
 import { btnPrimary } from '../components/layout/buttonStyles'
 import { FormError } from '../components/layout/dashboard-ui'
+import { getPostAuthPath } from '../components/RouteRedirects'
 import { useAuth } from '../context/AuthContext'
 import { getApiErrorMessage } from '../utils/apiError'
 import type { AuthUser } from '@shared/contracts/auth.api'
@@ -21,6 +22,8 @@ export function AuthPage() {
 
   const { login, register } = useAuth()
   const navigate = useNavigate()
+  const location = useLocation()
+  const redirectFrom = (location.state as { from?: string } | null)?.from
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -45,15 +48,8 @@ export function AuthPage() {
         user = response
       }
 
-      // Role-based redirect
-      if (user?.role === 'advisor') {
-        navigate('/advisor')
-      } else if (user?.role === 'partner_doctor') {
-        navigate('/partner')
-      } else if (user?.role === 'admin') {
-        navigate('/admin')
-      } else {
-        navigate('/discover')
+      if (user?.role) {
+        navigate(getPostAuthPath(user.role, redirectFrom), { replace: true })
       }
     } catch (err: unknown) {
       setError(getApiErrorMessage(err, 'Authentication failed'))

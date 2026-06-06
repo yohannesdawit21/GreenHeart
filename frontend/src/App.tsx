@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { Navigate, Route, Routes, useNavigate } from 'react-router-dom'
+import { Route, Routes, useNavigate } from 'react-router-dom'
 import { AdvisorControlPage } from './pages/AdvisorControlPage'
 import { AdvisorApplyPage } from './pages/AdvisorApplyPage'
 import { AdvisorProfilePage } from './pages/AdvisorProfilePage'
@@ -14,9 +14,9 @@ import { DiscoveryAiPage, DiscoveryPage } from './pages/DiscoveryPage'
 import { IncomingCallPage } from './pages/IncomingCallPage'
 import { WalletPage } from './pages/WalletPage'
 import { ClientAreaRoute, GuestAuthRoute, ProtectedRoute } from './components/ProtectedRoute'
+import { HomeRedirect, NotFoundRedirect, TrailingSlashRedirect } from './components/RouteRedirects'
 import { useSocket } from './context/SocketContext'
 import { useAuth } from './context/AuthContext'
-import { getRoleHome } from './utils/roleAccess'
 import type { IncomingCallDispatchPayload } from '@shared/contracts/socket.events'
 
 export default function App() {
@@ -40,8 +40,10 @@ export default function App() {
   }, [socket, user, navigate])
 
   return (
-    <Routes>
-      <Route path="/" element={<Navigate to={user ? getRoleHome(user.role) : '/discover'} replace />} />
+    <>
+      <TrailingSlashRedirect />
+      <Routes>
+      <Route path="/" element={<HomeRedirect />} />
 
       <Route
         path="/auth"
@@ -159,7 +161,8 @@ export default function App() {
         }
       />
 
-      <Route path="*" element={<Navigate to={user ? getRoleHome(user.role) : '/discover'} replace />} />
-    </Routes>
+      <Route path="*" element={<NotFoundRedirect />} />
+      </Routes>
+    </>
   )
 }
