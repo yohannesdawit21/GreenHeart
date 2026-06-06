@@ -1,11 +1,11 @@
 import { AppError } from '../../shared/errors/AppError.js';
-import { listOnlineAdvisorIds } from '../presence/presence.repository.js';
+import { getOnlineAdvisorIds } from '../presence/presence.repository.js';
 import { toAdvisorCard, toAuthUser } from './users.mapper.js';
 import * as usersRepo from './users.repository.js';
 import type { UpdateProfileRequest } from '../../shared/types/contracts.js';
 
 async function withOnlineStatus<T extends { id: string }>(cards: T[]): Promise<(T & { isOnline?: boolean })[]> {
-  const onlineIds = new Set(await listOnlineAdvisorIds());
+  const onlineIds = await getOnlineAdvisorIds();
   return cards.map((c) => ({ ...c, isOnline: onlineIds.has(c.id) }));
 }
 
