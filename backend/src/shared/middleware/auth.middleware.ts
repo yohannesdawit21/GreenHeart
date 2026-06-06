@@ -42,7 +42,10 @@ export function clearAuthCookie(res: Response): void {
 }
 
 export function requireAuth(req: Request, _res: Response, next: NextFunction): void {
-  const token = req.cookies?.[AUTH_COOKIE] as string | undefined;
+  const bearer = req.headers.authorization?.startsWith('Bearer ')
+    ? req.headers.authorization.slice(7)
+    : undefined;
+  const token = bearer || (req.cookies?.[AUTH_COOKIE] as string | undefined);
   if (!token) {
     throw new AppError(401, 'UNAUTHORIZED', 'Authentication required');
   }
