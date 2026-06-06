@@ -3,13 +3,27 @@
  * @see agent/api-contracts.md
  */
 
-export type UserRole = 'client' | 'advisor';
+export type UserRole = 'client' | 'advisor' | 'partner_doctor' | 'admin';
+
+export type VerificationStatus = 'pending_review' | 'verified' | 'rejected' | 'suspended';
 
 export interface RegisterRequest {
   email: string;
   password: string;
-  role: UserRole;
+  /** Client path only — use RegisterAdvisorRequest for doctor applicants */
+  role?: 'client';
   profile?: {
+    username: string;
+    bio?: string;
+    tags?: string[];
+    coinRatePerSession?: number;
+  };
+}
+
+export interface RegisterAdvisorRequest {
+  email: string;
+  password: string;
+  profile: {
     username: string;
     bio?: string;
     tags?: string[];
@@ -31,6 +45,8 @@ export interface AuthUser {
     bio: string;
     tags: string[];
     coinRatePerSession: number;
+    /** Present for advisor role — M6 */
+    verificationStatus?: VerificationStatus;
   };
 }
 

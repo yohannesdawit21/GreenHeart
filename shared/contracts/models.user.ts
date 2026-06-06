@@ -2,13 +2,17 @@
  * Shared domain models — see agent/data-models.md (PostgreSQL)
  */
 
-export type UserRole = 'client' | 'advisor';
+export type UserRole = 'client' | 'advisor' | 'partner_doctor' | 'admin';
+
+export type VerificationStatus = 'pending_review' | 'verified' | 'rejected' | 'suspended';
 
 export interface UserProfile {
   username: string;
   bio: string;
   tags: string[];
   coinRatePerSession: number;
+  /** Advisors only — M6 */
+  verificationStatus?: VerificationStatus;
 }
 
 export interface UserWallet {

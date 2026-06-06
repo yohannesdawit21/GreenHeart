@@ -4,20 +4,23 @@
 **Agent:** unassigned  
 **Spec:** [agent/modules/M5-presence-sessions.md](../../agent/modules/M5-presence-sessions.md)
 
+> Rebase `feat/m4-m5-role-c` onto latest `main` before starting.
+
 ## Tasks
 
-- [ ] Redis connection
+- [ ] Replace Redis stub — real connection in `database/redis/connection.ts`
 - [ ] PATCH `/api/presence/status` (verified advisors only)
 - [ ] GET `/api/presence/advisors`
-- [ ] Session repository (Postgres `sessions` table)
 - [ ] Run `backend/sql/002_sessions.sql`
-- [ ] POST `/api/session/initiate` (verified advisor only; calls M3 lockEscrow)
+- [ ] Session repository (Postgres `sessions` table)
+- [ ] POST `/api/session/initiate` (verified advisor; calls M3 `lockEscrow`)
 - [ ] Socket.io server + JWT auth on connect
-- [ ] Handlers: incoming_call_dispatch, call_accepted, call_declined
-- [ ] LiveKit token service
-- [ ] POST `/api/session/:id/end` + escrow release
+- [ ] Handlers: `incoming_call_dispatch`, `call_accepted`, `call_declined`, `session_ready`
+- [ ] LiveKit token service (`backend/src/livekit/token.service.ts`)
+- [ ] GET `/api/session/:id/livekit-token`
+- [ ] POST `/api/session/:id/end` + escrow release via M3
 - [ ] Update `shared/contracts/session.api.ts` + `socket.events.ts`
 
 ## Blocked by
 
-M2, M3
+M2, M3 — **unblocked** ✅ (both on `main`)
