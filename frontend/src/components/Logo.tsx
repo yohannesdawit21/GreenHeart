@@ -1,3 +1,5 @@
+import { useId } from 'react';
+
 interface LogoProps {
   className?: string
   title?: string
@@ -8,6 +10,8 @@ interface LogoProps {
  * platform's teal-green palette. Size it via `className` (e.g. "w-10 h-10").
  */
 export function Logo({ className = 'w-10 h-10', title = 'Green Heart' }: LogoProps) {
+  const id = useId();
+  const gradientId = `greenHeartBody-${id}`;
   return (
     <svg
       viewBox="0 0 48 48"
@@ -19,7 +23,7 @@ export function Logo({ className = 'w-10 h-10', title = 'Green Heart' }: LogoPro
     >
       <title>{title}</title>
       <defs>
-        <linearGradient id="greenHeartBody" x1="24" y1="3" x2="24" y2="47" gradientUnits="userSpaceOnUse">
+        <linearGradient id={gradientId} x1="24" y1="3" x2="24" y2="47" gradientUnits="userSpaceOnUse">
           <stop stopColor="#0d5c60" />
           <stop offset="1" stopColor="#004346" />
         </linearGradient>
@@ -27,7 +31,7 @@ export function Logo({ className = 'w-10 h-10', title = 'Green Heart' }: LogoPro
       {/* Leaf/flame body — pointed top reads as heart, rounded base as leaf */}
       <path
         d="M24 3C33 14 41 22 41 31C41 40.4 33.4 47 24 47C14.6 47 7 40.4 7 31C7 22 15 14 24 3Z"
-        fill="url(#greenHeartBody)"
+        fill={`url(#${gradientId})`}
       />
       {/* Inner glow — splits the mark into two leaf halves */}
       <path
