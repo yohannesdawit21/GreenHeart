@@ -2,12 +2,48 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { MaterialIcon } from '../components/MaterialIcon'
 import { Logo } from '../components/Logo'
+import { useAuth } from '../context/AuthContext'
 
 type AuthMode = 'login' | 'signup'
 
 export function AuthPage() {
   const [mode, setMode] = useState<AuthMode>('login')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [role, setRole] = useState<'client' | 'advisor'>('client')
+  const [error, setError] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
+
+  const { login, register } = useAuth()
   const navigate = useNavigate()
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError('')
+    setIsSubmitting(true)
+
+    try {
+      if (mode === 'login') {
+        await login(email, password)
+      } else {
+        await register({ 
+          email, 
+          password, 
+          role,
+          profile: {
+            username: email.split('@')[0],
+            tags: [],
+            coinRatePerSession: role === 'advisor' ? 100 : 0
+          }
+        })
+      }
+      navigate('/discover')
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Authentication failed')
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
 
   return (
     <div className="bg-background text-on-background font-body-md antialiased min-h-screen flex flex-col md:flex-row">
@@ -83,8 +119,14 @@ export function AuthPage() {
             </button>
           </div>
 
+          {error && (
+            <div className="mb-stack-md p-stack-sm bg-error-container text-on-error-container rounded-lg text-label-md">
+              {error}
+            </div>
+          )}
+
           {mode === 'login' ? (
-            <form className="flex flex-col gap-stack-md" onSubmit={(e) => { e.preventDefault(); navigate('/discover') }}>
+            <form className="flex flex-col gap-stack-md" onSubmit={handleSubmit}>
               <div className="text-center mb-stack-sm">
                 <h2 className="font-headline-md text-headline-md text-on-surface">Welcome Back</h2>
                 <p className="font-body-md text-body-md text-on-surface-variant">
@@ -97,6 +139,9 @@ export function AuthPage() {
                   className="w-full bg-surface-container-lowest border border-outline-variant rounded-lg px-4 py-3 font-body-md text-body-md text-on-surface focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all placeholder:text-outline"
                   placeholder="name@example.com"
                   type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
                 />
               </div>
               <div>
@@ -110,13 +155,17 @@ export function AuthPage() {
                   className="w-full bg-surface-container-lowest border border-outline-variant rounded-lg px-4 py-3 font-body-md text-body-md text-on-surface focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all placeholder:text-outline"
                   placeholder="••••••••"
                   type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
                 />
               </div>
               <button
                 type="submit"
-                className="mt-stack-sm w-full bg-primary text-on-primary font-label-md text-label-md py-3 rounded-lg hover:bg-on-primary-fixed-variant transition-colors flex justify-center items-center gap-stack-sm"
+                disabled={isSubmitting}
+                className="mt-stack-sm w-full bg-primary text-on-primary font-label-md text-label-md py-3 rounded-lg hover:bg-on-primary-fixed-variant transition-colors flex justify-center items-center gap-stack-sm disabled:opacity-50"
               >
-                CONTINUE TO PLATFORM
+                {isSubmitting ? 'PROCESSING...' : 'CONTINUE TO PLATFORM'}
                 <MaterialIcon name="arrow_forward" className="text-[18px]" />
               </button>
               <div className="mt-stack-sm relative flex items-center justify-center">
@@ -140,21 +189,33 @@ export function AuthPage() {
               </button>
             </form>
           ) : (
-            <form className="flex flex-col gap-stack-md" onSubmit={(e) => { e.preventDefault(); navigate('/discover') }}>
+            <form className="flex flex-col gap-stack-md" onSubmit={handleSubmit}>
               <div className="text-center mb-stack-sm">
                 <h2 className="font-headline-md text-headline-md text-on-surface">Create Account</h2>
                 <p className="font-body-md text-body-md text-on-surface-variant">Select your primary role to get started.</p>
               </div>
               <div className="grid grid-cols-2 gap-stack-sm mb-stack-sm">
                 <label className="cursor-pointer">
-                  <input defaultChecked className="peer sr-only" name="role" type="radio" />
+                  <input 
+                    className="peer sr-only" 
+                    name="role" 
+                    type="radio" 
+                    checked={role === 'client'}
+                    onChange={() => setRole('client')}
+                  />
                   <div className="p-stack-sm border border-outline-variant rounded-lg peer-checked:border-primary peer-checked:bg-surface-container peer-checked:ring-1 peer-checked:ring-primary transition-all text-center">
                     <MaterialIcon name="health_and_safety" filled className="text-primary mb-unit" />
                     <div className="font-label-md text-label-md text-on-surface">Looking for Care</div>
                   </div>
                 </label>
                 <label className="cursor-pointer">
-                  <input className="peer sr-only" name="role" type="radio" />
+                  <input 
+                    className="peer sr-only" 
+                    name="role" 
+                    type="radio" 
+                    checked={role === 'advisor'}
+                    onChange={() => setRole('advisor')}
+                  />
                   <div className="p-stack-sm border border-outline-variant rounded-lg peer-checked:border-primary peer-checked:bg-surface-container peer-checked:ring-1 peer-checked:ring-primary transition-all text-center">
                     <MaterialIcon name="medical_services" filled className="text-primary mb-unit" />
                     <div className="font-label-md text-label-md text-on-surface">Offering Service</div>
@@ -167,6 +228,9 @@ export function AuthPage() {
                   className="w-full bg-surface-container-lowest border border-outline-variant rounded-lg px-4 py-3 font-body-md text-body-md text-on-surface focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all placeholder:text-outline"
                   placeholder="name@example.com"
                   type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
                 />
               </div>
               <div>
@@ -175,13 +239,17 @@ export function AuthPage() {
                   className="w-full bg-surface-container-lowest border border-outline-variant rounded-lg px-4 py-3 font-body-md text-body-md text-on-surface focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all placeholder:text-outline"
                   placeholder="Min. 8 characters"
                   type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
                 />
               </div>
               <button
                 type="submit"
-                className="mt-stack-sm w-full bg-primary text-on-primary font-label-md text-label-md py-3 rounded-lg hover:bg-on-primary-fixed-variant transition-colors flex justify-center items-center gap-stack-sm"
+                disabled={isSubmitting}
+                className="mt-stack-sm w-full bg-primary text-on-primary font-label-md text-label-md py-3 rounded-lg hover:bg-on-primary-fixed-variant transition-colors flex justify-center items-center gap-stack-sm disabled:opacity-50"
               >
-                CREATE ACCOUNT
+                {isSubmitting ? 'CREATING...' : 'CREATE ACCOUNT'}
                 <MaterialIcon name="arrow_forward" className="text-[18px]" />
               </button>
             </form>

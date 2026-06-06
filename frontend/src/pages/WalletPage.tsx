@@ -1,10 +1,14 @@
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { MaterialIcon } from '../components/MaterialIcon'
 import { Logo } from '../components/Logo'
+import { walletService } from '../api/wallet.service'
+import { useAuth } from '../context/AuthContext'
+import type { WalletBalance, CoinPackageId } from '@shared/contracts/wallet.api'
 
 const packages = [
   {
-    id: 'starter',
+    id: 'starter' as CoinPackageId,
     label: 'Starter',
     coins: 20,
     price: '$19.99 USD',
@@ -12,7 +16,7 @@ const packages = [
     features: ['1 AI Diagnostic Scan', 'Basic Metric Tracking'],
   },
   {
-    id: 'growth',
+    id: 'growth' as CoinPackageId,
     label: 'Most Popular',
     coins: 50,
     price: '$44.99 USD',
@@ -22,7 +26,7 @@ const packages = [
     features: ['3 AI Diagnostic Scans', 'Advanced Metric Tracking', '1 Month Premium Access'],
   },
   {
-    id: 'pro',
+    id: 'pro' as CoinPackageId,
     label: 'Pro',
     coins: 120,
     price: '$99.99 USD',
@@ -33,6 +37,46 @@ const packages = [
 ]
 
 export function WalletPage() {
+  const { user } = useAuth()
+  const [balance, setBalance] = useState<WalletBalance | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [selectedPackage, setSelectedPackage] = useState<CoinPackageId>('growth')
+  const [isPurchasing, setIsPurchasing] = useState(false)
+
+  useEffect(() => {
+    const fetchBalance = async () => {
+      try {
+        const data = await walletService.getBalance()
+        setBalance(data.wallet)
+      } catch (err) {
+        console.error('Failed to fetch balance', err)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchBalance()
+  }, [])
+
+  const handlePurchase = async () => {
+    setIsPurchasing(true)
+    try {
+      const data = await walletService.initiatePurchase({ packageId: selectedPackage })
+      if (data.checkoutUrl) {
+        window.location.href = data.checkoutUrl
+      } else {
+        // Handle mock payment or success message
+        alert(`Successfully initiated purchase of ${data.coins} coins for ${data.amountUsd} USD.`)
+        // Refresh balance after purchase (mock)
+        const updatedBalance = await walletService.getBalance()
+        setBalance(updatedBalance.wallet)
+      }
+    } catch (err) {
+      console.error('Failed to initiate purchase', err)
+    } finally {
+      setIsPurchasing(false)
+    }
+  }
+
   return (
     <div className="bg-background text-on-background antialiased min-h-screen flex">
       <nav className="hidden md:flex flex-col w-64 h-screen py-stack-lg px-stack-md gap-stack-md bg-surface border-r border-outline-variant fixed left-0 top-0 z-40">
@@ -87,11 +131,11 @@ export function WalletPage() {
               <MaterialIcon name="monetization_on" />
             </button>
             <div className="w-10 h-10 rounded-full bg-surface-dim overflow-hidden cursor-pointer border border-outline-variant hover:border-primary transition-colors">
-              <img
-                alt="User profile"
-                className="w-full h-full object-cover"
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuCKfXjwFisKRVVRSGXawzQK01zI8nUFSjXFStAx1LpwDlJH0ji1kv76bM9hyMQF383_7fbrej0mIjfiGu_bltKCjfPP8y1AN3eu8Yt3IKOyctRJdbtlFCXqEhWvfzFJenWx15YVDptYJj37pKhHrkhp4PKG5xJf3DTcTBwoZTMibStkJlSBwOu1m-wI1ICnWyxOEcsXlA0k552pF5C5ImkUoqHclwx50foOBzuCXZ2AUJ8KomMWcZ7m5XwCrAm-uIVsmCh6gby6wcv_"
-              />
+              {user?.profile?.username && (
+                <div className="w-full h-full flex items-center justify-center bg-primary text-on-primary font-bold">
+                  {user.profile.username[0].toUpperCase()}
+                </div>
+              )}
             </div>
           </div>
         </header>
@@ -106,7 +150,9 @@ export function WalletPage() {
                 </p>
                 <div className="flex items-baseline gap-3">
                   <MaterialIcon name="monetization_on" className="text-4xl opacity-90" />
-                  <h2 className="font-stat-xl text-stat-xl font-extrabold tracking-tight">50 Coins</h2>
+                  <h2 className="font-stat-xl text-stat-xl font-extrabold tracking-tight">
+                    {loading ? '...' : `${balance?.coinBalance || 0} Coins`}
+                  </h2>
                 </div>
               </div>
               <button type="button" className="bg-surface-container-lowest text-primary px-6 py-3 rounded-lg font-label-md text-label-md hover:bg-surface-bright transition-colors shadow-sm flex items-center gap-2">
@@ -127,16 +173,17 @@ export function WalletPage() {
               {packages.map((pkg) => (
                 <div
                   key={pkg.id}
+                  onClick={() => setSelectedPackage(pkg.id)}
                   className={`bg-surface-container-lowest rounded-xl p-stack-md flex flex-col justify-between h-full cursor-pointer transition-all ${
-                    pkg.featured
+                    selectedPackage === pkg.id
                       ? 'border-2 border-primary shadow-ambient relative transform md:-translate-y-2'
                       : 'border border-outline-variant hover:shadow-ambient'
                   }`}
                 >
-                  {pkg.featured && (
+                  {(pkg.featured || selectedPackage === pkg.id) && (
                     <>
                       <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-on-primary font-label-md text-[10px] uppercase tracking-wider px-3 py-1 rounded-full">
-                        {pkg.label}
+                        {pkg.featured ? pkg.label : 'SELECTED'}
                       </div>
                       <div className="absolute top-4 right-4 text-primary">
                         <MaterialIcon name="check_circle" filled />
@@ -147,7 +194,7 @@ export function WalletPage() {
                     <div className="flex justify-between items-start mb-4">
                       <div
                         className={`w-12 h-12 rounded-lg flex items-center justify-center ${
-                          pkg.featured ? 'bg-primary-container text-on-primary-container' : 'bg-surface-container text-primary'
+                          selectedPackage === pkg.id ? 'bg-primary-container text-on-primary-container' : 'bg-surface-container text-primary'
                         }`}
                       >
                         <MaterialIcon name={pkg.icon} />
@@ -180,8 +227,13 @@ export function WalletPage() {
               ))}
             </div>
             <div className="mt-stack-lg flex justify-end">
-              <button type="button" className="bg-primary text-on-primary font-label-md text-label-md px-8 py-4 rounded-lg shadow-ambient hover:bg-on-primary-fixed-variant transition-colors flex items-center gap-2 w-full md:w-auto justify-center">
-                INITIALIZE TOP-UP
+              <button 
+                type="button" 
+                onClick={handlePurchase}
+                disabled={isPurchasing}
+                className="bg-primary text-on-primary font-label-md text-label-md px-8 py-4 rounded-lg shadow-ambient hover:bg-on-primary-fixed-variant transition-colors flex items-center gap-2 w-full md:w-auto justify-center disabled:opacity-50"
+              >
+                {isPurchasing ? 'PROCESSING...' : 'INITIALIZE TOP-UP'}
                 <MaterialIcon name="arrow_forward" className="text-sm" />
               </button>
             </div>
