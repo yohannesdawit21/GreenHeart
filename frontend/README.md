@@ -1,6 +1,6 @@
-# Codex Frontend
+# Green Heart Frontend
 
-React implementation of **Project Codex UI Manual** (Stitch project `12248742422895015941`) for GreenHeart.
+React implementation of the **Green Heart UI Manual** (Stitch project `12248742422895015941`).
 
 ## Screens
 
@@ -28,7 +28,7 @@ Open http://localhost:5173 — you'll land on the auth screen. Use **Continue to
 
 - React 19 + TypeScript
 - Vite
-- Tailwind CSS v4 (Codex design tokens from Stitch)
+- Tailwind CSS v4 (Green Heart design tokens from Stitch)
 - React Router
 
 ## Team ownership

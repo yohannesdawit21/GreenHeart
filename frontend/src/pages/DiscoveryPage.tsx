@@ -38,7 +38,7 @@ export function DiscoveryPage({ aiPulse = false }: DiscoveryPageProps) {
             <div className="flex-grow">
               <h4 className="font-headline-md text-[18px] text-on-background">AI Pulse Active</h4>
               <p className="font-body-md text-body-md text-on-surface-variant">
-                Codex AI analyzed your recent logs and prioritized advisors for holistic balance and burnout recovery.
+                Green Heart AI analyzed your recent logs and prioritized advisors for holistic balance and burnout recovery.
               </p>
             </div>
             <div className="w-2 h-2 rounded-full bg-vibrant-coral pulse-dot shrink-0" />
@@ -96,7 +96,7 @@ export function DiscoveryPage({ aiPulse = false }: DiscoveryPageProps) {
           <div className="grow text-center md:text-left">
             <h4 className="font-headline-md text-[18px] text-on-background">Not sure who to choose?</h4>
             <p className="font-body-md text-body-md text-on-surface-variant">
-              Let our Codex AI matching engine ask you a few quick questions to find your ideal professional fit.
+              Let our Green Heart AI matching engine ask you a few quick questions to find your ideal professional fit.
             </p>
           </div>
           <button

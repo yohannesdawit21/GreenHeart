@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { MaterialIcon } from '../components/MaterialIcon'
+import { Logo } from '../components/Logo'
 
 const performanceLogs = [
   { date: 'Oct 24, 2023', sessionId: '#SD-8921', duration: '45 mins', coins: 15 },
@@ -15,7 +16,10 @@ export function AdvisorControlPage() {
   return (
     <div className="text-on-surface antialiased bg-background min-h-screen">
       <header className="bg-surface-container-lowest border-b border-outline-variant fixed top-0 left-0 w-full z-50 flex justify-between items-center px-margin-desktop h-16 md:hidden">
-        <div className="font-headline-md text-headline-md font-bold text-primary">Codex</div>
+        <div className="flex items-center gap-2 font-headline-md text-headline-md font-bold text-primary">
+          <Logo className="w-8 h-8" />
+          Green Heart
+        </div>
         <div className="flex items-center gap-stack-md">
           <Link to="/auth" className="text-primary cursor-pointer hover:bg-surface-container p-2 rounded-full">
             <MaterialIcon name="account_circle" />
@@ -27,11 +31,14 @@ export function AdvisorControlPage() {
       </header>
 
       <nav className="bg-surface border-r border-outline-variant hidden md:flex flex-col w-64 h-screen py-stack-lg px-stack-md gap-stack-md fixed left-0 top-0">
-        <div className="mb-stack-lg">
-          <Link to="/discover" className="font-headline-md text-headline-md font-extrabold text-primary block">
-            Codex
-          </Link>
-          <div className="font-label-md text-label-md text-on-surface-variant">Holistic Health</div>
+        <div className="mb-stack-lg flex items-center gap-3">
+          <Logo className="w-10 h-10" />
+          <div>
+            <Link to="/discover" className="font-headline-md text-headline-md font-extrabold text-primary block">
+              Green Heart
+            </Link>
+            <div className="font-label-md text-label-md text-on-surface-variant">Holistic Health</div>
+          </div>
         </div>
         <Link to="/discover" className="flex items-center gap-stack-sm text-on-surface-variant px-4 py-3 hover:bg-surface-container-high rounded-lg transition-transform hover:scale-95">
           <MaterialIcon name="explore" />

@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { MaterialIcon } from '../components/MaterialIcon'
+import { Logo } from '../components/Logo'
 
 const packages = [
   {
@@ -36,12 +37,10 @@ export function WalletPage() {
     <div className="bg-background text-on-background antialiased min-h-screen flex">
       <nav className="hidden md:flex flex-col w-64 h-screen py-stack-lg px-stack-md gap-stack-md bg-surface border-r border-outline-variant fixed left-0 top-0 z-40">
         <div className="mb-stack-lg px-4 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center text-on-primary font-headline-md font-bold">
-            C
-          </div>
+          <Logo className="w-10 h-10" />
           <div>
             <Link to="/discover" className="font-headline-md text-headline-md font-extrabold text-primary block">
-              Codex
+              Green Heart
             </Link>
             <p className="font-label-md text-label-md text-on-surface-variant">Holistic Health</p>
           </div>
@@ -77,10 +76,8 @@ export function WalletPage() {
       <main className="flex-1 md:ml-64 bg-[#F8F9FA] min-h-screen pb-24 md:pb-8">
         <header className="w-full h-16 flex justify-between items-center px-margin-mobile md:px-margin-desktop bg-surface-container-lowest md:bg-transparent border-b border-outline-variant md:border-none sticky top-0 z-30 md:static">
           <div className="md:hidden flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-on-primary font-bold text-sm">
-              C
-            </div>
-            <span className="font-headline-md text-headline-md font-bold text-primary">Codex</span>
+            <Logo className="w-8 h-8" />
+            <span className="font-headline-md text-headline-md font-bold text-primary">Green Heart</span>
           </div>
           <div className="hidden md:block">
             <h2 className="font-headline-md text-headline-md text-on-background">Wallet Hub</h2>
@@ -123,7 +120,7 @@ export function WalletPage() {
             <div className="mb-stack-md">
               <h3 className="font-headline-md text-headline-md text-on-background mb-2">Acquire Coins</h3>
               <p className="font-body-md text-body-md text-on-surface-variant">
-                Select a bundle to top up your Codex wallet for AI health diagnostics and premium features.
+                Select a bundle to top up your Green Heart wallet for AI health diagnostics and premium features.
               </p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-gutter">

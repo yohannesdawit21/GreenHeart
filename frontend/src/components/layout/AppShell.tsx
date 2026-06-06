@@ -1,4 +1,5 @@
 import { Link, useLocation } from 'react-router-dom'
+import { Logo } from '../Logo'
 
 type NavItem = 'discover' | 'wallet' | 'logs' | 'settings' | 'advisor'
 
@@ -30,8 +31,9 @@ export function AppShell({
     <div className="text-on-background font-body-md antialiased md:pl-64 pt-16 md:pt-0 pb-20 md:pb-0 min-h-screen bg-background">
       <header className="bg-surface-container-lowest border-b border-outline-variant fixed top-0 left-0 w-full z-50 flex justify-between items-center px-margin-desktop h-16 md:ml-64 md:w-[calc(100%-16rem)]">
         <div className="flex items-center gap-4 w-full max-w-2xl mx-auto md:mx-0">
-          <Link to="/discover" className="font-headline-md text-headline-md font-bold text-primary md:hidden">
-            Codex
+          <Link to="/discover" className="flex items-center gap-2 font-headline-md text-headline-md font-bold text-primary md:hidden">
+            <Logo className="w-8 h-8" />
+            Green Heart
           </Link>
           {showSearch && (
             <div className="grow relative hidden md:block">
@@ -67,12 +69,10 @@ export function AppShell({
 
       <nav className="bg-surface border-r border-outline-variant fixed left-0 top-0 h-full w-64 hidden md:flex flex-col py-stack-lg px-stack-md gap-stack-md z-40">
         <div className="flex items-center gap-3 px-4 mb-8">
-          <div className="w-10 h-10 rounded-full bg-primary-container flex items-center justify-center text-on-primary-container font-headline-md font-bold">
-            C
-          </div>
+          <Logo className="w-10 h-10" />
           <div>
             <Link to="/discover" className="font-headline-md text-headline-md font-extrabold text-primary leading-tight block">
-              Codex
+              Green Heart
             </Link>
             <p className="font-label-md text-label-md text-on-surface-variant">Holistic Health</p>
           </div>

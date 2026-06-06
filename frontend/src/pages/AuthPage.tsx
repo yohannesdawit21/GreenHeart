@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { MaterialIcon } from '../components/MaterialIcon'
+import { Logo } from '../components/Logo'
 
 type AuthMode = 'login' | 'signup'
 
@@ -14,7 +15,10 @@ export function AuthPage() {
         <div className="absolute -top-32 -left-32 w-96 h-96 bg-primary rounded-full mix-blend-multiply filter blur-3xl opacity-50 animate-pulse" />
         <div className="absolute -bottom-32 -right-32 w-96 h-96 bg-on-primary-fixed-variant rounded-full mix-blend-multiply filter blur-3xl opacity-50" />
         <div className="relative z-10">
-          <h1 className="font-display-lg text-display-lg mb-stack-md">Codex</h1>
+          <div className="flex items-center gap-stack-sm mb-stack-md">
+            <Logo className="w-12 h-12" />
+            <h1 className="font-display-lg text-display-lg">Green Heart</h1>
+          </div>
           <p className="font-body-lg text-body-lg text-primary-fixed-dim max-w-md">
             The holistic health intelligence platform powered by a global coin economy.
           </p>
@@ -48,8 +52,9 @@ export function AuthPage() {
 
       <div className="w-full md:w-1/2 flex items-center justify-center p-margin-mobile md:p-margin-desktop bg-surface relative">
         <div className="w-full max-w-md bg-surface-container-lowest rounded-xl border border-outline-variant shadow-xl shadow-primary-container/10 p-stack-lg transition-all duration-300 relative z-10">
-          <div className="md:hidden text-center mb-stack-lg">
-            <h1 className="font-headline-lg-mobile text-headline-lg-mobile text-primary font-bold">Codex</h1>
+          <div className="md:hidden flex flex-col items-center text-center mb-stack-lg">
+            <Logo className="w-12 h-12 mb-stack-sm" />
+            <h1 className="font-headline-lg-mobile text-headline-lg-mobile text-primary font-bold">Green Heart</h1>
             <p className="font-label-md text-label-md text-on-surface-variant">Holistic Health Intelligence</p>
           </div>
 
