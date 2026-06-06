@@ -17,16 +17,16 @@ const router = Router();
 
 router.use(requireAuth);
 
-router.get('/applicants', requireRole('partner_doctor'), verificationController.listApplicants);
+router.get('/applicants', requireRole('partner_doctor', 'admin'), verificationController.listApplicants);
 router.post(
   '/interviews',
-  requireRole('partner_doctor'),
+  requireRole('partner_doctor', 'admin'),
   validateBody(startInterviewSchema),
   verificationController.startInterview,
 );
 router.patch(
   '/interviews/:id/complete',
-  requireRole('partner_doctor'),
+  requireRole('partner_doctor', 'admin'),
   validateBody(completeInterviewSchema),
   verificationController.completeInterview,
 );

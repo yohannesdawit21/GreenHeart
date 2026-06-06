@@ -24,7 +24,7 @@ export function PartnerDashboardPage() {
     verificationService
       .getApplicants()
       .then((data) => setApplicants(data.applicants))
-      .catch(() => setError('Failed to load applicants. Ensure you are logged in as a partner doctor.'))
+      .catch(() => setError('Failed to load applicants. Please try again.'))
       .finally(() => setLoading(false))
   }, [])
 
