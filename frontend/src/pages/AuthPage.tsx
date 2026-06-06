@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { MaterialIcon } from '../components/MaterialIcon'
 import { Logo } from '../components/Logo'
 import { useAuth } from '../context/AuthContext'
+import type { AuthUser } from '@shared/contracts/auth.api'
 
 type AuthMode = 'login' | 'signup'
 
@@ -23,21 +24,34 @@ export function AuthPage() {
     setIsSubmitting(true)
 
     try {
+      let user: AuthUser | undefined
       if (mode === 'login') {
-        await login(email, password)
+        const response = await login(email, password)
+        user = response
       } else {
-        await register({ 
+        const response = await register({ 
           email, 
           password, 
-          role,
+          role: 'client', // Registration form is for clients
           profile: {
             username: email.split('@')[0],
             tags: [],
-            coinRatePerSession: role === 'advisor' ? 100 : 0
+            coinRatePerSession: 0
           }
         })
+        user = response
       }
-      navigate('/discover')
+
+      // Role-based redirect
+      if (user?.role === 'advisor') {
+        navigate('/advisor')
+      } else if (user?.role === 'partner_doctor') {
+        navigate('/partner')
+      } else if (user?.role === 'admin') {
+        navigate('/admin')
+      } else {
+        navigate('/discover')
+      }
     } catch (err: any) {
       setError(err.response?.data?.message || 'Authentication failed')
     } finally {
@@ -214,7 +228,7 @@ export function AuthPage() {
                     name="role" 
                     type="radio" 
                     checked={role === 'advisor'}
-                    onChange={() => setRole('advisor')}
+                    onChange={() => navigate('/auth/advisor-apply')}
                   />
                   <div className="p-stack-sm border border-outline-variant rounded-lg peer-checked:border-primary peer-checked:bg-surface-container peer-checked:ring-1 peer-checked:ring-primary transition-all text-center">
                     <MaterialIcon name="medical_services" filled className="text-primary mb-unit" />

@@ -1,7 +1,8 @@
 import { Link, useLocation } from 'react-router-dom'
 import { Logo } from '../Logo'
+import { useAuth } from '../../context/AuthContext'
 
-type NavItem = 'discover' | 'wallet' | 'logs' | 'settings' | 'advisor'
+type NavItem = 'discover' | 'wallet' | 'logs' | 'settings' | 'advisor' | 'partner' | 'admin'
 
 interface AppShellProps {
   children: React.ReactNode
@@ -28,6 +29,12 @@ export function AppShell({
   onSearch,
 }: AppShellProps) {
   const location = useLocation()
+  const { user } = useAuth()
+
+  const isClient = user?.role === 'client' || !user
+  const isAdvisor = user?.role === 'advisor'
+  const isPartner = user?.role === 'partner_doctor'
+  const isAdmin = user?.role === 'admin'
 
   return (
     <div className="text-on-background font-body-md antialiased md:pl-64 pt-16 md:pt-0 pb-20 md:pb-0 min-h-screen bg-background">
@@ -87,6 +94,8 @@ export function AppShell({
         <div className="flex flex-col gap-2">
           {navItems.map((item) => {
             const active = activeNav === item.id
+            if (item.id === 'wallet' && !isClient) return null
+            
             return (
               <Link
                 key={item.id}
@@ -102,23 +111,56 @@ export function AppShell({
               </Link>
             )
           })}
-          <Link
-            to="/advisor"
-            className={`flex items-center gap-stack-sm rounded-lg px-4 py-3 font-label-md text-label-md transition-colors ${
-              location.pathname === '/advisor'
-                ? 'bg-secondary-container text-on-secondary-container'
-                : 'text-on-surface-variant hover:bg-surface-container-high'
-            }`}
-          >
-            <span className="material-symbols-outlined">medical_services</span>
-            Advisor Hub
-          </Link>
+          
+          {(isAdvisor || isAdmin) && (
+            <Link
+              to="/advisor"
+              className={`flex items-center gap-stack-sm rounded-lg px-4 py-3 font-label-md text-label-md transition-colors ${
+                location.pathname === '/advisor'
+                  ? 'bg-secondary-container text-on-secondary-container'
+                  : 'text-on-surface-variant hover:bg-surface-container-high'
+              }`}
+            >
+              <span className="material-symbols-outlined">medical_services</span>
+              Advisor Hub
+            </Link>
+          )}
+
+          {(isPartner || isAdmin) && (
+            <Link
+              to="/partner"
+              className={`flex items-center gap-stack-sm rounded-lg px-4 py-3 font-label-md text-label-md transition-colors ${
+                location.pathname === '/partner'
+                  ? 'bg-secondary-container text-on-secondary-container'
+                  : 'text-on-surface-variant hover:bg-surface-container-high'
+              }`}
+            >
+              <span className="material-symbols-outlined">verified_user</span>
+              Partner Portal
+            </Link>
+          )}
+
+          {isAdmin && (
+            <Link
+              to="/admin"
+              className={`flex items-center gap-stack-sm rounded-lg px-4 py-3 font-label-md text-label-md transition-colors ${
+                location.pathname === '/admin'
+                  ? 'bg-secondary-container text-on-secondary-container'
+                  : 'text-on-surface-variant hover:bg-surface-container-high'
+              }`}
+            >
+              <span className="material-symbols-outlined">admin_panel_settings</span>
+              System Admin
+            </Link>
+          )}
         </div>
       </nav>
 
       <nav className="bg-surface-container-lowest border-t border-outline-variant shadow-lg fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 py-2 md:hidden">
         {navItems.map((item) => {
           const active = activeNav === item.id
+          if (item.id === 'wallet' && !isClient) return null
+
           return (
             <Link
               key={item.id}

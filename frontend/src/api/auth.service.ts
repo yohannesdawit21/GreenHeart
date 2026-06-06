@@ -2,6 +2,7 @@ import { apiClient } from './client';
 import type { 
   LoginRequest, 
   RegisterRequest, 
+  RegisterAdvisorRequest,
   AuthResponse, 
   MeResponse 
 } from '@shared/contracts/auth.api';
@@ -14,6 +15,11 @@ export const authService = {
 
   register: async (data: RegisterRequest): Promise<AuthResponse> => {
     const response = await apiClient.post<AuthResponse>('/auth/register', data);
+    return response.data;
+  },
+
+  registerAdvisor: async (data: RegisterAdvisorRequest): Promise<AuthResponse> => {
+    const response = await apiClient.post<AuthResponse>('/auth/register/advisor', data);
     return response.data;
   },
 

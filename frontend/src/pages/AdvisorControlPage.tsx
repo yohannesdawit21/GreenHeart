@@ -33,6 +33,7 @@ export function AdvisorControlPage() {
   }, [])
 
   const handlePresenceToggle = async () => {
+    if (user?.profile?.verificationStatus !== 'verified') return
     const newStatus = !online
     try {
       await sessionService.updatePresence({ online: newStatus })
@@ -41,6 +42,8 @@ export function AdvisorControlPage() {
       console.error('Failed to update presence', err)
     }
   }
+
+  const verificationStatus = user?.profile?.verificationStatus
 
   return (
     <div className="text-on-surface antialiased bg-background min-h-screen">
@@ -60,7 +63,7 @@ export function AdvisorControlPage() {
       </header>
 
       <nav className="bg-surface border-r border-outline-variant hidden md:flex flex-col w-64 h-screen py-stack-lg px-stack-md gap-stack-md fixed left-0 top-0">
-        <div className="mb-stack-lg flex items-center gap-3">
+        <div className="mb-stack-lg flex items-center gap-3 px-4">
           <Logo className="w-10 h-10" />
           <div>
             <Link to="/discover" className="font-headline-md text-headline-md font-extrabold text-primary block">
@@ -88,6 +91,33 @@ export function AdvisorControlPage() {
       </nav>
 
       <main className="pt-20 md:pt-stack-lg md:ml-64 px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto pb-32 md:pb-stack-lg">
+        {verificationStatus === 'pending_review' && (
+          <div className="bg-primary-container/20 border border-primary-container text-on-primary-container p-stack-md rounded-lg mb-stack-lg flex items-center gap-stack-sm shadow-sm">
+            <MaterialIcon name="info" filled className="text-primary" />
+            <div className="flex-grow">
+              <p className="font-label-md text-label-md font-bold uppercase tracking-wider">Application Under Review</p>
+              <p className="font-body-md text-body-md opacity-80">Our partner doctors are reviewing your credentials. You will be notified once verified.</p>
+            </div>
+          </div>
+        )}
+
+        {verificationStatus === 'rejected' && (
+          <div className="bg-error-container/20 border border-error text-on-error-container p-stack-md rounded-lg mb-stack-lg flex items-center gap-stack-sm shadow-sm">
+            <MaterialIcon name="error" filled className="text-error" />
+            <div className="flex-grow">
+              <p className="font-label-md text-label-md font-bold uppercase tracking-wider">Verification Rejected</p>
+              <p className="font-body-md text-body-md opacity-80">Your application could not be verified. Please contact support for more information.</p>
+            </div>
+          </div>
+        )}
+
+        {verificationStatus === 'verified' && (
+          <div className="bg-secondary/10 border border-secondary text-secondary-container p-stack-sm rounded-lg mb-stack-lg flex items-center justify-center gap-stack-sm text-xs font-label-md uppercase tracking-[0.2em]">
+            <MaterialIcon name="verified" filled className="text-[16px]" />
+            Verified Medical Advisor
+          </div>
+        )}
+
         <div className="bg-surface-container-lowest border border-outline-variant rounded-lg p-stack-md flex justify-between items-center mb-stack-lg shadow-[0_1px_3px_rgba(0,0,0,0.05)]">
           <div className="flex items-center gap-stack-sm">
             <MaterialIcon name="cell_tower" className="text-outline" />
@@ -101,11 +131,12 @@ export function AdvisorControlPage() {
             </span>
             <button
               type="button"
+              disabled={verificationStatus !== 'verified'}
               aria-pressed={online}
               onClick={handlePresenceToggle}
               className={`w-12 h-6 rounded-full relative transition-colors duration-300 focus:outline-none ${
                 online ? 'bg-secondary' : 'bg-surface-variant'
-              }`}
+              } ${verificationStatus !== 'verified' ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
               <span
                 className={`absolute top-1 w-4 h-4 rounded-full transition-transform duration-300 ${
