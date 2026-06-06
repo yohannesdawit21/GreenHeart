@@ -64,17 +64,17 @@ export function AdminDashboardPage() {
   }
 
   return (
-    <AppShell activeNav="advisor" showSearch={false}>
+    <AppShell activeNav="admin" showSearch={false}>
       <main className="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop py-stack-lg flex flex-col gap-stack-lg">
-        <header className="flex justify-between items-center">
-          <div>
+        <header className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-stack-md">
+          <div className="min-w-0">
             <h1 className="font-display-lg text-headline-lg-mobile md:text-display-lg text-on-background">System Administration</h1>
             <p className="font-body-lg text-body-lg text-on-surface-variant">Platform-wide governance and partner management.</p>
           </div>
           <button
             type="button"
             onClick={() => setShowPartnerModal(true)}
-            className="bg-primary text-on-primary font-label-md text-xs py-3 px-6 rounded-lg hover:bg-on-primary-fixed-variant transition-colors flex items-center gap-2"
+            className="bg-primary text-on-primary font-label-md text-xs py-3 px-6 rounded-lg hover:bg-on-primary-fixed-variant transition-colors flex items-center justify-center gap-2 shrink-0 w-full sm:w-auto"
           >
             <MaterialIcon name="person_add" className="text-sm" />
             REGISTER PARTNER
@@ -166,8 +166,8 @@ export function AdminDashboardPage() {
 
         {/* Register Partner Modal (Simple Overlay) */}
         {showPartnerModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-            <div className="bg-surface-container-lowest w-full max-w-md rounded-xl border border-outline-variant shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-300">
+          <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm p-4 pb-[max(1rem,env(safe-area-inset-bottom))] overflow-y-auto">
+            <div className="bg-surface-container-lowest w-full max-w-md rounded-xl border border-outline-variant shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-300 my-auto">
               <div className="p-stack-lg">
                 <h2 className="font-display-md text-display-md mb-stack-sm">Register Partner Doctor</h2>
                 <form onSubmit={handleRegisterPartner} className="flex flex-col gap-stack-md">

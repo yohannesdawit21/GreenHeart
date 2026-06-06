@@ -40,6 +40,12 @@ router.post(
   validateBody(mockCompleteSchema),
   walletController.completeMockPurchase,
 );
+router.post(
+  '/purchase/complete-sandbox',
+  requireAuth,
+  validateBody(mockCompleteSchema),
+  walletController.completeMockPurchase,
+);
 router.post('/webhook/payment', walletController.paymentWebhook);
 
 // Internal escrow endpoints — M5 may call service directly or via HTTP

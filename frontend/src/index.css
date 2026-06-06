@@ -223,7 +223,16 @@
     display: none;
   }
 
-  .right-margin-desktop {
-    margin-right: var(--spacing-margin-desktop);
+  .app-shell-content {
+    padding-top: var(--app-header-h, 4rem);
+    padding-bottom: calc(
+      var(--app-bottom-nav-h, 4.75rem) + env(safe-area-inset-bottom, 0px) + var(--spacing-stack-md)
+    );
+  }
+
+  @media (min-width: 768px) {
+    .app-shell-content {
+      padding-bottom: var(--spacing-stack-lg);
+    }
   }
 }
