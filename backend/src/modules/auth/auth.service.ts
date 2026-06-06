@@ -2,7 +2,7 @@ import bcrypt from 'bcryptjs';
 import { AppError } from '../../shared/errors/AppError.js';
 import { toAuthUser } from '../users/users.mapper.js';
 import * as usersRepo from '../users/users.repository.js';
-import type { RegisterInput, LoginInput } from './auth.schemas.js';
+import type { RegisterAdvisorInput, RegisterInput, LoginInput } from './auth.schemas.js';
 
 const BCRYPT_ROUNDS = 10;
 
@@ -10,7 +10,7 @@ function defaultUsername(email: string): string {
   return email.split('@')[0].slice(0, 100);
 }
 
-export async function register(input: RegisterInput) {
+export async function registerClient(input: RegisterInput) {
   const existing = await usersRepo.findUserByEmail(input.email);
   if (existing) {
     throw new AppError(409, 'VALIDATION_ERROR', 'Email already registered');
@@ -22,11 +22,34 @@ export async function register(input: RegisterInput) {
   const user = await usersRepo.createUserWithProfileAndWallet({
     email: input.email,
     passwordHash,
-    role: input.role,
+    role: 'client',
     username,
     bio: input.profile?.bio ?? '',
     tags: input.profile?.tags ?? [],
-    coinRatePerSession: input.profile?.coinRatePerSession ?? 0,
+    coinRatePerSession: 0,
+    verificationStatus: null,
+  });
+
+  return toAuthUser(user);
+}
+
+export async function registerAdvisor(input: RegisterAdvisorInput) {
+  const existing = await usersRepo.findUserByEmail(input.email);
+  if (existing) {
+    throw new AppError(409, 'VALIDATION_ERROR', 'Email already registered');
+  }
+
+  const passwordHash = await bcrypt.hash(input.password, BCRYPT_ROUNDS);
+
+  const user = await usersRepo.createUserWithProfileAndWallet({
+    email: input.email,
+    passwordHash,
+    role: 'advisor',
+    username: input.profile.username,
+    bio: input.profile.bio ?? '',
+    tags: input.profile.tags ?? [],
+    coinRatePerSession: input.profile.coinRatePerSession ?? 0,
+    verificationStatus: 'pending_review',
   });
 
   return toAuthUser(user);

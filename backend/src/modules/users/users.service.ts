@@ -9,7 +9,7 @@ export async function updateProfile(userId: string, updates: UpdateProfileReques
 }
 
 export async function listAdvisors() {
-  const rows = await usersRepo.listAdvisors();
+  const rows = await usersRepo.listVerifiedAdvisors();
   return rows.map(toAdvisorCard);
 }
 

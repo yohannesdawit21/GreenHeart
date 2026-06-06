@@ -1,6 +1,7 @@
 import type { NextFunction, Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
 import { config } from '../../config/index.js';
+import type { UserRole } from '../types/contracts.js';
 import { AppError } from '../errors/AppError.js';
 
 const AUTH_COOKIE = 'auth_token';
@@ -8,7 +9,7 @@ const AUTH_COOKIE = 'auth_token';
 export interface AuthPayload {
   userId: string;
   email: string;
-  role: 'client' | 'advisor';
+  role: UserRole;
 }
 
 declare global {
@@ -53,4 +54,13 @@ export function requireAuth(req: Request, _res: Response, next: NextFunction): v
   } catch {
     throw new AppError(401, 'UNAUTHORIZED', 'Invalid or expired token');
   }
+}
+
+export function requireRole(...roles: UserRole[]) {
+  return (req: Request, _res: Response, next: NextFunction): void => {
+    if (!req.auth || !roles.includes(req.auth.role)) {
+      throw new AppError(403, 'FORBIDDEN', 'Insufficient permissions');
+    }
+    next();
+  };
 }
