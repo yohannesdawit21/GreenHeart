@@ -30,3 +30,9 @@ Open http://localhost:5173 — you'll land on the auth screen. Use **Continue to
 - Vite
 - Tailwind CSS v4 (Codex design tokens from Stitch)
 - React Router
+
+## Team ownership
+
+**Role A** owns this folder exclusively. Specs: [`../agent/modules/M1-frontend.md`](../agent/modules/M1-frontend.md)
+
+API types: [`../shared/contracts/`](../shared/contracts/)

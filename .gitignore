@@ -1,0 +1,5 @@
+# Use root .gitignore patterns
+node_modules/
+dist/
+.env
+*.log
