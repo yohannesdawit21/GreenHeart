@@ -10,7 +10,7 @@ import {
   LoadingSpinner,
   EmptyState,
 } from '../components/layout/dashboard-ui'
-import { btnGhost, btnToggle } from '../components/layout/buttonStyles'
+import { btnGhost, btnPrimary, btnToggle } from '../components/layout/buttonStyles'
 import { MaterialIcon } from '../components/MaterialIcon'
 import {
   VerificationInvitationModal,
@@ -27,18 +27,37 @@ import type { VerificationInterviewStartedPayload } from '@shared/contracts/sock
 
 export function AdvisorControlPage() {
   const { user } = useAuth()
-  const { connected } = useSocket()
+  const { connected, socket } = useSocket()
   const navigate = useNavigate()
+  const location = useLocation()
   const [online, setOnline] = useState(false)
   const [balance, setBalance] = useState<WalletBalance | null>(null)
   const [transactions, setTransactions] = useState<TransactionDto[]>([])
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState('')
   const [presenceError, setPresenceError] = useState('')
+  const [pendingInvitation, setPendingInvitation] = useState<VerificationInvitation | null>(null)
+  const [dismissedInterviewId, setDismissedInterviewId] = useState<string | null>(null)
 
   const verificationStatus = user?.profile?.verificationStatus
   const awaitingVerification =
     verificationStatus !== 'verified' && verificationStatus !== 'rejected'
+
+  const showInvitation = useCallback(
+    (invitation: VerificationInvitation, options?: { force?: boolean }) => {
+      if (!options?.force && dismissedInterviewId === invitation.interviewId) return
+      setPendingInvitation(invitation)
+    },
+    [dismissedInterviewId],
+  )
+
+  useEffect(() => {
+    const state = location.state as { verificationInvitation?: VerificationInvitation } | null
+    if (state?.verificationInvitation) {
+      showInvitation(state.verificationInvitation)
+      navigate(location.pathname, { replace: true, state: null })
+    }
+  }, [location.pathname, location.state, navigate, showInvitation])
 
   useEffect(() => {
     Promise.all([walletService.getBalance(), walletService.getTransactions()])
@@ -53,23 +72,44 @@ export function AdvisorControlPage() {
   useEffect(() => {
     if (!awaitingVerification) return
 
-    const promptIfActive = async () => {
+    const checkPendingInterview = async () => {
       try {
         const data = await verificationService.getMyInterview()
         if (data.interviewId) {
-          navigate(
-            `/incoming-verification?interviewId=${encodeURIComponent(data.interviewId)}&partnerName=${encodeURIComponent(data.partnerName ?? 'Partner Doctor')}`,
-          )
+          showInvitation({
+            interviewId: data.interviewId,
+            partnerName: data.partnerName ?? 'Partner Doctor',
+          })
         }
       } catch {
         /* polling fallback — ignore transient errors */
       }
     }
 
-    void promptIfActive()
-    const poll = setInterval(promptIfActive, 5000)
+    void checkPendingInterview()
+    const poll = setInterval(checkPendingInterview, 8000)
     return () => clearInterval(poll)
-  }, [awaitingVerification, navigate])
+  }, [awaitingVerification, showInvitation])
+
+  useEffect(() => {
+    if (!socket || !awaitingVerification) return
+
+    const onInterviewStarted = (payload: VerificationInterviewStartedPayload) => {
+      setDismissedInterviewId(null)
+      showInvitation(
+        {
+          interviewId: payload.interviewId,
+          partnerName: payload.partnerName,
+        },
+        { force: true },
+      )
+    }
+
+    socket.on('verification_interview_started', onInterviewStarted)
+    return () => {
+      socket.off('verification_interview_started', onInterviewStarted)
+    }
+  }, [socket, awaitingVerification, showInvitation])
 
   const handlePresenceToggle = async () => {
     if (verificationStatus !== 'verified') return
@@ -106,17 +146,67 @@ export function AdvisorControlPage() {
 
   return (
     <AppShell activeNav="advisor" showSearch={false}>
+      {pendingInvitation && (
+        <VerificationInvitationModal
+          invitation={pendingInvitation}
+          onAccepted={(interviewId) => {
+            setPendingInvitation(null)
+            navigate(`/verification/${interviewId}`)
+          }}
+          onDeclined={() => {
+            setPendingInvitation(null)
+            setDismissedInterviewId(pendingInvitation.interviewId)
+          }}
+          onDismiss={() => {
+            setDismissedInterviewId(pendingInvitation.interviewId)
+            setPendingInvitation(null)
+          }}
+        />
+      )}
+
       <main className={`${appShellMainClass} flex flex-col gap-stack-lg`}>
         <DashboardHeader
           title="Advisor Hub"
           description="Manage your availability, earnings, and incoming patient sessions."
         />
 
+        {awaitingVerification && verificationStatus === 'pending_review' && dismissedInterviewId && !pendingInvitation && (
+          <DashboardAlert variant="info" icon="notifications" title="Verification request pending">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-stack-sm mt-1">
+              <span>A partner doctor is waiting for your response.</span>
+              <button
+                type="button"
+                className={`${btnPrimary} text-xs px-4 py-2 w-full sm:w-auto`}
+                onClick={() => {
+                  setDismissedInterviewId(null)
+                  void verificationService.getMyInterview().then((data) => {
+                    if (data.interviewId) {
+                      showInvitation(
+                        {
+                          interviewId: data.interviewId,
+                          partnerName: data.partnerName ?? 'Partner Doctor',
+                        },
+                        { force: true },
+                      )
+                    }
+                  })
+                }}
+              >
+                View invitation
+              </button>
+            </div>
+          </DashboardAlert>
+        )}
+
         {awaitingVerification && verificationStatus === 'pending_review' && (
           <DashboardAlert variant="warning" icon="hourglass_top" title="Application under review">
-            {connected
-              ? 'Stay on this page — when a partner starts your verification interview, you will get an accept prompt (like an incoming call).'
-              : 'Connecting to realtime server… Keep this page open so you receive the verification invitation when a partner starts the interview.'}
+            {pendingInvitation ? (
+              <>A verification interview request is waiting — use the dialog above to accept or decline.</>
+            ) : connected ? (
+              'Stay on this page — when a partner starts your verification interview, an accept dialog will appear here.'
+            ) : (
+              'Connecting to realtime server… Keep this page open so you receive the verification invitation when a partner starts the interview.'
+            )}
           </DashboardAlert>
         )}
 
