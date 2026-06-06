@@ -24,6 +24,20 @@ npm run dev
 
 Open http://localhost:5173 — you'll land on the auth screen. Use **Continue to Platform** or **Browse as guest** to enter the app.
 
+Copy env for local dev:
+
+```bash
+cp .env.example .env.local
+```
+
+## Deploy to Vercel
+
+Full guide: **[DEPLOY-VERCEL.md](./DEPLOY-VERCEL.md)**
+
+1. Vercel → Import repo → **Root Directory:** `frontend`
+2. Set `VITE_API_URL` and `VITE_SOCKET_URL` to your Render API URL
+3. Deploy — `vercel.json` handles SPA routing
+
 ## Stack
 
 - React 19 + TypeScript

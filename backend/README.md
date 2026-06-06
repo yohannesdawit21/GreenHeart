@@ -35,11 +35,24 @@ backend/sql/
 cd backend
 cp .env.example .env
 npm install
-# Create DB, then run SQL files in order (001 → 002 → 003)
+npm run db:migrate
+npm run db:seed   # optional — first admin user
 npm run dev
 ```
 
 API: http://localhost:4000/health
+
+## Deploy to Render
+
+Production Docker deployment guide: **[DEPLOY-RENDER.md](./DEPLOY-RENDER.md)**
+
+Quick summary:
+
+1. Provision **Neon** (Postgres), **Upstash** (Redis), **LiveKit Cloud**
+2. Render → New Web Service → **Docker** → root directory `backend`
+3. Set env vars (`DATABASE_URL`, `REDIS_URL`, `JWT_SECRET`, `CORS_ORIGIN`, LiveKit keys)
+4. First deploy: `RUN_ADMIN_SEED=true`, then disable
+5. Point frontend `VITE_API_URL` / `VITE_SOCKET_URL` at your Render URL
 
 ## Specs
 

@@ -10,10 +10,28 @@ function required(key: string, fallback?: string): string {
   return value;
 }
 
+function parseCorsOrigins(raw: string | undefined): string[] {
+  const value = raw ?? 'http://localhost:5173';
+  return value
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean);
+}
+
+function parseCookieSameSite(): 'lax' | 'none' | 'strict' {
+  const raw = process.env.COOKIE_SAME_SITE?.toLowerCase();
+  if (raw === 'none' || raw === 'strict' || raw === 'lax') return raw;
+  // Cross-origin SPA (e.g. Vercel) talking to API on Render needs SameSite=None + Secure.
+  return process.env.NODE_ENV === 'production' ? 'none' : 'lax';
+}
+
 export const config = {
   port: parseInt(process.env.PORT ?? '4000', 10),
   nodeEnv: process.env.NODE_ENV ?? 'development',
-  corsOrigin: process.env.CORS_ORIGIN ?? 'http://localhost:5173',
+  corsOrigins: parseCorsOrigins(process.env.CORS_ORIGIN),
+  /** @deprecated use corsOrigins */
+  corsOrigin: parseCorsOrigins(process.env.CORS_ORIGIN)[0] ?? 'http://localhost:5173',
+  cookieSameSite: parseCookieSameSite(),
 
   postgres: {
     url: process.env.DATABASE_URL ?? 'postgresql://codex:codex@localhost:5432/codex',

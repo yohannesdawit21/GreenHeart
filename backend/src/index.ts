@@ -14,8 +14,8 @@ async function main() {
 
   initSocket(httpServer);
 
-  httpServer.listen(config.port, () => {
-    console.log(`Codex API listening on http://localhost:${config.port}`);
+  httpServer.listen(config.port, '0.0.0.0', () => {
+    console.log(`Codex API listening on 0.0.0.0:${config.port}`);
   });
 
   const shutdown = async () => {

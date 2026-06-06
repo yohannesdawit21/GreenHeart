@@ -1,0 +1,46 @@
+# Render Blueprint — optional one-click setup
+# Docs: backend/DEPLOY-RENDER.md
+#
+# Usage: Render Dashboard → New → Blueprint → connect repo → set root to `backend`
+
+services:
+  - type: web
+    name: greenheart-api
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    plan: starter
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: RUN_DB_MIGRATE
+        value: "true"
+      - key: RUN_ADMIN_SEED
+        value: "true"
+      - key: COOKIE_SAME_SITE
+        value: none
+      - key: DATABASE_URL
+        sync: false
+      - key: REDIS_URL
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: CORS_ORIGIN
+        sync: false
+      - key: LIVEKIT_URL
+        sync: false
+      - key: LIVEKIT_API_KEY
+        sync: false
+      - key: LIVEKIT_API_SECRET
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: ADMIN_SEED_EMAIL
+        value: admin@greenheart.dev
+      - key: ADMIN_SEED_PASSWORD
+        generateValue: true
+      - key: ADMIN_SEED_USERNAME
+        value: Platform Admin
+      - key: PAYMENT_WEBHOOK_SECRET
+        generateValue: true

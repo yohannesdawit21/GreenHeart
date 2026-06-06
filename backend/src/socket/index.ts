@@ -11,7 +11,7 @@ export function initSocket(httpServer: HttpServer): Server {
 
   io = new Server(httpServer, {
     cors: {
-      origin: config.corsOrigin,
+      origin: config.corsOrigins,
       credentials: true,
     },
   });
