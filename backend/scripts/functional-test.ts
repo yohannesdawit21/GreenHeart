@@ -131,8 +131,8 @@ async function main() {
   if (advisorReg.status === 201 && advisorId) ok('Register advisor applicant');
   else fail('Register advisor applicant', JSON.stringify(advisorReg.body));
 
-  const adminEmail = process.env.ADMIN_SEED_EMAIL ?? 'admin@greenheart.dev';
-  const adminPass = process.env.ADMIN_SEED_PASSWORD ?? 'AdminChangeMe123!';
+  const adminEmail = process.env.ADMIN_SEED_EMAIL ?? 'admin@gmail.com';
+  const adminPass = process.env.ADMIN_SEED_PASSWORD ?? '12345678';
   const adminLogin = await req('POST', '/api/auth/login', {
     body: { email: adminEmail, password: adminPass },
   });

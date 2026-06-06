@@ -7,8 +7,8 @@ dotenv.config();
 const BCRYPT_ROUNDS = 10;
 
 async function seedAdmin() {
-  const email = process.env.ADMIN_SEED_EMAIL ?? 'admin@greenheart.dev';
-  const password = process.env.ADMIN_SEED_PASSWORD ?? 'AdminChangeMe123!';
+  const email = process.env.ADMIN_SEED_EMAIL ?? 'admin@gmail.com';
+  const password = process.env.ADMIN_SEED_PASSWORD ?? '12345678';
   const username = process.env.ADMIN_SEED_USERNAME ?? 'Platform Admin';
 
   await connectPostgres();
