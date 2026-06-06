@@ -1,6 +1,6 @@
 import { useEffect, useState, type CSSProperties } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { Logo } from '../Logo'
+import { BrandLockup } from '../Logo'
 import { UserMenu } from '../UserMenu'
 import { MaterialIcon } from '../MaterialIcon'
 import { btnIcon } from './buttonStyles'
@@ -9,6 +9,8 @@ import { useSocket } from '../../context/SocketContext'
 import { getNavLinksForRole, getRoleHome, type NavItem } from '../../utils/roleAccess'
 
 const SIDEBAR_STORAGE_KEY = 'greenheart-sidebar-collapsed'
+const SIDEBAR_TOGGLE_OFFSET = '0.875rem'
+const SIDEBAR_TOGGLE_TOP = 'calc(var(--app-header-h) + 2rem)'
 const SIDEBAR_EXPANDED = '16rem'
 const SIDEBAR_COLLAPSED = '4.5rem'
 
@@ -103,10 +105,9 @@ export function AppShell({
         <div className="flex items-center gap-3 w-full max-w-2xl mx-auto md:mx-0 min-w-0">
           <Link
             to={getRoleHome(role)}
-            className="flex items-center gap-2 font-headline-md text-headline-md font-bold text-primary md:hidden shrink-0 min-w-0"
+            className="flex items-center md:hidden shrink-0 min-w-0"
           >
-            <Logo className="w-8 h-8 shrink-0" />
-            <span className="truncate">Green Heart</span>
+            <BrandLockup subtitle="" className="gap-2 [&_span]:text-base" />
           </Link>
           {showSearchBar && (
             <div className="grow relative hidden md:block min-w-0">
@@ -165,62 +166,51 @@ export function AppShell({
           sidebarCollapsed ? 'w-[4.5rem] px-2' : 'w-64 px-stack-md'
         }`}
       >
-        <div
-          className={`flex items-center shrink-0 mb-6 ${sidebarCollapsed ? 'flex-col gap-3 px-1' : 'gap-3 px-4 justify-between'}`}
-        >
-          <Link
-            to={getRoleHome(role)}
-            className={`flex items-center min-w-0 ${sidebarCollapsed ? 'justify-center' : 'gap-3 flex-1'}`}
-            title="Green Heart home"
-          >
-            <Logo className="w-10 h-10 shrink-0" />
-            {!sidebarCollapsed && (
-              <div className="min-w-0">
-                <span className="font-headline-md text-headline-md font-extrabold text-primary leading-tight block truncate">
-                  Green Heart
-                </span>
-                <p className="font-label-md text-label-md text-on-surface-variant">Holistic Health</p>
-              </div>
-            )}
+        <div className={`shrink-0 mb-4 ${sidebarCollapsed ? 'px-1' : 'px-2'}`}>
+          <Link to={getRoleHome(role)} title="Green Heart home">
+            <BrandLockup collapsed={sidebarCollapsed} />
           </Link>
-          {!sidebarCollapsed && (
-            <button
-              type="button"
-              onClick={() => setSidebarCollapsed(true)}
-              className={`${btnIcon} shrink-0 border border-outline-variant/60 bg-surface-container-lowest hover:border-primary/30`}
-              aria-label="Collapse sidebar"
-              title="Collapse sidebar"
-            >
-              <MaterialIcon name="chevron_left" className="text-[20px]" />
-            </button>
-          )}
         </div>
 
-        <div className="flex flex-col gap-2 flex-1 overflow-y-auto overflow-x-hidden scrollbar-hide">
+        <div className="flex flex-col gap-2 flex-1 overflow-y-auto overflow-x-hidden scrollbar-hide mt-2">
           {navLinks.map((item) => renderNavLink(item, false, sidebarCollapsed))}
         </div>
 
         <div className={`shrink-0 pt-4 border-t border-outline-variant ${sidebarCollapsed ? 'px-1' : 'px-2'}`}>
-          {sidebarCollapsed ? (
-            <button
-              type="button"
-              onClick={() => setSidebarCollapsed(false)}
-              className={`${btnIcon} w-full flex items-center justify-center border border-outline-variant/60 bg-surface-container-lowest hover:border-primary/30`}
-              aria-label="Expand sidebar"
-              title="Expand sidebar"
+          {user && (
+            <div
+              className={`text-sm text-on-surface-variant ${sidebarCollapsed ? 'flex justify-center py-1' : 'px-2 pb-1'}`}
+              title={sidebarCollapsed ? user.email : undefined}
             >
-              <MaterialIcon name="chevron_right" className="text-[20px]" />
-            </button>
-          ) : (
-            user && (
-              <div className="px-2 pb-1 text-sm text-on-surface-variant">
-                <p className="font-label-md truncate">{user.email}</p>
-                <p className="text-xs capitalize opacity-70">{user.role.replace('_', ' ')}</p>
-              </div>
-            )
+              {sidebarCollapsed ? (
+                <span className="w-9 h-9 rounded-full bg-primary-container text-on-primary-container font-label-md flex items-center justify-center text-sm">
+                  {user.profile?.username?.[0]?.toUpperCase() ?? '?'}
+                </span>
+              ) : (
+                <>
+                  <p className="font-label-md truncate">{user.email}</p>
+                  <p className="text-xs capitalize opacity-70">{user.role.replace('_', ' ')}</p>
+                </>
+              )}
+            </div>
           )}
         </div>
       </nav>
+
+      <button
+        type="button"
+        onClick={() => setSidebarCollapsed((v) => !v)}
+        style={{
+          top: SIDEBAR_TOGGLE_TOP,
+          left: `calc(var(--app-sidebar-w) + ${SIDEBAR_TOGGLE_OFFSET})`,
+        }}
+        className={`${btnIcon} hidden md:flex fixed z-[45] h-9 w-9 items-center justify-center rounded-full border border-outline-variant bg-surface-container-lowest shadow-[0_2px_10px_rgba(13,92,96,0.12)] hover:border-primary/40 hover:text-primary hover:shadow-[0_4px_14px_rgba(13,92,96,0.18)] transition-[left,box-shadow,border-color,color,transform] duration-300 ease-in-out mb-6`}
+        aria-label={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+        aria-expanded={!sidebarCollapsed}
+        title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+      >
+        <MaterialIcon name={sidebarCollapsed ? 'chevron_right' : 'chevron_left'} className="text-[18px]" />
+      </button>
 
       <nav
         aria-label="Primary"
