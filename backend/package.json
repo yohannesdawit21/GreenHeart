@@ -11,6 +11,7 @@
     "db:migrate": "tsx scripts/migrate.ts",
     "test:smoke": "tsx scripts/smoke-test.ts",
     "test:smoke:m5": "tsx scripts/smoke-test-m5.ts",
+    "test:smoke:m6": "tsx scripts/smoke-test-m6-livekit.ts",
     "test:functional": "tsx scripts/functional-test.ts"
   },
   "dependencies": {

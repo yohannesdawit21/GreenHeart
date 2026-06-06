@@ -44,7 +44,8 @@
 - [x] `livekit/verification.service.ts` — interview room tokens (no escrow)
 - [x] M4: filter semantic search to `verification_status = verified` only
 - [x] M5: presence + session initiate reject unverified advisors (`ADVISOR_NOT_VERIFIED`)
-- [ ] GET `/api/verification/interviews/:id/livekit-token` — **wire in Role B verification routes**
+- [x] GET `/api/verification/interviews/:id/livekit-token` — Role C route in `livekit/verification.routes.ts`
+- [x] `004_advisor_verification.sql` — interviews table + `verification_status` column (Role B may extend roles/seed)
 
 ## Blocked by
 
