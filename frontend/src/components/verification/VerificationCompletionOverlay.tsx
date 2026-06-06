@@ -32,7 +32,7 @@ export function VerificationCompletionOverlay({
       : 'Your application was not approved at this time. Contact support if you have questions.'
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-midnight/95 backdrop-blur-md p-margin-mobile animate-in fade-in duration-300">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-midnight/95 backdrop-blur-md p-margin-mobile">
       {isVerified && (
         <div className="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden>
           {Array.from({ length: 24 }).map((_, i) => (

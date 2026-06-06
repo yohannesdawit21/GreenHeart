@@ -6,16 +6,16 @@ import {
   useRoomContext,
 } from '@livekit/components-react'
 import '@livekit/components-styles'
-import { MaterialIcon } from '../components/MaterialIcon'
-import { btnDangerSolid, btnSecondary } from '../components/layout/buttonStyles'
-import { FormError } from '../components/layout/dashboard-ui'
-import { TwoPartyVideoLayout } from '../components/livekit/TwoPartyVideoLayout'
-import { PartnerWaitingOverlay } from '../components/livekit/PartnerWaitingOverlay'
-import { VerificationCompletionOverlay } from '../components/verification/VerificationCompletionOverlay'
-import { verificationService } from '../api/verification.service'
-import { useAuth } from '../context/AuthContext'
-import { useSocket } from '../context/SocketContext'
-import { getApiErrorMessage } from '../utils/apiError'
+import { MaterialIcon } from '../MaterialIcon'
+import { btnDangerSolid, btnSecondary } from '../layout/buttonStyles'
+import { FormError } from '../layout/dashboard-ui'
+import { TwoPartyVideoLayout } from '../livekit/TwoPartyVideoLayout'
+import { PartnerWaitingOverlay } from '../livekit/PartnerWaitingOverlay'
+import { VerificationCompletionOverlay } from './VerificationCompletionOverlay'
+import { verificationService } from '../../api/verification.service'
+import { useAuth } from '../../context/AuthContext'
+import { useSocket } from '../../context/SocketContext'
+import { getApiErrorMessage } from '../../utils/apiError'
 import type { VerificationInterviewCompletedPayload } from '@shared/contracts/socket.events'
 
 interface VerificationRoomContentProps {
@@ -23,6 +23,7 @@ interface VerificationRoomContentProps {
   roomName: string | null
   isInterviewer: boolean
   backPath: string
+  onCompletingChange: (completing: boolean) => void
 }
 
 function VerificationRoomContent({
@@ -30,6 +31,7 @@ function VerificationRoomContent({
   roomName,
   isInterviewer,
   backPath,
+  onCompletingChange,
 }: VerificationRoomContentProps) {
   const room = useRoomContext()
   const navigate = useNavigate()
@@ -46,6 +48,7 @@ function VerificationRoomContent({
     async (outcome: 'pass' | 'fail') => {
       if (completingRef.current) return
       completingRef.current = true
+      onCompletingChange(true)
 
       if (outcome === 'pass' && !isInterviewer) {
         await refreshUser().catch(() => undefined)
@@ -53,8 +56,9 @@ function VerificationRoomContent({
 
       room.disconnect(true)
       setCompletion(outcome)
+      setIsProcessing(false)
     },
-    [isInterviewer, refreshUser, room],
+    [isInterviewer, onCompletingChange, refreshUser, room],
   )
 
   useEffect(() => {
@@ -71,6 +75,14 @@ function VerificationRoomContent({
     }
   }, [socket, interviewId, isInterviewer, endCallForBoth])
 
+  useEffect(() => {
+    if (!completion) return
+    const timer = setTimeout(() => {
+      navigate(backPath, { replace: true })
+    }, 4500)
+    return () => clearTimeout(timer)
+  }, [completion, backPath, navigate])
+
   const handleCompleteInterview = async (outcome: 'pass' | 'fail') => {
     if (!isInterviewer) return
     setIsProcessing(true)
@@ -80,6 +92,7 @@ function VerificationRoomContent({
       await endCallForBoth(outcome)
     } catch (err) {
       completingRef.current = false
+      onCompletingChange(false)
       setActionError(getApiErrorMessage(err, 'Could not save the interview result. Please try again.'))
       setIsProcessing(false)
     }
@@ -169,7 +182,7 @@ export function VerificationRoomSession({
   backPath,
 }: VerificationRoomSessionProps) {
   const navigate = useNavigate()
-  const unexpectedDisconnectRef = useRef(false)
+  const [isCompleting, setIsCompleting] = useState(false)
 
   return (
     <div className="bg-midnight h-[100dvh] w-full overflow-hidden text-on-primary font-body-md relative">
@@ -179,7 +192,7 @@ export function VerificationRoomSession({
         token={token}
         serverUrl={url}
         onDisconnected={() => {
-          if (!unexpectedDisconnectRef.current) {
+          if (!isCompleting) {
             navigate(backPath, { replace: true })
           }
         }}
@@ -191,6 +204,7 @@ export function VerificationRoomSession({
           roomName={roomName}
           isInterviewer={isInterviewer}
           backPath={backPath}
+          onCompletingChange={setIsCompleting}
         />
       </LiveKitRoom>
     </div>
