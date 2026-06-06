@@ -29,7 +29,7 @@ When implementing an endpoint or socket event, update the contract file **first*
 | GET | `/api/verification/applicants` | `verification.api.ts` | stub — partner doctor queue |
 | POST | `/api/verification/interviews` | `verification.api.ts` | stub — start video interview |
 | PATCH | `/api/verification/interviews/:id/complete` | `verification.api.ts` | stub — pass/fail |
-| GET | `/api/verification/interviews/:id/livekit-token` | `verification.api.ts` | stub — Role C |
+| GET | `/api/verification/interviews/:id/livekit-token` | `verification.api.ts` | Role C service ready — Role B route pending |
 
 ### Wallet & Ledger (Role B — M3)
 
@@ -47,20 +47,20 @@ When implementing an endpoint or socket event, update the contract file **first*
 
 | Method | Path | Contract file | Status |
 |--------|------|---------------|--------|
-| POST | `/api/search/semantic` | `search.api.ts` | stub |
-| POST | `/api/search/reindex/:advisorId` | `search.api.ts` | stub (advisor onboarding) |
+| POST | `/api/search/semantic` | `search.api.ts` | implemented |
+| POST | `/api/search/reindex/:advisorId` | `search.api.ts` | implemented |
 
 ### Sessions & Presence (Role C — M5)
 
 | Method | Path | Contract file | Status |
 |--------|------|---------------|--------|
-| PATCH | `/api/presence/status` | `session.api.ts` | stub |
-| GET | `/api/presence/advisors` | `session.api.ts` | stub |
-| POST | `/api/session/initiate` | `session.api.ts` | stub |
-| POST | `/api/session/:id/accept` | `session.api.ts` | stub |
-| POST | `/api/session/:id/decline` | `session.api.ts` | stub |
-| POST | `/api/session/:id/end` | `session.api.ts` | stub |
-| GET | `/api/session/:id/livekit-token` | `session.api.ts` | stub |
+| PATCH | `/api/presence/status` | `session.api.ts` | implemented |
+| GET | `/api/presence/advisors` | `session.api.ts` | implemented |
+| POST | `/api/session/initiate` | `session.api.ts` | implemented |
+| POST | `/api/session/:id/accept` | `session.api.ts` | implemented |
+| POST | `/api/session/:id/decline` | `session.api.ts` | implemented |
+| POST | `/api/session/:id/end` | `session.api.ts` | implemented |
+| GET | `/api/session/:id/livekit-token` | `session.api.ts` | implemented |
 
 ## WebSocket events (Role C)
 

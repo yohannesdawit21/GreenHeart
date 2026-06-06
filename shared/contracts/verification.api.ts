@@ -1,5 +1,5 @@
 /**
- * Verification & RBAC API contracts — Owner: Role B
+ * Verification & RBAC API contracts — Owner: Role B + Role C (LiveKit)
  * @see agent/api-contracts.md
  * @see agent/modules/M6-advisor-verification.md
  */
@@ -62,8 +62,17 @@ export interface OverrideVerificationStatusRequest {
   status: VerificationStatus;
 }
 
+/** GET /api/verification/interviews/:id/livekit-token — Role C implements token service */
 export interface VerificationLiveKitTokenResponse {
   token: string;
   livekitUrl: string;
   roomName: string;
+}
+
+/** Role C helper — tokens for partner + applicant when interview starts (Role B calls livekit service) */
+export interface VerificationInterviewTokensForRoleB {
+  roomName: string;
+  url: string;
+  partnerToken: string;
+  applicantToken: string;
 }

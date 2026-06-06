@@ -9,15 +9,20 @@
     "start": "node dist/index.js",
     "lint": "eslint src --ext .ts",
     "db:migrate": "tsx scripts/migrate.ts",
-    "test:smoke": "tsx scripts/smoke-test.ts"
+    "test:smoke": "tsx scripts/smoke-test.ts",
+    "test:smoke:m5": "tsx scripts/smoke-test-m5.ts",
+    "test:smoke:m6": "tsx scripts/smoke-test-m6-livekit.ts",
+    "test:functional": "tsx scripts/functional-test.ts"
   },
   "dependencies": {
     "bcryptjs": "^3.0.2",
+    "cookie": "^1.1.1",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "dotenv": "^16.5.0",
     "express": "^5.1.0",
     "jsonwebtoken": "^9.0.2",
+    "livekit-server-sdk": "^2.15.4",
     "pg": "^8.16.0",
     "redis": "^5.5.6",
     "socket.io": "^4.8.1",
@@ -25,12 +30,14 @@
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
+    "@types/cookie": "^0.6.0",
     "@types/cookie-parser": "^1.4.9",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.3",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^24.0.3",
     "@types/pg": "^8.20.0",
+    "socket.io-client": "^4.8.3",
     "tsx": "^4.20.3",
     "typescript": "^5.8.3"
   }

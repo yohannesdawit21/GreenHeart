@@ -1,7 +1,7 @@
 # M6 — Advisor Verification & RBAC
 
 **Owners:** Role B + Role A + Role C  
-**Agent:** unassigned  
+**Agent:** cursor-role-c (Role C tasks)  
 **Spec:** [agent/modules/M6-advisor-verification.md](../../agent/modules/M6-advisor-verification.md)
 
 ## Platform roles (reference)
@@ -26,7 +26,7 @@
 - [ ] PATCH `/api/verification/interviews/:id/complete` (pass → verified + reindex hook)
 - [ ] POST `/api/admin/partner-doctors` + GET list
 - [ ] PATCH `/api/admin/advisors/:id/verification-status` (admin override)
-- [ ] Create `shared/contracts/verification.api.ts`
+- [x] Create `shared/contracts/verification.api.ts`
 - [ ] Update `auth.api.ts` + `models.user.ts` with four roles + verificationStatus
 
 ## Tasks — Role A
@@ -41,11 +41,13 @@
 
 ## Tasks — Role C
 
-- [ ] GET `/api/verification/interviews/:id/livekit-token`
-- [ ] M4: filter semantic search to `verification_status = verified` only
-- [ ] M5: presence + session initiate reject unverified advisors (`ADVISOR_NOT_VERIFIED`)
+- [x] `livekit/verification.service.ts` — interview room tokens (no escrow)
+- [x] M4: filter semantic search to `verification_status = verified` only
+- [x] M5: presence + session initiate reject unverified advisors (`ADVISOR_NOT_VERIFIED`)
+- [x] GET `/api/verification/interviews/:id/livekit-token` — Role C route in `livekit/verification.routes.ts`
+- [x] `004_advisor_verification.sql` — interviews table + `verification_status` column (Role B may extend roles/seed)
 
 ## Blocked by
 
-- Role B: M2 JWT foundation ✅ (done)
-- Role C: LiveKit token service (reuse for verification rooms)
+- Role B: verification module + `004_advisor_verification.sql`
+- Role C LiveKit service ✅ (done — reuse for verification rooms)
