@@ -12,6 +12,7 @@ Living specification for **Project Codex** (GreenHeart). AI agents and human tea
 | [api-contracts.md](./api-contracts.md) | REST + WebSocket contract index (source of truth: `shared/contracts/`) |
 | [data-models.md](./data-models.md) | PostgreSQL & Redis schemas |
 | [ui-routing.md](./ui-routing.md) | Frontend routes mapped to spec layouts |
+| [workflows/end-to-end.md](./workflows/end-to-end.md) | **Start-to-finish workflow** — bootstrap → verification → consultation |
 
 ## Module specs (implementation guides)
 
