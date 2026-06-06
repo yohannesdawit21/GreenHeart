@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { MaterialIcon } from '../components/MaterialIcon'
 import { Logo } from '../components/Logo'
+import { PasswordInput } from '../components/PasswordInput'
 import { useAuth } from '../context/AuthContext'
 import type { AuthUser } from '@shared/contracts/auth.api'
 
@@ -165,12 +166,11 @@ export function AuthPage() {
                     Forgot?
                   </span>
                 </div>
-                <input
-                  className="w-full bg-surface-container-lowest border border-outline-variant rounded-lg px-4 py-3 font-body-md text-body-md text-on-surface focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all placeholder:text-outline"
-                  placeholder="••••••••"
-                  type="password"
+                <PasswordInput
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={setPassword}
+                  placeholder="••••••••"
+                  autoComplete="current-password"
                   required
                 />
               </div>
@@ -181,27 +181,6 @@ export function AuthPage() {
               >
                 {isSubmitting ? 'PROCESSING...' : 'CONTINUE TO PLATFORM'}
                 <MaterialIcon name="arrow_forward" className="text-[18px]" />
-              </button>
-              <div className="mt-stack-sm relative flex items-center justify-center">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-outline-variant" />
-                </div>
-                <div className="relative bg-surface-container-lowest px-4 font-label-md text-label-md text-on-surface-variant">
-                  Or continue with
-                </div>
-              </div>
-              <button
-                type="button"
-                disabled
-                title="Google sign-in coming soon"
-                className="w-full bg-surface-container-lowest border border-outline-variant text-on-surface-variant font-label-md text-label-md py-3 rounded-lg flex justify-center items-center gap-stack-sm opacity-50 cursor-not-allowed"
-              >
-                <img
-                  alt="Google Logo"
-                  className="w-5 h-5"
-                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuAYdvonpeUd4Vy2ExHFpRyyxWnLTD9SzprpyMIahsN2QNVwd8M5fuWQo7mhsLgPd3KCin3_GEJiF55p0UhN86wD-9HkuPtY6pIQ-0gCIOkmFnS4fAR45AjB6ZXMJuLGPpQ7RfF-Zlk9q1PhFxPVyMKzdP0RWWRss0O5dVxN5f-zAfKM8k8bUfz-e_qKCQxaGt1ZxK3nX_roQ5Ha-I44d2ELvBSRx0puhfUJoV9kq3F5opSezkM9C0vyawuf-AoagU80Y6COh1JdquCb"
-                />
-                Google
               </button>
             </form>
           ) : (
@@ -251,12 +230,12 @@ export function AuthPage() {
               </div>
               <div>
                 <label className="block font-label-md text-label-md text-on-surface-variant mb-unit">Create Password</label>
-                <input
-                  className="w-full bg-surface-container-lowest border border-outline-variant rounded-lg px-4 py-3 font-body-md text-body-md text-on-surface focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all placeholder:text-outline"
-                  placeholder="Min. 8 characters"
-                  type="password"
+                <PasswordInput
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={setPassword}
+                  placeholder="Min. 8 characters"
+                  autoComplete="new-password"
+                  minLength={8}
                   required
                 />
               </div>

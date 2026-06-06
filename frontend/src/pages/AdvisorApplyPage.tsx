@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { MaterialIcon } from '../components/MaterialIcon'
 import { Logo } from '../components/Logo'
+import { PasswordInput } from '../components/PasswordInput'
 import { useAuth } from '../context/AuthContext'
 
 export function AdvisorApplyPage() {
@@ -104,12 +105,12 @@ export function AdvisorApplyPage() {
             </div>
             <div className="col-span-2">
               <label className="block font-label-md text-label-md text-on-surface-variant mb-unit">Password</label>
-              <input
-                className="w-full bg-surface-container-lowest border border-outline-variant rounded-lg px-4 py-3 font-body-md text-body-md text-on-surface focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all placeholder:text-outline"
-                placeholder="Min. 8 characters"
-                type="password"
+              <PasswordInput
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={setPassword}
+                placeholder="Min. 8 characters"
+                autoComplete="new-password"
+                minLength={8}
                 required
               />
             </div>
