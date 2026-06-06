@@ -18,9 +18,9 @@
 | M1 | Frontend | Role A | Gemini CLI | **mostly done** | M4/M5/M6 APIs for full E2E |
 | M2 | Auth & Users | Role B | cursor-agent | **core done** | M6 role extensions |
 | M3 | Wallet & Ledger | Role B | cursor-agent | **done** | — |
-| M4 | Search & Vectors | Role C | unassigned | not_started | Rebase onto main |
-| M5 | Presence & Sessions | Role C | unassigned | not_started | Rebase onto main |
-| M6 | Advisor Verification | B + A + C | unassigned | spec_only | M2 roles foundation |
+| M4 | Search & Vectors | Role C | cursor-role-c | **done** (branch `feat/m6-verification-livekit`) | Merge PR to `main` |
+| M5 | Presence & Sessions | Role C | cursor-role-c | **done** (branch `feat/m6-verification-livekit`) | Merge PR to `main` |
+| M6 | Advisor Verification | B + A + C | unassigned | **partial** — Role C LiveKit helpers only | Role B APIs + Role A UI |
 
 ## Definition of done (MVP demo)
 

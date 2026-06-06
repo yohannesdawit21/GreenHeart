@@ -10,7 +10,8 @@
     "lint": "eslint src --ext .ts",
     "db:migrate": "tsx scripts/migrate.ts",
     "test:smoke": "tsx scripts/smoke-test.ts",
-    "test:smoke:m5": "tsx scripts/smoke-test-m5.ts"
+    "test:smoke:m5": "tsx scripts/smoke-test-m5.ts",
+    "test:functional": "tsx scripts/functional-test.ts"
   },
   "dependencies": {
     "bcryptjs": "^3.0.2",
@@ -35,6 +36,7 @@
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^24.0.3",
     "@types/pg": "^8.20.0",
+    "socket.io-client": "^4.8.3",
     "tsx": "^4.20.3",
     "typescript": "^5.8.3"
   }

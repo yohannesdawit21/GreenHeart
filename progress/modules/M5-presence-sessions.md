@@ -19,6 +19,7 @@
 - [x] POST `/api/session/:id/end` + escrow release/refund via M3
 - [x] Update `shared/contracts/session.api.ts` + `socket.events.ts` (verified in code)
 - [x] `npm run test:smoke:m5`
+- [x] `npm run test:functional` — full E2E: wallet → search → socket call → LiveKit → escrow
 
 ## Blocked by
 
