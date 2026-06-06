@@ -10,7 +10,13 @@ function required(key: string, fallback?: string): string {
   return value;
 }
 
+function parseCorsAllowAll(raw: string | undefined): boolean {
+  if (process.env.CORS_ALLOW_ALL === 'true') return true;
+  return (raw ?? '').trim() === '*';
+}
+
 function parseCorsOrigins(raw: string | undefined): string[] {
+  if (parseCorsAllowAll(raw)) return [];
   const value = raw ?? 'http://localhost:5173';
   return value
     .split(',')
@@ -28,6 +34,7 @@ function parseCookieSameSite(): 'lax' | 'none' | 'strict' {
 export const config = {
   port: parseInt(process.env.PORT ?? '4000', 10),
   nodeEnv: process.env.NODE_ENV ?? 'development',
+  corsAllowAll: parseCorsAllowAll(process.env.CORS_ORIGIN),
   corsOrigins: parseCorsOrigins(process.env.CORS_ORIGIN),
   /** @deprecated use corsOrigins */
   corsOrigin: parseCorsOrigins(process.env.CORS_ORIGIN)[0] ?? 'http://localhost:5173',

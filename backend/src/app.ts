@@ -18,16 +18,20 @@ export function createApp() {
   const app = express();
 
   app.use(
-    cors({
-      origin(origin, callback) {
-        if (!origin || config.corsOrigins.includes(origin)) {
-          callback(null, true);
-          return;
-        }
-        callback(null, false);
-      },
-      credentials: true,
-    }),
+    cors(
+      config.corsAllowAll
+        ? { origin: true, credentials: true }
+        : {
+            origin(origin, callback) {
+              if (!origin || config.corsOrigins.includes(origin)) {
+                callback(null, true);
+                return;
+              }
+              callback(null, false);
+            },
+            credentials: true,
+          },
+    ),
   );
   app.use(express.json());
   app.use(cookieParser());

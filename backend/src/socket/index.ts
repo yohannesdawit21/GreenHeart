@@ -10,10 +10,9 @@ export function initSocket(httpServer: HttpServer): Server {
   if (io) return io;
 
   io = new Server(httpServer, {
-    cors: {
-      origin: config.corsOrigins,
-      credentials: true,
-    },
+    cors: config.corsAllowAll
+      ? { origin: true, credentials: true }
+      : { origin: config.corsOrigins, credentials: true },
   });
 
   io.use(authenticateSocket);
