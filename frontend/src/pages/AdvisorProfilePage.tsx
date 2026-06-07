@@ -8,6 +8,8 @@ import { userService } from '../api/user.service';
 import { sessionService } from '../api/session.service';
 import { useAuth } from '../context/AuthContext';
 import { getApiErrorCode, getApiErrorMessage } from '../utils/apiError';
+import { parseAdvisorApplicationBio } from '../utils/advisorApplicationBio';
+import { getProfessionLabel } from '@shared/advisor/credentialOptions';
 import type { AdvisorCardDto } from '@shared/contracts/users.api';
 
 export function AdvisorProfilePage() {
@@ -45,6 +47,10 @@ export function AdvisorProfilePage() {
     }
   };
 
+  const parsed = advisor ? parseAdvisorApplicationBio(advisor.bio, advisor.credentials) : null;
+  const headline = parsed?.professionalTitle ?? advisor?.bio.split('.')[0] ?? '';
+  const approachText = parsed?.approach ?? advisor?.bio ?? '';
+
   if (loading) {
     return (
       <AppShell activeNav="discover" showSearch={false}>
@@ -79,7 +85,18 @@ export function AdvisorProfilePage() {
             </div>
             <div>
               <h1 className="font-display-md text-display-md">{advisor.username}</h1>
-              <p className="text-on-surface-variant font-body-md">{advisor.bio.split('.')[0]}</p>
+              <p className="text-on-surface-variant font-body-md">{headline}</p>
+              {advisor.credentials?.professionType && (
+                <p className="text-xs text-outline mt-1">
+                  {getProfessionLabel(advisor.credentials.professionType)}
+                  {advisor.credentials.credentialType ? ` · ${advisor.credentials.credentialType}` : ''}
+                </p>
+              )}
+              {advisor.credentials?.languages && advisor.credentials.languages.length > 0 && (
+                <p className="text-xs text-on-surface-variant mt-1">
+                  Languages: {advisor.credentials.languages.join(', ')}
+                </p>
+              )}
               <div className="flex items-center gap-1 mt-1">
                 <MaterialIcon name="star" className="text-primary text-sm" />
                 <span className="text-sm text-on-surface-variant">{advisor.rating ?? 5.0} rating</span>
@@ -87,7 +104,7 @@ export function AdvisorProfilePage() {
             </div>
           </div>
 
-          <p className="font-body-md text-body-md text-on-surface-variant mb-stack-md">{advisor.bio}</p>
+          <p className="font-body-md text-body-md text-on-surface-variant mb-stack-md">{approachText}</p>
 
           <div className="flex flex-wrap gap-2 mb-stack-lg">
             {advisor.tags.map((tag) => (

@@ -4,6 +4,8 @@
  * @see agent/modules/M6-advisor-verification.md
  */
 
+import type { AdvisorCredentials } from './models.advisor.js';
+
 export type VerificationStatus = 'pending_review' | 'verified' | 'rejected' | 'suspended';
 
 export type InterviewOutcome = 'pass' | 'fail';
@@ -17,6 +19,8 @@ export interface ApplicantDto {
   coinRatePerSession: number;
   verificationStatus: VerificationStatus;
   createdAt: string;
+  /** Structured credential fields from apply wizard */
+  credentials?: AdvisorCredentials;
   /** Open for verification interview (pending applicants only) */
   isOnline?: boolean;
 }

@@ -17,6 +17,7 @@ export interface AdvisorProfileRow {
   tags: string[];
   coinRatePerSession: number;
   verificationStatus: string | null;
+  advisorCredentials: unknown;
 }
 
 export async function findAdvisorProfile(userId: string): Promise<AdvisorProfileRow | null> {
@@ -29,9 +30,10 @@ export async function findAdvisorProfile(userId: string): Promise<AdvisorProfile
     tags: string[];
     coin_rate_per_session: number;
     verification_status: string | null;
+    advisor_credentials: unknown;
   }>(
     `SELECT u.id AS user_id, u.role, p.username, p.bio, p.tags, p.coin_rate_per_session,
-            p.verification_status
+            p.verification_status, p.advisor_credentials
      FROM users u
      JOIN profiles p ON p.user_id = u.id
      WHERE u.id = $1`,
@@ -49,6 +51,7 @@ export async function findAdvisorProfile(userId: string): Promise<AdvisorProfile
     tags: row.tags ?? [],
     coinRatePerSession: row.coin_rate_per_session,
     verificationStatus: row.verification_status,
+    advisorCredentials: row.advisor_credentials,
   };
 }
 

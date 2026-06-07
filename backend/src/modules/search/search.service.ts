@@ -95,7 +95,11 @@ export async function reindexAdvisor(advisorId: string): Promise<ReindexResponse
 
   assertAdvisorEligibleForIndex(profile.verificationStatus);
 
-  const embeddingText = buildAdvisorEmbeddingText(profile.bio, profile.tags);
+  const embeddingText = buildAdvisorEmbeddingText(
+    profile.bio,
+    profile.tags,
+    profile.advisorCredentials,
+  );
   if (!embeddingText) {
     await deleteAdvisorEmbedding(advisorId);
     return { userId: advisorId, indexed: false };

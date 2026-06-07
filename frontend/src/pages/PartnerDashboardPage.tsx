@@ -20,6 +20,8 @@ import type {
   VerificationInterviewAcceptedPayload,
   VerificationInterviewDeclinedPayload,
 } from '@shared/contracts/socket.events'
+import { AdvisorApplicationDetails } from '../components/admin/AdvisorApplicationDetails'
+import { credentialPreview } from '../utils/advisorApplicationBio'
 
 interface PendingInterview {
   interviewId: string
@@ -230,7 +232,10 @@ export function PartnerDashboardPage() {
                       <p className="text-sm text-on-surface-variant">{applicant.email}</p>
                       <div className="mt-1">{renderAvailabilityBadge(applicant)}</div>
                     </div>
-                    <p className="text-sm text-on-surface-variant italic line-clamp-3">"{applicant.bio}"</p>
+                    <p className="text-sm text-on-surface-variant line-clamp-2">
+                      {credentialPreview(applicant.bio, applicant.credentials) || 'No credentials listed'}
+                    </p>
+                    <AdvisorApplicationDetails bio={applicant.bio} credentials={applicant.credentials} />
                     {applicant.tags.length > 0 && (
                       <div className="flex flex-wrap gap-1">
                         {applicant.tags.map((tag) => (
@@ -284,7 +289,10 @@ export function PartnerDashboardPage() {
                           </div>
                         </td>
                         <td className="py-stack-md px-stack-lg align-top max-w-md">
-                          <p className="line-clamp-3 text-sm italic text-on-surface-variant">"{applicant.bio}"</p>
+                          <p className="text-sm text-on-surface-variant line-clamp-2 mb-2">
+                            {credentialPreview(applicant.bio, applicant.credentials) || 'No credentials listed'}
+                          </p>
+                          <AdvisorApplicationDetails bio={applicant.bio} credentials={applicant.credentials} />
                         </td>
                         <td className="py-stack-md px-stack-lg text-right align-middle">
                           <div className="flex flex-col items-end gap-2">

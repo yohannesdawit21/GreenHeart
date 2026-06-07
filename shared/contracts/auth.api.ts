@@ -3,6 +3,8 @@
  * @see agent/api-contracts.md
  */
 
+import type { AdvisorCredentials } from './models.advisor.js';
+
 export type UserRole = 'client' | 'advisor' | 'partner_doctor' | 'admin';
 
 export type VerificationStatus = 'pending_review' | 'verified' | 'rejected' | 'suspended';
@@ -28,6 +30,7 @@ export interface RegisterAdvisorRequest {
     bio?: string;
     tags?: string[];
     coinRatePerSession?: number;
+    credentials?: AdvisorCredentials;
   };
 }
 
@@ -47,6 +50,8 @@ export interface AuthUser {
     coinRatePerSession: number;
     /** Present for advisor role — M6 */
     verificationStatus?: VerificationStatus;
+    /** Structured credentials from apply wizard */
+    credentials?: AdvisorCredentials;
   };
 }
 

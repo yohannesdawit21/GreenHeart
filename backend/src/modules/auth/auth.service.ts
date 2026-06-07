@@ -2,6 +2,7 @@ import bcrypt from 'bcryptjs';
 import { AppError } from '../../shared/errors/AppError.js';
 import { toAuthUser } from '../users/users.mapper.js';
 import * as usersRepo from '../users/users.repository.js';
+import { buildAdvisorBioFromCredentials } from '../users/advisorCredentials.util.js';
 import type { RegisterAdvisorInput, RegisterInput, LoginInput } from './auth.schemas.js';
 
 const BCRYPT_ROUNDS = 10;
@@ -40,16 +41,21 @@ export async function registerAdvisor(input: RegisterAdvisorInput) {
   }
 
   const passwordHash = await bcrypt.hash(input.password, BCRYPT_ROUNDS);
+  const credentials = input.profile.credentials;
+  const bio =
+    input.profile.bio?.trim() ||
+    buildAdvisorBioFromCredentials(credentials, '');
 
   const user = await usersRepo.createUserWithProfileAndWallet({
     email: input.email,
     passwordHash,
     role: 'advisor',
     username: input.profile.username,
-    bio: input.profile.bio ?? '',
+    bio,
     tags: input.profile.tags ?? [],
-    coinRatePerSession: input.profile.coinRatePerSession ?? 0,
+    coinRatePerSession: input.profile.coinRatePerSession ?? 100,
     verificationStatus: 'pending_review',
+    advisorCredentials: credentials,
   });
 
   return toAuthUser(user);

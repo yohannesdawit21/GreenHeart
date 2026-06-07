@@ -4,6 +4,20 @@ export type UserRole = 'client' | 'advisor' | 'partner_doctor' | 'admin';
 
 export type VerificationStatus = 'pending_review' | 'verified' | 'rejected' | 'suspended';
 
+export interface AdvisorCredentials {
+  professionType: string;
+  credentialType: string;
+  issuingBody: string;
+  issuingRegion: string;
+  licenseNumber: string;
+  degree?: string;
+  yearsExperience: number;
+  languages: string[];
+  professionalTitle: string;
+  specialtyCategory?: string;
+  additionalCertifications?: string;
+}
+
 export interface AuthUser {
   id: string;
   email: string;
@@ -14,6 +28,7 @@ export interface AuthUser {
     tags: string[];
     coinRatePerSession: number;
     verificationStatus?: VerificationStatus;
+    credentials?: AdvisorCredentials;
   };
 }
 
@@ -27,6 +42,7 @@ export interface AdvisorCardDto {
   reviewCount?: number;
   isOnline?: boolean;
   avatarUrl?: string;
+  credentials?: AdvisorCredentials;
 }
 
 export interface UpdateProfileRequest {
@@ -34,6 +50,7 @@ export interface UpdateProfileRequest {
   bio?: string;
   tags?: string[];
   coinRatePerSession?: number;
+  credentials?: AdvisorCredentials;
 }
 
 export type InterviewOutcome = 'pass' | 'fail';
@@ -68,6 +85,7 @@ export interface ApplicantDto {
   coinRatePerSession: number;
   verificationStatus: VerificationStatus;
   createdAt: string;
+  credentials?: AdvisorCredentials;
 }
 
 export interface PartnerDoctorDto {

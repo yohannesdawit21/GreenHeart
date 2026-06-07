@@ -2,6 +2,8 @@
  * Users API contracts — Owner: Role B
  */
 
+import type { AdvisorCredentials } from './models.advisor.js';
+
 export interface AdvisorCardDto {
   id: string;
   username: string;
@@ -12,6 +14,7 @@ export interface AdvisorCardDto {
   reviewCount?: number;
   isOnline?: boolean;
   avatarUrl?: string;
+  credentials?: AdvisorCredentials;
 }
 
 export interface UpdateProfileRequest {
@@ -19,6 +22,7 @@ export interface UpdateProfileRequest {
   bio?: string;
   tags?: string[];
   coinRatePerSession?: number;
+  credentials?: AdvisorCredentials;
 }
 
 export interface AdvisorListResponse {

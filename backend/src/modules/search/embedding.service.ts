@@ -1,5 +1,6 @@
 import { config } from '../../config/index.js';
 import { AppError } from '../../shared/errors/AppError.js';
+import { credentialsToSearchText, parseAdvisorCredentials } from '../users/advisorCredentials.util.js';
 
 /** Matches advisor_embeddings.embedding vector(1536) in 003_advisor_embeddings.sql */
 export const EMBEDDING_DIMENSIONS = config.embeddings.dimensions;
@@ -89,10 +90,16 @@ async function embedWithGemini(text: string, taskType: GeminiTaskType): Promise<
   return values;
 }
 
-export function buildAdvisorEmbeddingText(bio: string, tags: string[]): string {
+export function buildAdvisorEmbeddingText(
+  bio: string,
+  tags: string[],
+  advisorCredentials?: unknown,
+): string {
   const trimmedBio = bio.trim();
+  const credentials = parseAdvisorCredentials(advisorCredentials);
+  const credentialLine = credentialsToSearchText(credentials);
   const tagLine = tags.length > 0 ? `Tags: ${tags.join(', ')}` : '';
-  return [trimmedBio, tagLine].filter(Boolean).join('\n');
+  return [trimmedBio, credentialLine, tagLine].filter(Boolean).join('\n');
 }
 
 async function embedNormalized(text: string, taskType: GeminiTaskType): Promise<number[]> {

@@ -15,10 +15,12 @@ import { AdminSubNav } from '../../components/admin/AdminSubNav'
 import { AdvisorApplicationDetails } from '../../components/admin/AdvisorApplicationDetails'
 import { verificationService } from '../../api/verification.service'
 import { getApiErrorMessage } from '../../utils/apiError'
-import { parseAdvisorApplicationBio } from '../../utils/advisorApplicationBio'
+import { credentialPreview } from '../../utils/advisorApplicationBio'
+import { getProfessionLabel, PROFESSION_TYPES } from '@shared/advisor/credentialOptions'
 import type { ApplicantDto, VerificationStatus } from '@shared/contracts/verification.api'
 
 type StatusFilter = 'all' | VerificationStatus
+type ProfessionFilter = 'all' | string
 
 const FILTER_TABS: { id: StatusFilter; label: string }[] = [
   { id: 'all', label: 'All' },
@@ -34,6 +36,7 @@ export function AdminAdvisorsPage() {
   const [pageError, setPageError] = useState('')
   const [overrideError, setOverrideError] = useState('')
   const [filter, setFilter] = useState<StatusFilter>('all')
+  const [professionFilter, setProfessionFilter] = useState<ProfessionFilter>('all')
   const [expandedId, setExpandedId] = useState<string | null>(null)
 
   const loadAdvisors = useCallback(async () => {
@@ -53,9 +56,15 @@ export function AdminAdvisorsPage() {
   }, [loadAdvisors])
 
   const filtered = useMemo(() => {
-    if (filter === 'all') return advisors
-    return advisors.filter((a) => a.verificationStatus === filter)
-  }, [advisors, filter])
+    let list = advisors
+    if (filter !== 'all') {
+      list = list.filter((a) => a.verificationStatus === filter)
+    }
+    if (professionFilter !== 'all') {
+      list = list.filter((a) => a.credentials?.professionType === professionFilter)
+    }
+    return list
+  }, [advisors, filter, professionFilter])
 
   const counts = useMemo(() => {
     const c: Record<string, number> = { all: advisors.length }
@@ -112,6 +121,22 @@ export function AdminAdvisorsPage() {
               <span className="ml-1 opacity-70">({counts[tab.id] ?? 0})</span>
             </button>
           ))}
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-xs text-on-surface-variant font-label-md">Profession:</span>
+          <select
+            value={professionFilter}
+            onChange={(e) => setProfessionFilter(e.target.value)}
+            className="text-xs border border-outline-variant rounded-lg px-3 py-1.5 bg-surface-container-lowest"
+          >
+            <option value="all">All professions</option>
+            {PROFESSION_TYPES.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.label}
+              </option>
+            ))}
+          </select>
         </div>
 
         <DashboardSection
@@ -179,18 +204,14 @@ export function AdminAdvisorsPage() {
                             <VerificationStatusPill status={a.verificationStatus} />
                           </td>
                           <td className="py-stack-md px-stack-lg max-w-[220px]">
-                            {(() => {
-                              const parsed = parseAdvisorApplicationBio(a.bio)
-                              const preview =
-                                parsed.credentials ??
-                                parsed.professionalTitle ??
-                                (parsed.isStructured ? '—' : parsed.rawBio.slice(0, 80))
-                              return (
-                                <p className="text-xs text-on-surface-variant line-clamp-2" title={preview}>
-                                  {preview || '—'}
-                                </p>
-                              )
-                            })()}
+                            <p className="text-xs text-on-surface-variant line-clamp-2" title={credentialPreview(a.bio, a.credentials)}>
+                              {credentialPreview(a.bio, a.credentials) || '—'}
+                            </p>
+                            {a.credentials?.professionType && (
+                              <p className="text-[10px] text-outline mt-1">
+                                {getProfessionLabel(a.credentials.professionType)}
+                              </p>
+                            )}
                           </td>
                           <td className="py-stack-md px-stack-lg text-sm whitespace-nowrap">
                             {a.coinRatePerSession} coins
@@ -235,7 +256,7 @@ export function AdminAdvisorsPage() {
                                   <p className="font-label-md text-xs uppercase tracking-wide text-on-surface-variant mb-2">
                                     Application from registration
                                   </p>
-                                  <AdvisorApplicationDetails bio={a.bio} />
+                                  <AdvisorApplicationDetails bio={a.bio} credentials={a.credentials} />
                                 </div>
                                 <div className="space-y-3">
                                   <div>
