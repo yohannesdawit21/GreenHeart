@@ -3,20 +3,23 @@ import { AppShell } from '../components/layout/AppShell';
 import { appShellMainClass, DashboardHeader, DashboardAlert, FormError } from '../components/layout/dashboard-ui';
 import { btnPrimary } from '../components/layout/buttonStyles';
 import { MaterialIcon } from '../components/MaterialIcon';
+import { LanguageFluencyEditor, validateLanguages } from '../components/advisor/LanguageFluencyEditor';
 import { userService } from '../api/user.service';
 import { useAuth } from '../context/AuthContext';
 import { getApiErrorMessage } from '../utils/apiError';
 import { buildAdvisorBio } from '../utils/advisorApplicationBio';
 import type { AdvisorCredentials } from '@shared/contracts/models.advisor';
-import { EMPTY_ADVISOR_CREDENTIALS } from '@shared/contracts/models.advisor';
+import { EMPTY_ADVISOR_CREDENTIALS, OTHER_OPTION } from '@shared/contracts/models.advisor';
 import {
-  ALL_REGIONS,
   DEGREE_OPTIONS,
-  getCredentialTypesForProfession,
-  getIssuingBodiesForCredential,
-  LANGUAGE_OPTIONS,
+  getCredentialTypesForRegionProfession,
+  getIssuingBodiesForRegionCredential,
+  getRegionsByGroup,
+  isOtherSelection,
+  isUsRegion,
   PROFESSION_TYPES,
   SPECIALTY_CATEGORIES,
+  US_STATE_REGIONS,
 } from '@shared/advisor/credentialOptions';
 
 const inputClass =
@@ -38,9 +41,13 @@ export function SettingsPage() {
   const [error, setError] = useState('');
 
   const isAdvisor = user?.role === 'advisor';
-  const credentialOptions = getCredentialTypesForProfession(credentials.professionType);
+  const regionGroups = getRegionsByGroup();
+  const credentialOptions = getCredentialTypesForRegionProfession(
+    credentials.issuingRegion,
+    credentials.professionType,
+  );
   const issuingBodyOptions = credentials.credentialType
-    ? getIssuingBodiesForCredential(credentials.credentialType)
+    ? getIssuingBodiesForRegionCredential(credentials.issuingRegion, credentials.credentialType)
     : [];
 
   useEffect(() => {
@@ -62,20 +69,21 @@ export function SettingsPage() {
     setCredentials((prev) => ({ ...prev, [key]: value }));
   };
 
-  const toggleLanguage = (lang: string) => {
-    setCredentials((prev) => ({
-      ...prev,
-      languages: prev.languages.includes(lang)
-        ? prev.languages.filter((l) => l !== lang)
-        : [...prev.languages, lang],
-    }));
-  };
-
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
     setError('');
     setMessage('');
+
+    if (isAdvisor) {
+      const langErr = validateLanguages(credentials.languages);
+      if (langErr) {
+        setError(langErr);
+        setSaving(false);
+        return;
+      }
+    }
+
     try {
       const payload: Parameters<typeof userService.updateProfile>[0] = {
         username,
@@ -129,15 +137,84 @@ export function SettingsPage() {
             <>
               <div className="pt-stack-sm border-t border-outline-variant/40">
                 <h3 className="font-label-md text-sm uppercase tracking-wide text-on-surface mb-stack-sm flex items-center gap-2">
+                  <MaterialIcon name="translate" className="text-secondary text-base" />
+                  Languages & fluency
+                </h3>
+                <LanguageFluencyEditor
+                  languages={credentials.languages}
+                  onChange={(languages) => setCredentialField('languages', languages)}
+                />
+              </div>
+
+              <div className="pt-stack-sm border-t border-outline-variant/40">
+                <h3 className="font-label-md text-sm uppercase tracking-wide text-on-surface mb-stack-sm flex items-center gap-2">
                   <MaterialIcon name="badge" className="text-secondary text-base" />
                   Professional credentials
                 </h3>
                 <div className="grid sm:grid-cols-2 gap-stack-md">
+                  <div className="sm:col-span-2">
+                    <label className={labelClass}>Country / licensing region</label>
+                    <select
+                      className={selectClass}
+                      value={credentials.issuingRegion}
+                      onChange={(e) =>
+                        setCredentials((prev) => ({
+                          ...prev,
+                          issuingRegion: e.target.value,
+                          professionType: '',
+                          credentialType: '',
+                          issuingBody: '',
+                        }))
+                      }
+                    >
+                      <option value="">Select…</option>
+                      {Object.entries({
+                        Africa: regionGroups.africa,
+                        Americas: regionGroups.americas,
+                        Europe: regionGroups.europe,
+                        'Asia-Pacific': regionGroups.asia_pacific,
+                        'Middle East': regionGroups.middle_east,
+                        Other: regionGroups.other,
+                      }).map(([group, items]) => (
+                        <optgroup key={group} label={group}>
+                          {items.map((r) => (
+                            <option key={r.id} value={r.id}>{r.label}</option>
+                          ))}
+                        </optgroup>
+                      ))}
+                    </select>
+                  </div>
+                  {isOtherSelection(credentials.issuingRegion) && (
+                    <div className="sm:col-span-2">
+                      <label className={labelClass}>Country / region (specify)</label>
+                      <input
+                        className={inputClass}
+                        value={credentials.issuingRegionOther ?? ''}
+                        onChange={(e) => setCredentialField('issuingRegionOther', e.target.value)}
+                      />
+                    </div>
+                  )}
+                  {isUsRegion(credentials.issuingRegion) && (
+                    <div className="sm:col-span-2">
+                      <label className={labelClass}>US licensing state</label>
+                      <select
+                        className={selectClass}
+                        value={credentials.issuingRegionOther ?? ''}
+                        onChange={(e) => setCredentialField('issuingRegionOther', e.target.value)}
+                      >
+                        <option value="">Select state…</option>
+                        {US_STATE_REGIONS.map((s) => (
+                          <option key={s} value={s}>{s}</option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
                   <div>
                     <label className={labelClass}>Profession type</label>
                     <select
                       className={selectClass}
                       value={credentials.professionType}
+                      disabled={!credentials.issuingRegion}
                       onChange={(e) =>
                         setCredentials((prev) => ({
                           ...prev,
@@ -169,10 +246,20 @@ export function SettingsPage() {
                     >
                       <option value="">Select…</option>
                       {credentialOptions.map((c) => (
-                        <option key={c} value={c}>{c}</option>
+                        <option key={c} value={c}>{c === OTHER_OPTION ? 'Other / not listed' : c}</option>
                       ))}
                     </select>
                   </div>
+                  {isOtherSelection(credentials.credentialType) && (
+                    <div className="sm:col-span-2">
+                      <label className={labelClass}>Credential type (specify)</label>
+                      <input
+                        className={inputClass}
+                        value={credentials.credentialTypeOther ?? ''}
+                        onChange={(e) => setCredentialField('credentialTypeOther', e.target.value)}
+                      />
+                    </div>
+                  )}
                   <div>
                     <label className={labelClass}>Issuing body</label>
                     <select
@@ -183,23 +270,20 @@ export function SettingsPage() {
                     >
                       <option value="">Select…</option>
                       {issuingBodyOptions.map((b) => (
-                        <option key={b} value={b}>{b}</option>
+                        <option key={b} value={b}>{b === OTHER_OPTION ? 'Other / not listed' : b}</option>
                       ))}
                     </select>
                   </div>
-                  <div>
-                    <label className={labelClass}>Region</label>
-                    <select
-                      className={selectClass}
-                      value={credentials.issuingRegion}
-                      onChange={(e) => setCredentialField('issuingRegion', e.target.value)}
-                    >
-                      <option value="">Select…</option>
-                      {ALL_REGIONS.map((r) => (
-                        <option key={r} value={r}>{r}</option>
-                      ))}
-                    </select>
-                  </div>
+                  {isOtherSelection(credentials.issuingBody) && (
+                    <div>
+                      <label className={labelClass}>Issuing body (specify)</label>
+                      <input
+                        className={inputClass}
+                        value={credentials.issuingBodyOther ?? ''}
+                        onChange={(e) => setCredentialField('issuingBodyOther', e.target.value)}
+                      />
+                    </div>
+                  )}
                   <div>
                     <label className={labelClass}>License number</label>
                     <input
@@ -241,28 +325,6 @@ export function SettingsPage() {
                     </select>
                   </div>
                   <div className="sm:col-span-2">
-                    <label className={labelClass}>Languages</label>
-                    <div className="flex flex-wrap gap-2">
-                      {LANGUAGE_OPTIONS.map((lang) => {
-                        const active = credentials.languages.includes(lang);
-                        return (
-                          <button
-                            key={lang}
-                            type="button"
-                            onClick={() => toggleLanguage(lang)}
-                            className={`text-xs px-2 py-1 rounded-full border ${
-                              active
-                                ? 'bg-secondary-container border-secondary'
-                                : 'border-outline-variant'
-                            }`}
-                          >
-                            {lang}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                  <div className="sm:col-span-2">
                     <label className={labelClass}>Primary focus area</label>
                     <select
                       className={selectClass}
@@ -300,7 +362,7 @@ export function SettingsPage() {
                   onChange={(e) => setCoinRate(Number(e.target.value))}
                 />
               </div>
-              {user.profile?.verificationStatus && (
+              {user?.profile?.verificationStatus && (
                 <div className="flex items-center gap-2 text-on-surface-variant font-body-md">
                   <MaterialIcon name="verified" />
                   Verification: <strong>{user.profile.verificationStatus}</strong>

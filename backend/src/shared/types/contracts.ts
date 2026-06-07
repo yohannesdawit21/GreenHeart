@@ -4,15 +4,26 @@ export type UserRole = 'client' | 'advisor' | 'partner_doctor' | 'admin';
 
 export type VerificationStatus = 'pending_review' | 'verified' | 'rejected' | 'suspended';
 
+export type LanguageFluency = 'native' | 'fluent' | 'conversational' | 'basic';
+
+export interface AdvisorLanguage {
+  code: string;
+  name: string;
+  fluency: LanguageFluency;
+}
+
 export interface AdvisorCredentials {
+  issuingRegion: string;
+  issuingRegionOther?: string;
   professionType: string;
   credentialType: string;
+  credentialTypeOther?: string;
   issuingBody: string;
-  issuingRegion: string;
+  issuingBodyOther?: string;
   licenseNumber: string;
   degree?: string;
   yearsExperience: number;
-  languages: string[];
+  languages: AdvisorLanguage[];
   professionalTitle: string;
   specialtyCategory?: string;
   additionalCertifications?: string;

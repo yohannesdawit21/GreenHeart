@@ -10,6 +10,7 @@ import { useAuth } from '../context/AuthContext';
 import { getApiErrorCode, getApiErrorMessage } from '../utils/apiError';
 import { parseAdvisorApplicationBio } from '../utils/advisorApplicationBio';
 import { getProfessionLabel } from '@shared/advisor/credentialOptions';
+import { formatLanguagesList } from '@shared/advisor/languageUtils';
 import type { AdvisorCardDto } from '@shared/contracts/users.api';
 
 export function AdvisorProfilePage() {
@@ -94,7 +95,7 @@ export function AdvisorProfilePage() {
               )}
               {advisor.credentials?.languages && advisor.credentials.languages.length > 0 && (
                 <p className="text-xs text-on-surface-variant mt-1">
-                  Languages: {advisor.credentials.languages.join(', ')}
+                  Languages: {formatLanguagesList(advisor.credentials.languages)}
                 </p>
               )}
               <div className="flex items-center gap-1 mt-1">

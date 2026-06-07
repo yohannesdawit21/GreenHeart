@@ -12,9 +12,20 @@ function DetailField({ label, value }: { label: string; value?: string }) {
   )
 }
 
-function LanguageList({ languages }: { languages?: string[] }) {
-  if (!languages?.length) return null
-  return <DetailField label="Languages" value={languages.join(', ')} />
+function LanguageList({
+  languagesDisplay,
+  languages,
+}: {
+  languagesDisplay?: string
+  languages?: AdvisorCredentials['languages']
+}) {
+  const text =
+    languagesDisplay ??
+    (languages?.length
+      ? languages.map((l) => `${l.name} (${l.fluency})`).join(', ')
+      : undefined)
+  if (!text?.trim()) return null
+  return <DetailField label="Languages" value={text} />
 }
 
 export function AdvisorApplicationDetails({
@@ -50,10 +61,10 @@ export function AdvisorApplicationDetails({
         <DetailField label="Credential / license type" value={parsed.credentialType} />
         <DetailField label="Years of experience" value={parsed.yearsExperience ? `${parsed.yearsExperience} years` : undefined} />
         <DetailField label="Issuing body" value={parsed.issuingBody} />
-        <DetailField label="Issuing region" value={parsed.issuingRegion} />
+        <DetailField label="Country / region" value={parsed.issuingRegion} />
         <DetailField label="License number" value={parsed.licenseNumber} />
         <DetailField label="Degree" value={parsed.degree} />
-        <LanguageList languages={parsed.languages} />
+        <LanguageList languagesDisplay={parsed.languagesDisplay} languages={parsed.languages} />
         <DetailField label="Primary focus area" value={parsed.specialtyCategory} />
         <div className="sm:col-span-2">
           <DetailField label="Additional certifications" value={parsed.additionalCertifications} />

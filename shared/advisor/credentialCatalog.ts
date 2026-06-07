@@ -1,0 +1,325 @@
+/**
+ * Country/region-specific credential and issuing-body catalog.
+ * Africa-focused licensing bodies researched from national medical/counseling councils.
+ */
+
+export const OTHER_OPTION = '__other__';
+
+export interface RegionOption {
+  id: string;
+  label: string;
+  group: 'africa' | 'americas' | 'europe' | 'asia_pacific' | 'middle_east' | 'other';
+}
+
+/** Countries and licensing jurisdictions — African nations listed first */
+export const COUNTRY_REGIONS: readonly RegionOption[] = [
+  { id: 'za', label: 'South Africa', group: 'africa' },
+  { id: 'ng', label: 'Nigeria', group: 'africa' },
+  { id: 'ke', label: 'Kenya', group: 'africa' },
+  { id: 'gh', label: 'Ghana', group: 'africa' },
+  { id: 'et', label: 'Ethiopia', group: 'africa' },
+  { id: 'tz', label: 'Tanzania', group: 'africa' },
+  { id: 'ug', label: 'Uganda', group: 'africa' },
+  { id: 'rw', label: 'Rwanda', group: 'africa' },
+  { id: 'eg', label: 'Egypt', group: 'africa' },
+  { id: 'ma', label: 'Morocco', group: 'africa' },
+  { id: 'dz', label: 'Algeria', group: 'africa' },
+  { id: 'tn', label: 'Tunisia', group: 'africa' },
+  { id: 'sn', label: 'Senegal', group: 'africa' },
+  { id: 'ci', label: "Côte d'Ivoire", group: 'africa' },
+  { id: 'cm', label: 'Cameroon', group: 'africa' },
+  { id: 'cd', label: 'Democratic Republic of Congo', group: 'africa' },
+  { id: 'ao', label: 'Angola', group: 'africa' },
+  { id: 'mz', label: 'Mozambique', group: 'africa' },
+  { id: 'zw', label: 'Zimbabwe', group: 'africa' },
+  { id: 'zm', label: 'Zambia', group: 'africa' },
+  { id: 'mw', label: 'Malawi', group: 'africa' },
+  { id: 'bw', label: 'Botswana', group: 'africa' },
+  { id: 'na', label: 'Namibia', group: 'africa' },
+  { id: 'ls', label: 'Lesotho', group: 'africa' },
+  { id: 'sz', label: 'Eswatini (Swaziland)', group: 'africa' },
+  { id: 'mu', label: 'Mauritius', group: 'africa' },
+  { id: 'mg', label: 'Madagascar', group: 'africa' },
+  { id: 'sd', label: 'Sudan', group: 'africa' },
+  { id: 'ss', label: 'South Sudan', group: 'africa' },
+  { id: 'so', label: 'Somalia', group: 'africa' },
+  { id: 'er', label: 'Eritrea', group: 'africa' },
+  { id: 'dj', label: 'Djibouti', group: 'africa' },
+  { id: 'ly', label: 'Libya', group: 'africa' },
+  { id: 'ml', label: 'Mali', group: 'africa' },
+  { id: 'bf', label: 'Burkina Faso', group: 'africa' },
+  { id: 'ne', label: 'Niger', group: 'africa' },
+  { id: 'td', label: 'Chad', group: 'africa' },
+  { id: 'gn', label: 'Guinea', group: 'africa' },
+  { id: 'sl', label: 'Sierra Leone', group: 'africa' },
+  { id: 'lr', label: 'Liberia', group: 'africa' },
+  { id: 'gm', label: 'Gambia', group: 'africa' },
+  { id: 'bj', label: 'Benin', group: 'africa' },
+  { id: 'tg', label: 'Togo', group: 'africa' },
+  { id: 'ga', label: 'Gabon', group: 'africa' },
+  { id: 'cg', label: 'Republic of Congo', group: 'africa' },
+  { id: 'cf', label: 'Central African Republic', group: 'africa' },
+  { id: 'bi', label: 'Burundi', group: 'africa' },
+  { id: 'sc', label: 'Seychelles', group: 'africa' },
+  { id: 'us', label: 'United States', group: 'americas' },
+  { id: 'ca', label: 'Canada', group: 'americas' },
+  { id: 'mx', label: 'Mexico', group: 'americas' },
+  { id: 'br', label: 'Brazil', group: 'americas' },
+  { id: 'ar', label: 'Argentina', group: 'americas' },
+  { id: 'co', label: 'Colombia', group: 'americas' },
+  { id: 'cl', label: 'Chile', group: 'americas' },
+  { id: 'pe', label: 'Peru', group: 'americas' },
+  { id: 'jm', label: 'Jamaica', group: 'americas' },
+  { id: 'tt', label: 'Trinidad and Tobago', group: 'americas' },
+  { id: 'gb', label: 'United Kingdom', group: 'europe' },
+  { id: 'ie', label: 'Ireland', group: 'europe' },
+  { id: 'de', label: 'Germany', group: 'europe' },
+  { id: 'fr', label: 'France', group: 'europe' },
+  { id: 'es', label: 'Spain', group: 'europe' },
+  { id: 'it', label: 'Italy', group: 'europe' },
+  { id: 'nl', label: 'Netherlands', group: 'europe' },
+  { id: 'be', label: 'Belgium', group: 'europe' },
+  { id: 'ch', label: 'Switzerland', group: 'europe' },
+  { id: 'se', label: 'Sweden', group: 'europe' },
+  { id: 'no', label: 'Norway', group: 'europe' },
+  { id: 'dk', label: 'Denmark', group: 'europe' },
+  { id: 'fi', label: 'Finland', group: 'europe' },
+  { id: 'pl', label: 'Poland', group: 'europe' },
+  { id: 'pt', label: 'Portugal', group: 'europe' },
+  { id: 'gr', label: 'Greece', group: 'europe' },
+  { id: 'eu', label: 'European Union (other member state)', group: 'europe' },
+  { id: 'au', label: 'Australia', group: 'asia_pacific' },
+  { id: 'nz', label: 'New Zealand', group: 'asia_pacific' },
+  { id: 'in', label: 'India', group: 'asia_pacific' },
+  { id: 'pk', label: 'Pakistan', group: 'asia_pacific' },
+  { id: 'bd', label: 'Bangladesh', group: 'asia_pacific' },
+  { id: 'lk', label: 'Sri Lanka', group: 'asia_pacific' },
+  { id: 'np', label: 'Nepal', group: 'asia_pacific' },
+  { id: 'sg', label: 'Singapore', group: 'asia_pacific' },
+  { id: 'my', label: 'Malaysia', group: 'asia_pacific' },
+  { id: 'ph', label: 'Philippines', group: 'asia_pacific' },
+  { id: 'id', label: 'Indonesia', group: 'asia_pacific' },
+  { id: 'th', label: 'Thailand', group: 'asia_pacific' },
+  { id: 'vn', label: 'Vietnam', group: 'asia_pacific' },
+  { id: 'jp', label: 'Japan', group: 'asia_pacific' },
+  { id: 'kr', label: 'South Korea', group: 'asia_pacific' },
+  { id: 'cn', label: 'China', group: 'asia_pacific' },
+  { id: 'hk', label: 'Hong Kong', group: 'asia_pacific' },
+  { id: 'ae', label: 'United Arab Emirates', group: 'middle_east' },
+  { id: 'sa', label: 'Saudi Arabia', group: 'middle_east' },
+  { id: 'qa', label: 'Qatar', group: 'middle_east' },
+  { id: 'kw', label: 'Kuwait', group: 'middle_east' },
+  { id: 'bh', label: 'Bahrain', group: 'middle_east' },
+  { id: 'om', label: 'Oman', group: 'middle_east' },
+  { id: 'jo', label: 'Jordan', group: 'middle_east' },
+  { id: 'lb', label: 'Lebanon', group: 'middle_east' },
+  { id: 'il', label: 'Israel', group: 'middle_east' },
+  { id: 'tr', label: 'Turkey', group: 'middle_east' },
+  { id: OTHER_OPTION, label: 'Other / not listed', group: 'other' },
+] as const;
+
+export const US_STATE_REGIONS = [
+  'Alabama', 'Alaska', 'Arizona', 'Arkansas', 'California', 'Colorado', 'Connecticut', 'Delaware',
+  'District of Columbia', 'Florida', 'Georgia', 'Hawaii', 'Idaho', 'Illinois', 'Indiana', 'Iowa',
+  'Kansas', 'Kentucky', 'Louisiana', 'Maine', 'Maryland', 'Massachusetts', 'Michigan', 'Minnesota',
+  'Mississippi', 'Missouri', 'Montana', 'Nebraska', 'Nevada', 'New Hampshire', 'New Jersey',
+  'New Mexico', 'New York', 'North Carolina', 'North Dakota', 'Ohio', 'Oklahoma', 'Oregon',
+  'Pennsylvania', 'Rhode Island', 'South Carolina', 'South Dakota', 'Tennessee', 'Texas', 'Utah',
+  'Vermont', 'Virginia', 'Washington', 'West Virginia', 'Wisconsin', 'Wyoming',
+] as const;
+
+type CredentialMap = Partial<Record<string, readonly string[]>>;
+
+export const REGION_CREDENTIAL_TYPES: Partial<Record<string, CredentialMap>> = {
+  za: {
+    psychologist: [
+      'HPCSA Registered Psychologist',
+      'HPCSA Registered Counsellor',
+      'HPCSA Registered Psychometrist',
+    ],
+    licensed_counselor: ['HPCSA Registered Counsellor', 'ASCHP Registered Counsellor'],
+    psychiatrist: ['HPCSA Registered Medical Specialist (Psychiatry)'],
+    clinical_social_worker: ['SACSSP Registered Social Worker (Independent Practice)'],
+    psychiatric_nurse: ['SANC Registered Psychiatric Nurse'],
+    wellness_coach: ['COMENSA Registered Coach'],
+  },
+  ng: {
+    psychologist: ['Nigerian Psychological Association (NPA) member', 'Licensed Clinical Psychologist'],
+    licensed_counselor: ['Licensed Professional Counsellor (LPC Nigeria)', 'CICN — Chartered Institute of Counseling Nigeria'],
+    psychiatrist: ['Medical and Dental Council of Nigeria (MDCN) — Psychiatry specialist'],
+    clinical_social_worker: ['Association of Social Workers of Nigeria (ASWON) registered'],
+    substance_abuse_counselor: ['CADAC — Certified Addiction Counsellor'],
+  },
+  ke: {
+    psychologist: ['Kenya Psychological Association (KPA) registered'],
+    licensed_counselor: ['Kenya Counseling Association (KCA) certified counsellor'],
+    psychiatrist: ['Kenya Medical Practitioners and Dentists Council (KMPDC) — Psychiatry'],
+    clinical_social_worker: ['Kenya Association of Social Workers registered'],
+    psychiatric_nurse: ['Nursing Council of Kenya — Psychiatric nurse'],
+  },
+  gh: {
+    psychologist: ['Ghana Psychological Association registered'],
+    licensed_counselor: ['Ghana Psychology Council — Licensed Counsellor'],
+    psychiatrist: ['Ghana Medical and Dental Council (MDC) — Psychiatry specialist'],
+    clinical_social_worker: ['Ghana Social Workers Registration Board'],
+  },
+  et: {
+    psychologist: ['Ethiopian Psychological Association member'],
+    licensed_counselor: ['Ethiopian Counseling Association certified counsellor'],
+    psychiatrist: ['Ethiopian Medical Association — Psychiatry board certified'],
+    clinical_social_worker: ['Ethiopian Social Workers Association registered'],
+  },
+  tz: {
+    psychologist: ['Tanzania Psychological Association registered'],
+    licensed_counselor: ['Tanzania Counsellors Association certified'],
+    psychiatrist: ['Medical Council of Tanganyika — Psychiatry specialist'],
+    clinical_social_worker: ['Tanzania Social Work Association registered'],
+  },
+  ug: {
+    psychologist: ['Uganda Counselling Association registered psychologist'],
+    licensed_counselor: ['Uganda Counselling Association certified counsellor'],
+    psychiatrist: ['Uganda Medical and Dental Practitioners Council — Psychiatry'],
+    clinical_social_worker: ['Uganda Association of Social Workers'],
+  },
+  rw: {
+    psychologist: ['Rwanda Psychological Society member'],
+    licensed_counselor: ['Rwanda Counsellors Association certified'],
+    psychiatrist: ['Rwanda Medical and Dental Council — Psychiatry'],
+    clinical_social_worker: ['Rwanda Social Work Association'],
+  },
+  eg: {
+    psychologist: ['Egyptian Psychological Association member'],
+    psychiatrist: ['Egyptian Medical Syndicate — Psychiatry specialist'],
+    licensed_counselor: ['Licensed Mental Health Counsellor (Egypt)'],
+  },
+  gb: {
+    psychologist: ['HCPC Registered Practitioner Psychologist', 'BPS Chartered Psychologist'],
+    licensed_counselor: ['BACP Accredited Counsellor', 'UKCP Registered Psychotherapist'],
+    clinical_social_worker: ['Social Work England registered'],
+    psychiatrist: ['GMC Specialist Register — Psychiatry'],
+  },
+  au: {
+    psychologist: ['AHPRA Registered Psychologist'],
+    licensed_counselor: ['PACFA Registered Counsellor', 'ACA Level 4 Counsellor'],
+    clinical_social_worker: ['AASW Accredited Social Worker'],
+    psychiatrist: ['AHPRA Specialist Registration — Psychiatry'],
+  },
+  ca: {
+    psychologist: ['Provincial College of Psychologists registration'],
+    licensed_counselor: ['Registered Clinical Counsellor (RCC)', 'Registered Psychotherapist (RP)'],
+    clinical_social_worker: ['Provincial Social Work registration (RSW / MSW)'],
+    psychiatrist: ['CPSO / provincial medical college — Psychiatry'],
+  },
+  in: {
+    psychologist: ['Rehabilitation Council of India (RCI) registered'],
+    psychiatrist: ['National Medical Commission (NMC) — Psychiatry MD/DNB'],
+    licensed_counselor: ['RCI Registered Counsellor / Guidance professional'],
+  },
+};
+
+export const REGION_ISSUING_BODIES: Partial<Record<string, Record<string, readonly string[]>>> = {
+  za: {
+    'HPCSA Registered Psychologist': ['Health Professions Council of South Africa (HPCSA) — Professional Board for Psychology'],
+    'HPCSA Registered Counsellor': ['Health Professions Council of South Africa (HPCSA) — Professional Board for Psychology'],
+    'HPCSA Registered Psychometrist': ['Health Professions Council of South Africa (HPCSA) — Professional Board for Psychology'],
+    'ASCHP Registered Counsellor': ['Association for Supportive Counsellors and Holistic Practitioners (ASCHP)'],
+    'HPCSA Registered Medical Specialist (Psychiatry)': ['Health Professions Council of South Africa (HPCSA) — Medical & Dental Board'],
+    'SACSSP Registered Social Worker (Independent Practice)': ['South African Council for Social Service Professions (SACSSP)'],
+    'SANC Registered Psychiatric Nurse': ['South African Nursing Council (SANC)'],
+    'COMENSA Registered Coach': ['Coaches and Mentors of South Africa (COMENSA)'],
+  },
+  ng: {
+    'Nigerian Psychological Association (NPA) member': ['Nigerian Psychological Association (NPA)'],
+    'Licensed Clinical Psychologist': ['Nigerian Psychological Association / state licensing board'],
+    'Licensed Professional Counsellor (LPC Nigeria)': ['Licensed Professional Counsellors Board of Nigeria'],
+    'CICN — Chartered Institute of Counseling Nigeria': ['Chartered Institute of Counseling Nigeria (CICN)'],
+    'Medical and Dental Council of Nigeria (MDCN) — Psychiatry specialist': ['Medical and Dental Council of Nigeria (MDCN)'],
+    'Association of Social Workers of Nigeria (ASWON) registered': ['Association of Social Workers of Nigeria (ASWON)'],
+    'CADAC — Certified Addiction Counsellor': ['Centre for Addiction Management (CADAC Nigeria)'],
+  },
+  ke: {
+    'Kenya Psychological Association (KPA) registered': ['Kenya Psychological Association (KPA)'],
+    'Kenya Counseling Association (KCA) certified counsellor': ['Kenya Counseling Association (KCA)'],
+    'Kenya Medical Practitioners and Dentists Council (KMPDC) — Psychiatry': ['Kenya Medical Practitioners and Dentists Council (KMPDC)'],
+    'Kenya Association of Social Workers registered': ['Kenya Association of Social Workers'],
+    'Nursing Council of Kenya — Psychiatric nurse': ['Nursing Council of Kenya (NCK)'],
+  },
+  gh: {
+    'Ghana Psychological Association registered': ['Ghana Psychological Association'],
+    'Ghana Psychology Council — Licensed Counsellor': ['Ghana Psychology Council'],
+    'Ghana Medical and Dental Council (MDC) — Psychiatry specialist': ['Medical and Dental Council of Ghana (MDC)'],
+    'Ghana Social Workers Registration Board': ['Ghana Social Workers Registration Board'],
+  },
+  et: {
+    'Ethiopian Psychological Association member': ['Ethiopian Psychological Association'],
+    'Ethiopian Counseling Association certified counsellor': ['Ethiopian Counseling Association'],
+    'Ethiopian Medical Association — Psychiatry board certified': ['Ethiopian Medical Association / FMHACA'],
+    'Ethiopian Social Workers Association registered': ['Ethiopian Social Workers Association'],
+  },
+  tz: {
+    'Tanzania Psychological Association registered': ['Tanzania Psychological Association'],
+    'Tanzania Counsellors Association certified': ['Tanzania Counsellors Association'],
+    'Medical Council of Tanganyika — Psychiatry specialist': ['Medical Council of Tanganyika (MCT)'],
+    'Tanzania Social Work Association registered': ['Tanzania Social Work Association'],
+  },
+  ug: {
+    'Uganda Counselling Association registered psychologist': ['Uganda Counselling Association'],
+    'Uganda Counselling Association certified counsellor': ['Uganda Counselling Association'],
+    'Uganda Medical and Dental Practitioners Council — Psychiatry': ['Uganda Medical and Dental Practitioners Council (UMDPC)'],
+    'Uganda Association of Social Workers': ['Uganda Association of Social Workers'],
+  },
+  rw: {
+    'Rwanda Psychological Society member': ['Rwanda Psychological Society'],
+    'Rwanda Counsellors Association certified': ['Rwanda Counsellors Association'],
+    'Rwanda Medical and Dental Council — Psychiatry': ['Rwanda Medical and Dental Council (RMDC)'],
+    'Rwanda Social Work Association': ['Rwanda Social Work Association'],
+  },
+  eg: {
+    'Egyptian Psychological Association member': ['Egyptian Psychological Association'],
+    'Egyptian Medical Syndicate — Psychiatry specialist': ['Egyptian Medical Syndicate'],
+    'Licensed Mental Health Counsellor (Egypt)': ['Egyptian Ministry of Health — Mental Health licensing'],
+  },
+  gb: {
+    'HCPC Registered Practitioner Psychologist': ['Health and Care Professions Council (HCPC)'],
+    'BPS Chartered Psychologist': ['British Psychological Society (BPS)'],
+    'BACP Accredited Counsellor': ['British Association for Counselling and Psychotherapy (BACP)'],
+    'UKCP Registered Psychotherapist': ['UK Council for Psychotherapy (UKCP)'],
+    'Social Work England registered': ['Social Work England'],
+    'GMC Specialist Register — Psychiatry': ['General Medical Council (GMC)'],
+  },
+  au: {
+    'AHPRA Registered Psychologist': ['Australian Health Practitioner Regulation Agency (AHPRA)'],
+    'PACFA Registered Counsellor': ['Psychotherapy and Counselling Federation of Australia (PACFA)'],
+    'AASW Accredited Social Worker': ['Australian Association of Social Workers (AASW)'],
+    'AHPRA Specialist Registration — Psychiatry': ['Medical Board of Australia (AHPRA)'],
+  },
+  ca: {
+    'Provincial College of Psychologists registration': ['Provincial College of Psychologists (CPBC, OCP, OPQ, etc.)'],
+    'Registered Clinical Counsellor (RCC)': ['BC Association of Clinical Counsellors / provincial equivalent'],
+    'CPSO / provincial medical college — Psychiatry': ['College of Physicians and Surgeons (provincial)'],
+  },
+  in: {
+    'Rehabilitation Council of India (RCI) registered': ['Rehabilitation Council of India (RCI)'],
+    'National Medical Commission (NMC) — Psychiatry MD/DNB': ['National Medical Commission (NMC)'],
+    'RCI Registered Counsellor / Guidance professional': ['Rehabilitation Council of India (RCI)'],
+  },
+  us: {
+    'Licensed Psychologist (LP)': ['State Psychology Licensing Board', 'Association of State and Provincial Psychology Boards (ASPPB)'],
+    'LPC — Licensed Professional Counselor': ['State Counseling / Behavioral Health Board'],
+    'LMHC — Licensed Mental Health Counselor': ['State Mental Health Counselors Board'],
+    'LCSW — Licensed Clinical Social Worker': ['State Social Work Licensing Board'],
+    'LMFT — Licensed Marriage and Family Therapist': ['State Marriage & Family Therapy Board'],
+    'MD — Board-certified Psychiatrist': ['State Medical Board', 'American Board of Psychiatry and Neurology (ABPN)'],
+    'PMHNP — Psychiatric Mental Health Nurse Practitioner': ['State Board of Nursing', 'American Nurses Credentialing Center (ANCC)'],
+    'NBHWC — National Board Certified Health & Wellness Coach': ['National Board for Health & Wellness Coaching (NBHWC)'],
+  },
+};
+
+export function getRegionLabel(regionId: string): string {
+  const found = COUNTRY_REGIONS.find((r) => r.id === regionId);
+  return found?.label ?? regionId;
+}
+
+export function isUsRegion(regionId: string): boolean {
+  return regionId === 'us';
+}

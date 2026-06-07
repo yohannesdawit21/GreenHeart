@@ -1,32 +1,41 @@
-import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { MaterialIcon } from '../components/MaterialIcon'
 import { Logo } from '../components/Logo'
 import { PasswordInput } from '../components/PasswordInput'
 import { btnPrimary, btnOutline } from '../components/layout/buttonStyles'
 import { FormError } from '../components/layout/dashboard-ui'
+import { LanguageFluencyEditor, validateLanguages } from '../components/advisor/LanguageFluencyEditor'
 import { useAuth } from '../context/AuthContext'
 import { getApiErrorMessage } from '../utils/apiError'
 import { buildAdvisorBio } from '../utils/advisorApplicationBio'
+import { formatLanguagesList } from '@shared/advisor/languageUtils'
 import type { AdvisorCredentials } from '@shared/contracts/models.advisor'
-import { EMPTY_ADVISOR_CREDENTIALS } from '@shared/contracts/models.advisor'
+import { EMPTY_ADVISOR_CREDENTIALS, OTHER_OPTION } from '@shared/contracts/models.advisor'
 import {
-  ALL_REGIONS,
+  COUNTRY_REGIONS,
   DEGREE_OPTIONS,
-  getCredentialTypesForProfession,
-  getIssuingBodiesForCredential,
+  getCredentialTypesForRegionProfession,
+  getIssuingBodiesForRegionCredential,
+  getRegionsByGroup,
   getSpecialtiesForCategory,
-  LANGUAGE_OPTIONS,
+  isOtherSelection,
+  isUsRegion,
   PROFESSION_TYPES,
+  resolveCredentialTypeDisplay,
+  resolveIssuingBodyDisplay,
+  resolveRegionDisplay,
   SESSION_RATE_OPTIONS,
   SPECIALTY_CATEGORIES,
+  US_STATE_REGIONS,
 } from '@shared/advisor/credentialOptions'
 
 const STEPS = [
   { id: 1, title: 'Account', icon: 'person' },
-  { id: 2, title: 'Credentials', icon: 'badge' },
-  { id: 3, title: 'Practice', icon: 'medical_services' },
-  { id: 4, title: 'Review', icon: 'fact_check' },
+  { id: 2, title: 'Languages', icon: 'translate' },
+  { id: 3, title: 'Credentials', icon: 'badge' },
+  { id: 4, title: 'Practice', icon: 'medical_services' },
+  { id: 5, title: 'Review', icon: 'fact_check' },
 ] as const
 
 const inputClass =
@@ -36,6 +45,12 @@ const selectClass = `${inputClass} appearance-none cursor-pointer`
 
 const labelClass = 'block font-label-md text-label-md text-on-surface-variant mb-unit'
 
+type ApplyLocationState = {
+  email?: string
+  password?: string
+  username?: string
+}
+
 function SelectField({
   label,
   value,
@@ -44,6 +59,7 @@ function SelectField({
   placeholder,
   required,
   disabled,
+  grouped,
 }: {
   label: string
   value: string
@@ -52,6 +68,7 @@ function SelectField({
   placeholder?: string
   required?: boolean
   disabled?: boolean
+  grouped?: Record<string, readonly { id: string; label: string }[]>
 }) {
   return (
     <div>
@@ -65,17 +82,27 @@ function SelectField({
           disabled={disabled}
         >
           <option value="">{placeholder ?? 'Select…'}</option>
-          {options.map((opt) =>
-            typeof opt === 'string' ? (
-              <option key={opt} value={opt}>
-                {opt}
-              </option>
-            ) : (
-              <option key={opt.id} value={opt.id}>
-                {opt.label}
-              </option>
-            ),
-          )}
+          {grouped
+            ? Object.entries(grouped).map(([groupLabel, items]) => (
+                <optgroup key={groupLabel} label={groupLabel}>
+                  {items.map((opt) => (
+                    <option key={opt.id} value={opt.id}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </optgroup>
+              ))
+            : options.map((opt) =>
+                typeof opt === 'string' ? (
+                  <option key={opt} value={opt}>
+                    {opt === OTHER_OPTION ? 'Other / not listed' : opt}
+                  </option>
+                ) : (
+                  <option key={opt.id} value={opt.id}>
+                    {opt.label}
+                  </option>
+                ),
+              )}
         </select>
         <MaterialIcon
           name="expand_more"
@@ -89,14 +116,14 @@ function SelectField({
 function WizardProgress({ step }: { step: number }) {
   return (
     <div className="mb-stack-lg">
-      <div className="flex items-center justify-between gap-2 mb-3">
+      <div className="flex items-center justify-between gap-1 sm:gap-2 mb-3">
         {STEPS.map((s, i) => {
           const active = step === s.id
           const done = step > s.id
           return (
             <div key={s.id} className="flex-1 flex flex-col items-center gap-1 min-w-0">
               <div
-                className={`w-9 h-9 rounded-full flex items-center justify-center border-2 transition-colors ${
+                className={`w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center border-2 transition-colors ${
                   active
                     ? 'bg-primary border-primary text-on-primary'
                     : done
@@ -111,7 +138,7 @@ function WizardProgress({ step }: { step: number }) {
                 )}
               </div>
               <span
-                className={`text-[10px] sm:text-xs font-label-md text-center truncate w-full ${
+                className={`text-[9px] sm:text-xs font-label-md text-center truncate w-full ${
                   active ? 'text-primary' : 'text-on-surface-variant'
                 }`}
               >
@@ -143,11 +170,14 @@ function WizardProgress({ step }: { step: number }) {
 }
 
 export function AdvisorApplyPage() {
+  const location = useLocation()
+  const prefilled = (location.state as ApplyLocationState | null) ?? {}
+
   const [step, setStep] = useState(1)
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [confirmPassword, setConfirmPassword] = useState('')
-  const [username, setUsername] = useState('')
+  const [email, setEmail] = useState(prefilled.email ?? '')
+  const [password, setPassword] = useState(prefilled.password ?? '')
+  const [confirmPassword, setConfirmPassword] = useState(prefilled.password ?? '')
+  const [username, setUsername] = useState(prefilled.username ?? '')
   const [credentials, setCredentials] = useState<AdvisorCredentials>({ ...EMPTY_ADVISOR_CREDENTIALS })
   const [selectedTags, setSelectedTags] = useState<string[]>([])
   const [customTag, setCustomTag] = useState('')
@@ -160,9 +190,22 @@ export function AdvisorApplyPage() {
   const { registerAdvisor } = useAuth()
   const navigate = useNavigate()
 
-  const credentialOptions = getCredentialTypesForProfession(credentials.professionType)
+  useEffect(() => {
+    if (prefilled.email) setEmail(prefilled.email)
+    if (prefilled.password) {
+      setPassword(prefilled.password)
+      setConfirmPassword(prefilled.password)
+    }
+    if (prefilled.username) setUsername(prefilled.username)
+  }, [prefilled.email, prefilled.password, prefilled.username])
+
+  const regionGroups = getRegionsByGroup()
+  const credentialOptions = getCredentialTypesForRegionProfession(
+    credentials.issuingRegion,
+    credentials.professionType,
+  )
   const issuingBodyOptions = credentials.credentialType
-    ? getIssuingBodiesForCredential(credentials.credentialType)
+    ? getIssuingBodiesForRegionCredential(credentials.issuingRegion, credentials.credentialType)
     : []
   const specialtyOptions = credentials.specialtyCategory
     ? getSpecialtiesForCategory(credentials.specialtyCategory)
@@ -172,12 +215,27 @@ export function AdvisorApplyPage() {
     setCredentials((prev) => ({ ...prev, [key]: value }))
   }
 
+  const handleRegionChange = (issuingRegion: string) => {
+    setCredentials((prev) => ({
+      ...prev,
+      issuingRegion,
+      issuingRegionOther: issuingRegion === OTHER_OPTION ? prev.issuingRegionOther : isUsRegion(issuingRegion) ? prev.issuingRegionOther : '',
+      professionType: '',
+      credentialType: '',
+      credentialTypeOther: '',
+      issuingBody: '',
+      issuingBodyOther: '',
+    }))
+  }
+
   const handleProfessionChange = (professionType: string) => {
     setCredentials((prev) => ({
       ...prev,
       professionType,
       credentialType: '',
+      credentialTypeOther: '',
       issuingBody: '',
+      issuingBodyOther: '',
     }))
   }
 
@@ -185,7 +243,9 @@ export function AdvisorApplyPage() {
     setCredentials((prev) => ({
       ...prev,
       credentialType,
+      credentialTypeOther: isOtherSelection(credentialType) ? prev.credentialTypeOther : '',
       issuingBody: '',
+      issuingBodyOther: '',
     }))
   }
 
@@ -198,15 +258,6 @@ export function AdvisorApplyPage() {
     setSelectedTags((prev) =>
       prev.includes(tag) ? prev.filter((t) => t !== tag) : prev.length < 8 ? [...prev, tag] : prev,
     )
-  }
-
-  const toggleLanguage = (lang: string) => {
-    setCredentials((prev) => ({
-      ...prev,
-      languages: prev.languages.includes(lang)
-        ? prev.languages.filter((l) => l !== lang)
-        : [...prev.languages, lang],
-    }))
   }
 
   const addCustomTag = () => {
@@ -222,24 +273,38 @@ export function AdvisorApplyPage() {
       if (password.length < 8) return 'Password must be at least 8 characters.'
       if (password !== confirmPassword) return 'Passwords do not match.'
       if (username.trim().length < 2) return 'Display name is required.'
-      if (credentials.languages.length === 0) return 'Select at least one language you offer sessions in.'
     }
     if (s === 2) {
+      return validateLanguages(credentials.languages)
+    }
+    if (s === 3) {
+      if (!credentials.issuingRegion) return 'Select your country or licensing region.'
+      if (isOtherSelection(credentials.issuingRegion) && !credentials.issuingRegionOther?.trim()) {
+        return 'Enter your country or region.'
+      }
+      if (isUsRegion(credentials.issuingRegion) && !credentials.issuingRegionOther?.trim()) {
+        return 'Select your US licensing state.'
+      }
       if (!credentials.professionType) return 'Select your profession type.'
       if (!credentials.credentialType) return 'Select your credential or license type.'
+      if (isOtherSelection(credentials.credentialType) && !credentials.credentialTypeOther?.trim()) {
+        return 'Enter your credential or license type.'
+      }
       if (!credentials.issuingBody) return 'Select the issuing body or board.'
-      if (!credentials.issuingRegion) return 'Select your licensing region.'
+      if (isOtherSelection(credentials.issuingBody) && !credentials.issuingBodyOther?.trim()) {
+        return 'Enter the issuing body or board.'
+      }
       if (!credentials.licenseNumber.trim()) return 'License or certification number is required.'
       if (!credentials.professionalTitle.trim()) return 'Professional title is required.'
       if (credentials.yearsExperience < 0) return 'Years of experience is required.'
     }
-    if (s === 3) {
+    if (s === 4) {
       if (!credentials.specialtyCategory) return 'Select a primary focus area.'
       if (selectedTags.length === 0) return 'Select at least one specialty.'
       if (approach.trim().length < 40) return 'Please write at least a few sentences about your approach.'
       if (coinRatePerSession < 20) return 'Set a valid session rate.'
     }
-    if (s === 4) {
+    if (s === 5) {
       if (!termsAccepted) return 'You must accept the advisor terms to submit.'
     }
     return null
@@ -262,7 +327,7 @@ export function AdvisorApplyPage() {
 
   const handleSubmit = async () => {
     setError('')
-    for (let s = 1; s <= 4; s++) {
+    for (let s = 1; s <= STEPS.length; s++) {
       const err = validateStep(s)
       if (err) {
         setError(err)
@@ -308,9 +373,9 @@ export function AdvisorApplyPage() {
           </p>
           <ul className="space-y-3 text-sm text-on-secondary-container">
             {[
-              'Four-step application with structured credentials',
-              'Partners review license details before video verification',
-              'Specialties help patients find you on Discover',
+              'Five-step application with languages & structured credentials',
+              'Africa-focused licensing bodies and global coverage',
+              'Partners review credentials before video verification',
             ].map((item) => (
               <li key={item} className="flex gap-2">
                 <MaterialIcon name="check_circle" className="text-secondary shrink-0 text-base" />
@@ -348,16 +413,16 @@ export function AdvisorApplyPage() {
               <div className="md:col-span-2">
                 <h3 className="font-label-md text-sm font-bold uppercase tracking-wide text-on-surface mb-stack-sm flex items-center gap-2">
                   <MaterialIcon name="person" className="text-secondary" />
-                  Account & personal details
+                  Account details
                 </h3>
-              </div>
-              <div>
-                <label className={labelClass}>Email address</label>
-                <input className={inputClass} type="email" placeholder="jane@example.com" value={email} onChange={(e) => setEmail(e.target.value)} required />
               </div>
               <div>
                 <label className={labelClass}>Display name</label>
                 <input className={inputClass} type="text" placeholder="Dr. Jane Smith" value={username} onChange={(e) => setUsername(e.target.value)} minLength={2} required />
+              </div>
+              <div>
+                <label className={labelClass}>Email address</label>
+                <input className={inputClass} type="email" placeholder="jane@example.com" value={email} onChange={(e) => setEmail(e.target.value)} required />
               </div>
               <div>
                 <label className={labelClass}>Password</label>
@@ -367,32 +432,28 @@ export function AdvisorApplyPage() {
                 <label className={labelClass}>Confirm password</label>
                 <PasswordInput value={confirmPassword} onChange={setConfirmPassword} placeholder="Repeat password" autoComplete="new-password" minLength={8} required />
               </div>
-              <div className="md:col-span-2">
-                <label className={labelClass}>Languages offered (select all that apply)</label>
-                <div className="flex flex-wrap gap-2">
-                  {LANGUAGE_OPTIONS.map((lang) => {
-                    const active = credentials.languages.includes(lang)
-                    return (
-                      <button
-                        key={lang}
-                        type="button"
-                        onClick={() => toggleLanguage(lang)}
-                        className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${
-                          active
-                            ? 'bg-secondary-container text-on-secondary-container border-secondary'
-                            : 'bg-surface-container-low border-outline-variant text-on-surface-variant hover:border-primary/40'
-                        }`}
-                      >
-                        {lang}
-                      </button>
-                    )
-                  })}
-                </div>
-              </div>
             </div>
           )}
 
           {step === 2 && (
+            <div className="space-y-stack-md">
+              <div>
+                <h3 className="font-label-md text-sm font-bold uppercase tracking-wide text-on-surface mb-stack-sm flex items-center gap-2">
+                  <MaterialIcon name="translate" className="text-secondary" />
+                  Languages & fluency
+                </h3>
+                <p className="text-sm text-on-surface-variant mb-stack-sm">
+                  Add every language you can offer sessions in, with your fluency level. African languages are listed first.
+                </p>
+              </div>
+              <LanguageFluencyEditor
+                languages={credentials.languages}
+                onChange={(languages) => setCredentialField('languages', languages)}
+              />
+            </div>
+          )}
+
+          {step === 3 && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-stack-md">
               <div className="md:col-span-2">
                 <h3 className="font-label-md text-sm font-bold uppercase tracking-wide text-on-surface mb-stack-sm flex items-center gap-2">
@@ -400,16 +461,55 @@ export function AdvisorApplyPage() {
                   Professional credentials
                 </h3>
                 <p className="text-sm text-on-surface-variant mb-stack-sm">
-                  Shown to partner doctors during verification — include your active license or board certification.
+                  Select your licensing country, profession, credential type, and issuing body.
                 </p>
               </div>
+              <SelectField
+                label="Country / licensing region"
+                value={credentials.issuingRegion}
+                onChange={handleRegionChange}
+                options={COUNTRY_REGIONS}
+                grouped={{
+                  Africa: regionGroups.africa,
+                  Americas: regionGroups.americas,
+                  Europe: regionGroups.europe,
+                  'Asia-Pacific': regionGroups.asia_pacific,
+                  'Middle East': regionGroups.middle_east,
+                  Other: regionGroups.other,
+                }}
+                placeholder="Select country…"
+                required
+              />
+              {isOtherSelection(credentials.issuingRegion) && (
+                <div>
+                  <label className={labelClass}>Country / region (specify)</label>
+                  <input
+                    className={inputClass}
+                    placeholder="Enter country or region"
+                    value={credentials.issuingRegionOther ?? ''}
+                    onChange={(e) => setCredentialField('issuingRegionOther', e.target.value)}
+                    required
+                  />
+                </div>
+              )}
+              {isUsRegion(credentials.issuingRegion) && (
+                <SelectField
+                  label="US licensing state"
+                  value={credentials.issuingRegionOther ?? ''}
+                  onChange={(v) => setCredentialField('issuingRegionOther', v)}
+                  options={US_STATE_REGIONS}
+                  placeholder="Select state…"
+                  required
+                />
+              )}
               <SelectField
                 label="Profession type"
                 value={credentials.professionType}
                 onChange={handleProfessionChange}
                 options={PROFESSION_TYPES}
-                placeholder="Select profession…"
+                placeholder={credentials.issuingRegion ? 'Select profession…' : 'Choose country first'}
                 required
+                disabled={!credentials.issuingRegion}
               />
               <SelectField
                 label="Credential / license type"
@@ -420,28 +520,50 @@ export function AdvisorApplyPage() {
                 required
                 disabled={!credentials.professionType}
               />
+              {isOtherSelection(credentials.credentialType) && (
+                <div className="md:col-span-2">
+                  <label className={labelClass}>Credential type (specify)</label>
+                  <input
+                    className={inputClass}
+                    placeholder="e.g. Licensed Clinical Psychologist"
+                    value={credentials.credentialTypeOther ?? ''}
+                    onChange={(e) => setCredentialField('credentialTypeOther', e.target.value)}
+                    required
+                  />
+                </div>
+              )}
               <SelectField
                 label="Issuing body / board"
                 value={credentials.issuingBody}
-                onChange={(v) => setCredentialField('issuingBody', v)}
+                onChange={(v) =>
+                  setCredentials((prev) => ({
+                    ...prev,
+                    issuingBody: v,
+                    issuingBodyOther: isOtherSelection(v) ? prev.issuingBodyOther : '',
+                  }))
+                }
                 options={issuingBodyOptions}
                 placeholder={credentials.credentialType ? 'Select issuing body…' : 'Choose credential first'}
                 required
                 disabled={!credentials.credentialType}
               />
-              <SelectField
-                label="Licensing region"
-                value={credentials.issuingRegion}
-                onChange={(v) => setCredentialField('issuingRegion', v)}
-                options={ALL_REGIONS}
-                placeholder="Select state or region…"
-                required
-              />
+              {isOtherSelection(credentials.issuingBody) && (
+                <div className="md:col-span-2">
+                  <label className={labelClass}>Issuing body (specify)</label>
+                  <input
+                    className={inputClass}
+                    placeholder="e.g. National Medical Council"
+                    value={credentials.issuingBodyOther ?? ''}
+                    onChange={(e) => setCredentialField('issuingBodyOther', e.target.value)}
+                    required
+                  />
+                </div>
+              )}
               <div>
                 <label className={labelClass}>License / certification number</label>
                 <input
                   className={inputClass}
-                  placeholder="e.g. PSY12345, LPC-67890"
+                  placeholder="e.g. PSY12345, HPCSA MP 0123456"
                   value={credentials.licenseNumber}
                   onChange={(e) => setCredentialField('licenseNumber', e.target.value)}
                   required
@@ -488,7 +610,7 @@ export function AdvisorApplyPage() {
             </div>
           )}
 
-          {step === 3 && (
+          {step === 4 && (
             <div className="grid grid-cols-1 gap-stack-md">
               <div>
                 <h3 className="font-label-md text-sm font-bold uppercase tracking-wide text-on-surface mb-stack-sm flex items-center gap-2">
@@ -594,7 +716,7 @@ export function AdvisorApplyPage() {
             </div>
           )}
 
-          {step === 4 && (
+          {step === 5 && (
             <div className="space-y-stack-md">
               <h3 className="font-label-md text-sm font-bold uppercase tracking-wide text-on-surface flex items-center gap-2">
                 <MaterialIcon name="fact_check" className="text-secondary" />
@@ -604,12 +726,21 @@ export function AdvisorApplyPage() {
                 <div className="grid sm:grid-cols-2 gap-stack-sm">
                   <p><span className="text-on-surface-variant">Name:</span> {username}</p>
                   <p><span className="text-on-surface-variant">Email:</span> {email}</p>
-                  <p><span className="text-on-surface-variant">Languages:</span> {credentials.languages.join(', ') || '—'}</p>
+                  <p className="sm:col-span-2">
+                    <span className="text-on-surface-variant">Languages:</span>{' '}
+                    {credentials.languages.length ? formatLanguagesList(credentials.languages) : '—'}
+                  </p>
+                  <p><span className="text-on-surface-variant">Region:</span>{' '}
+                    {resolveRegionDisplay(credentials.issuingRegion, credentials.issuingRegionOther) || '—'}
+                  </p>
                   <p><span className="text-on-surface-variant">Title:</span> {credentials.professionalTitle || '—'}</p>
-                  <p><span className="text-on-surface-variant">Credential:</span> {credentials.credentialType || '—'}</p>
+                  <p><span className="text-on-surface-variant">Credential:</span>{' '}
+                    {resolveCredentialTypeDisplay(credentials.credentialType, credentials.credentialTypeOther) || '—'}
+                  </p>
                   <p><span className="text-on-surface-variant">License #:</span> {credentials.licenseNumber || '—'}</p>
-                  <p><span className="text-on-surface-variant">Issuing body:</span> {credentials.issuingBody || '—'}</p>
-                  <p><span className="text-on-surface-variant">Region:</span> {credentials.issuingRegion || '—'}</p>
+                  <p><span className="text-on-surface-variant">Issuing body:</span>{' '}
+                    {resolveIssuingBodyDisplay(credentials.issuingBody, credentials.issuingBodyOther) || '—'}
+                  </p>
                   <p><span className="text-on-surface-variant">Experience:</span> {credentials.yearsExperience} years</p>
                   <p><span className="text-on-surface-variant">Rate:</span> {coinRatePerSession} coins</p>
                 </div>

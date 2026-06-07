@@ -9,7 +9,6 @@ import { getPostAuthPath } from '../components/RouteRedirects'
 import { useAuth } from '../context/AuthContext'
 import { DEMO_ADMIN_EMAIL, DEMO_ADMIN_PASSWORD } from '../constants/demoAccess'
 import { getApiErrorMessage } from '../utils/apiError'
-import type { AuthUser } from '@shared/contracts/auth.api'
 
 type AuthMode = 'login' | 'signup'
 
@@ -17,6 +16,8 @@ export function AuthPage() {
   const [mode, setMode] = useState<AuthMode>('login')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [username, setUsername] = useState('')
   const [role, setRole] = useState<'client' | 'advisor'>('client')
   const [error, setError] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -36,28 +37,56 @@ export function AuthPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
+
+    if (mode === 'signup') {
+      if (username.trim().length < 2) {
+        setError('Display name is required.')
+        return
+      }
+      if (password.length < 8) {
+        setError('Password must be at least 8 characters.')
+        return
+      }
+      if (password !== confirmPassword) {
+        setError('Passwords do not match.')
+        return
+      }
+    }
+
     setIsSubmitting(true)
 
     try {
-      let user: AuthUser | undefined
       if (mode === 'login') {
         const response = await login(email, password)
-        user = response
-      } else {
-        const response = await register({
-          email,
-          password,
-          profile: {
-            username: email.split('@')[0],
-            tags: [],
-            coinRatePerSession: 0,
-          },
-        })
-        user = response
+        if (response?.role) {
+          navigate(getPostAuthPath(response.role, redirectFrom), { replace: true })
+        }
+        return
       }
 
-      if (user?.role) {
-        navigate(getPostAuthPath(user.role, redirectFrom), { replace: true })
+      if (role === 'advisor') {
+        navigate('/auth/advisor-apply', {
+          state: {
+            email: email.trim(),
+            password,
+            username: username.trim(),
+          },
+        })
+        return
+      }
+
+      const response = await register({
+        email,
+        password,
+        profile: {
+          username: username.trim(),
+          tags: [],
+          coinRatePerSession: 0,
+        },
+      })
+
+      if (response?.role) {
+        navigate(getPostAuthPath(response.role, redirectFrom), { replace: true })
       }
     } catch (err: unknown) {
       setError(getApiErrorMessage(err, 'Authentication failed'))
@@ -234,10 +263,10 @@ export function AuthPage() {
               </div>
               <div className="grid grid-cols-2 gap-stack-sm mb-stack-sm">
                 <label className="cursor-pointer">
-                  <input 
-                    className="peer sr-only" 
-                    name="role" 
-                    type="radio" 
+                  <input
+                    className="peer sr-only"
+                    name="role"
+                    type="radio"
                     checked={role === 'client'}
                     onChange={() => setRole('client')}
                   />
@@ -247,18 +276,30 @@ export function AuthPage() {
                   </div>
                 </label>
                 <label className="cursor-pointer">
-                  <input 
-                    className="peer sr-only" 
-                    name="role" 
-                    type="radio" 
+                  <input
+                    className="peer sr-only"
+                    name="role"
+                    type="radio"
                     checked={role === 'advisor'}
-                    onChange={() => navigate('/auth/advisor-apply')}
+                    onChange={() => setRole('advisor')}
                   />
                   <div className="p-stack-sm border border-outline-variant rounded-lg peer-checked:border-primary peer-checked:bg-surface-container peer-checked:ring-1 peer-checked:ring-primary transition-all text-center">
                     <MaterialIcon name="medical_services" filled className="text-primary mb-unit" />
                     <div className="font-label-md text-label-md text-on-surface">Offering Service</div>
                   </div>
                 </label>
+              </div>
+              <div>
+                <label className="block font-label-md text-label-md text-on-surface-variant mb-unit">Display name</label>
+                <input
+                  className="w-full bg-surface-container-lowest border border-outline-variant rounded-lg px-4 py-3 font-body-md text-body-md text-on-surface focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all placeholder:text-outline"
+                  placeholder="Your name"
+                  type="text"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  minLength={2}
+                  required
+                />
               </div>
               <div>
                 <label className="block font-label-md text-label-md text-on-surface-variant mb-unit">Email Address</label>
@@ -282,12 +323,32 @@ export function AuthPage() {
                   required
                 />
               </div>
+              <div>
+                <label className="block font-label-md text-label-md text-on-surface-variant mb-unit">Confirm Password</label>
+                <PasswordInput
+                  value={confirmPassword}
+                  onChange={setConfirmPassword}
+                  placeholder="Repeat password"
+                  autoComplete="new-password"
+                  minLength={8}
+                  required
+                />
+              </div>
+              {role === 'advisor' && (
+                <p className="text-xs text-on-surface-variant -mt-2">
+                  Next you&apos;ll complete the advisor application (languages, credentials, and practice details).
+                </p>
+              )}
               <button
                 type="submit"
                 disabled={isSubmitting}
                 className={`mt-stack-sm ${btnPrimary} text-label-md py-3 w-full flex justify-center items-center gap-stack-sm`}
               >
-                {isSubmitting ? 'CREATING...' : 'CREATE ACCOUNT'}
+                {isSubmitting
+                  ? 'PROCESSING...'
+                  : role === 'advisor'
+                    ? 'CONTINUE TO APPLICATION'
+                    : 'CREATE ACCOUNT'}
                 <MaterialIcon name="arrow_forward" className="text-[18px]" />
               </button>
             </form>

@@ -2,6 +2,29 @@
  * Advisor credential dropdown options — shared by apply wizard, settings, and backend validation.
  */
 
+import {
+  COUNTRY_REGIONS,
+  OTHER_OPTION as CATALOG_OTHER,
+  REGION_CREDENTIAL_TYPES,
+  REGION_ISSUING_BODIES,
+  getRegionLabel,
+} from './credentialCatalog.js';
+import { LANGUAGE_OPTIONS } from './languageOptions.js';
+
+export { LANGUAGE_OPTIONS } from './languageOptions.js';
+export { FLUENCY_LEVELS } from './languageOptions.js';
+export {
+  COUNTRY_REGIONS,
+  US_STATE_REGIONS,
+  getRegionLabel,
+  isUsRegion,
+} from './credentialCatalog.js';
+
+export const OTHER_OPTION = CATALOG_OTHER;
+
+/** @deprecated Use COUNTRY_REGIONS — kept for backward compatibility */
+export const ALL_REGIONS = COUNTRY_REGIONS.map((r) => r.label);
+
 export const PROFESSION_TYPES = [
   { id: 'psychologist', label: 'Psychologist (PhD / PsyD)' },
   { id: 'licensed_counselor', label: 'Licensed Professional Counselor' },
@@ -18,6 +41,7 @@ export const PROFESSION_TYPES = [
 
 export type ProfessionTypeId = (typeof PROFESSION_TYPES)[number]['id'];
 
+/** Global default credential types by profession (US/international baseline) */
 export const CREDENTIAL_TYPES_BY_PROFESSION: Record<ProfessionTypeId, readonly string[]> = {
   psychologist: [
     'Licensed Psychologist (LP)',
@@ -115,26 +139,6 @@ export const ISSUING_BODIES_BY_CREDENTIAL: Record<string, readonly string[]> = {
   'Other certification': ['Certifying organization (specify in license number field)'],
 };
 
-export const US_REGIONS = [
-  'Alabama', 'Alaska', 'Arizona', 'Arkansas', 'California', 'Colorado', 'Connecticut', 'Delaware',
-  'District of Columbia', 'Florida', 'Georgia', 'Hawaii', 'Idaho', 'Illinois', 'Indiana', 'Iowa',
-  'Kansas', 'Kentucky', 'Louisiana', 'Maine', 'Maryland', 'Massachusetts', 'Michigan', 'Minnesota',
-  'Mississippi', 'Missouri', 'Montana', 'Nebraska', 'Nevada', 'New Hampshire', 'New Jersey',
-  'New Mexico', 'New York', 'North Carolina', 'North Dakota', 'Ohio', 'Oklahoma', 'Oregon',
-  'Pennsylvania', 'Rhode Island', 'South Carolina', 'South Dakota', 'Tennessee', 'Texas', 'Utah',
-  'Vermont', 'Virginia', 'Washington', 'West Virginia', 'Wisconsin', 'Wyoming',
-] as const;
-
-export const INTERNATIONAL_REGIONS = [
-  'Canada — Provincial/Territorial Board',
-  'United Kingdom — HCPC / BACP',
-  'European Union — National regulatory body',
-  'Australia — AHPRA',
-  'Other international jurisdiction',
-] as const;
-
-export const ALL_REGIONS = [...US_REGIONS, ...INTERNATIONAL_REGIONS] as const;
-
 export const DEGREE_OPTIONS = [
   'PhD — Doctor of Philosophy (Psychology)',
   'PsyD — Doctor of Psychology',
@@ -150,24 +154,6 @@ export const DEGREE_OPTIONS = [
   'Other graduate degree',
 ] as const;
 
-export const LANGUAGE_OPTIONS = [
-  'English',
-  'Spanish',
-  'Mandarin Chinese',
-  'Cantonese',
-  'French',
-  'Arabic',
-  'Hindi',
-  'Portuguese',
-  'Russian',
-  'Tagalog',
-  'Vietnamese',
-  'Korean',
-  'German',
-  'Italian',
-  'American Sign Language (ASL)',
-] as const;
-
 export const SPECIALTY_CATEGORIES = [
   { id: 'mental_health', label: 'Mental health & emotional wellbeing' },
   { id: 'relationships', label: 'Relationships & family' },
@@ -181,56 +167,27 @@ export type SpecialtyCategoryId = (typeof SPECIALTY_CATEGORIES)[number]['id'];
 
 export const SPECIALTIES_BY_CATEGORY: Record<SpecialtyCategoryId, readonly string[]> = {
   mental_health: [
-    'Anxiety',
-    'Depression',
-    'Stress management',
-    'Sleep disorders',
-    'Burnout',
-    'Self-esteem',
-    'ADHD support',
-    'OCD',
-    'Bipolar support',
+    'Anxiety', 'Depression', 'Stress management', 'Sleep disorders', 'Burnout',
+    'Self-esteem', 'ADHD support', 'OCD', 'Bipolar support',
   ],
   relationships: [
-    'Couples counseling',
-    'Marriage therapy',
-    'Family therapy',
-    'Parenting',
-    'Communication skills',
-    'Conflict resolution',
-    'Divorce / separation',
+    'Couples counseling', 'Marriage therapy', 'Family therapy', 'Parenting',
+    'Communication skills', 'Conflict resolution', 'Divorce / separation',
   ],
   trauma_grief: [
-    'Trauma / PTSD',
-    'EMDR-informed care',
-    'Grief & loss',
-    'Crisis support',
+    'Trauma / PTSD', 'EMDR-informed care', 'Grief & loss', 'Crisis support',
     'Domestic violence recovery',
   ],
   behavioral: [
-    'Addiction recovery',
-    'Substance use',
-    'Eating disorders',
-    'Anger management',
-    'Behavioral change',
+    'Addiction recovery', 'Substance use', 'Eating disorders', 'Anger management', 'Behavioral change',
   ],
   wellness: [
-    'Mindfulness',
-    'Nutrition counseling',
-    'Weight management',
-    'Chronic illness support',
-    'Work-life balance',
-    'Health coaching',
-    'Preventive care',
+    'Mindfulness', 'Nutrition counseling', 'Weight management', 'Chronic illness support',
+    'Work-life balance', 'Health coaching', 'Preventive care',
   ],
   holistic: [
-    'Integrative therapy',
-    'Somatic approaches',
-    'CBT',
-    'DBT-informed skills',
-    'Acceptance & Commitment (ACT)',
-    'Mind-body connection',
-    'Spiritual wellness',
+    'Integrative therapy', 'Somatic approaches', 'CBT', 'DBT-informed skills',
+    'Acceptance & Commitment (ACT)', 'Mind-body connection', 'Spiritual wellness',
   ],
 };
 
@@ -238,12 +195,53 @@ export const SESSION_RATE_OPTIONS = [50, 75, 100, 125, 150, 175, 200] as const;
 
 export const YEARS_EXPERIENCE_OPTIONS = Array.from({ length: 41 }, (_, i) => i) as readonly number[];
 
-export function getCredentialTypesForProfession(professionType: string): readonly string[] {
-  return CREDENTIAL_TYPES_BY_PROFESSION[professionType as ProfessionTypeId] ?? [];
+const OTHER_LABEL = 'Other / not listed';
+
+function withOtherOption(options: readonly string[]): readonly string[] {
+  if (options.some((o) => o === OTHER_OPTION || o === OTHER_LABEL)) return options;
+  return [...options, OTHER_OPTION];
 }
 
+export function isOtherSelection(value: string): boolean {
+  return value === OTHER_OPTION || value === OTHER_LABEL;
+}
+
+/** Country/Region → Profession → credential types */
+export function getCredentialTypesForRegionProfession(
+  regionId: string,
+  professionType: string,
+): readonly string[] {
+  if (!professionType) return [];
+
+  const regional = REGION_CREDENTIAL_TYPES[regionId]?.[professionType as ProfessionTypeId];
+  const global = CREDENTIAL_TYPES_BY_PROFESSION[professionType as ProfessionTypeId] ?? [];
+
+  const merged = regional ? [...new Set([...regional, ...global])] : [...global];
+  return withOtherOption(merged);
+}
+
+/** @deprecated Use getCredentialTypesForRegionProfession */
+export function getCredentialTypesForProfession(professionType: string): readonly string[] {
+  return getCredentialTypesForRegionProfession('us', professionType);
+}
+
+/** Region + credential type → issuing bodies */
+export function getIssuingBodiesForRegionCredential(
+  regionId: string,
+  credentialType: string,
+): readonly string[] {
+  if (!credentialType || isOtherSelection(credentialType)) return [OTHER_OPTION];
+
+  const regional = REGION_ISSUING_BODIES[regionId]?.[credentialType];
+  const global = ISSUING_BODIES_BY_CREDENTIAL[credentialType];
+  const bodies = regional ?? global ?? ['National or regional licensing authority'];
+
+  return withOtherOption(bodies);
+}
+
+/** @deprecated Use getIssuingBodiesForRegionCredential */
 export function getIssuingBodiesForCredential(credentialType: string): readonly string[] {
-  return ISSUING_BODIES_BY_CREDENTIAL[credentialType] ?? ['State or national licensing authority'];
+  return getIssuingBodiesForRegionCredential('us', credentialType);
 }
 
 export function getSpecialtiesForCategory(categoryId: string): readonly string[] {
@@ -256,4 +254,40 @@ export function getProfessionLabel(professionType: string): string {
 
 export function getSpecialtyCategoryLabel(categoryId: string): string {
   return SPECIALTY_CATEGORIES.find((c) => c.id === categoryId)?.label ?? categoryId;
+}
+
+export function resolveRegionDisplay(regionId: string, other?: string): string {
+  if (isOtherSelection(regionId)) return other?.trim() || OTHER_LABEL;
+  const label = getRegionLabel(regionId);
+  if (regionId === 'us' && other?.trim()) return `${label} — ${other.trim()}`;
+  return label;
+}
+
+export function resolveCredentialTypeDisplay(credentialType: string, other?: string): string {
+  if (isOtherSelection(credentialType)) return other?.trim() || OTHER_LABEL;
+  return credentialType;
+}
+
+export function resolveIssuingBodyDisplay(issuingBody: string, other?: string): string {
+  if (isOtherSelection(issuingBody)) return other?.trim() || OTHER_LABEL;
+  return issuingBody;
+}
+
+export function getLanguagesByGroup() {
+  return {
+    africa: LANGUAGE_OPTIONS.filter((l) => l.group === 'africa'),
+    world: LANGUAGE_OPTIONS.filter((l) => l.group === 'world'),
+    other: LANGUAGE_OPTIONS.filter((l) => l.group === 'other'),
+  };
+}
+
+export function getRegionsByGroup() {
+  return {
+    africa: COUNTRY_REGIONS.filter((r) => r.group === 'africa'),
+    americas: COUNTRY_REGIONS.filter((r) => r.group === 'americas'),
+    europe: COUNTRY_REGIONS.filter((r) => r.group === 'europe'),
+    asia_pacific: COUNTRY_REGIONS.filter((r) => r.group === 'asia_pacific'),
+    middle_east: COUNTRY_REGIONS.filter((r) => r.group === 'middle_east'),
+    other: COUNTRY_REGIONS.filter((r) => r.group === 'other'),
+  };
 }

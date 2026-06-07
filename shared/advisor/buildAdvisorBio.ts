@@ -1,5 +1,12 @@
 import type { AdvisorCredentials } from '../contracts/models.advisor.js';
-import { getProfessionLabel, getSpecialtyCategoryLabel } from './credentialOptions.js';
+import { formatLanguagesList } from './languageUtils.js';
+import {
+  getProfessionLabel,
+  getSpecialtyCategoryLabel,
+  resolveCredentialTypeDisplay,
+  resolveIssuingBodyDisplay,
+  resolveRegionDisplay,
+} from './credentialOptions.js';
 
 /** Build searchable bio text from structured credentials + narrative approach. */
 export function buildAdvisorBioFromCredentials(
@@ -15,13 +22,19 @@ export function buildAdvisorBioFromCredentials(
     header.push(`Profession: ${getProfessionLabel(credentials.professionType)}`);
   }
   if (credentials.credentialType.trim()) {
-    header.push(`Credential: ${credentials.credentialType.trim()}`);
+    header.push(
+      `Credential: ${resolveCredentialTypeDisplay(credentials.credentialType, credentials.credentialTypeOther)}`,
+    );
   }
   if (credentials.issuingBody.trim()) {
-    header.push(`Issuing body: ${credentials.issuingBody.trim()}`);
+    header.push(
+      `Issuing body: ${resolveIssuingBodyDisplay(credentials.issuingBody, credentials.issuingBodyOther)}`,
+    );
   }
   if (credentials.issuingRegion.trim()) {
-    header.push(`Region: ${credentials.issuingRegion.trim()}`);
+    header.push(
+      `Region: ${resolveRegionDisplay(credentials.issuingRegion, credentials.issuingRegionOther)}`,
+    );
   }
   if (credentials.licenseNumber.trim()) {
     header.push(`License #: ${credentials.licenseNumber.trim()}`);
@@ -33,7 +46,7 @@ export function buildAdvisorBioFromCredentials(
     header.push(`Experience: ${credentials.yearsExperience} years`);
   }
   if (credentials.languages.length > 0) {
-    header.push(`Languages: ${credentials.languages.join(', ')}`);
+    header.push(`Languages: ${formatLanguagesList(credentials.languages)}`);
   }
   if (credentials.specialtyCategory) {
     header.push(`Focus area: ${getSpecialtyCategoryLabel(credentials.specialtyCategory)}`);
@@ -54,12 +67,12 @@ export function credentialsToSearchText(credentials: AdvisorCredentials | undefi
   const parts = [
     credentials.professionalTitle,
     getProfessionLabel(credentials.professionType),
-    credentials.credentialType,
-    credentials.issuingBody,
-    credentials.issuingRegion,
+    resolveCredentialTypeDisplay(credentials.credentialType, credentials.credentialTypeOther),
+    resolveIssuingBodyDisplay(credentials.issuingBody, credentials.issuingBodyOther),
+    resolveRegionDisplay(credentials.issuingRegion, credentials.issuingRegionOther),
     credentials.degree,
     credentials.additionalCertifications,
-    credentials.languages.join(', '),
+    formatLanguagesList(credentials.languages),
     credentials.specialtyCategory ? getSpecialtyCategoryLabel(credentials.specialtyCategory) : '',
   ].filter(Boolean);
   return parts.join('. ');

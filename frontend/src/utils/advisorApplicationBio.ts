@@ -1,5 +1,12 @@
-import type { AdvisorCredentials } from '@shared/contracts/models.advisor';
-import { getProfessionLabel, getSpecialtyCategoryLabel } from '@shared/advisor/credentialOptions';
+import type { AdvisorCredentials, AdvisorLanguage } from '@shared/contracts/models.advisor';
+import {
+  getProfessionLabel,
+  getSpecialtyCategoryLabel,
+  resolveCredentialTypeDisplay,
+  resolveIssuingBodyDisplay,
+  resolveRegionDisplay,
+} from '@shared/advisor/credentialOptions';
+import { formatLanguagesList } from '@shared/advisor/languageUtils';
 import { buildAdvisorBioFromCredentials } from '@shared/advisor/buildAdvisorBio';
 
 export type { AdvisorCredentials };
@@ -14,7 +21,8 @@ export interface ParsedAdvisorApplication {
   licenseNumber?: string
   degree?: string
   yearsExperience?: string
-  languages?: string[]
+  languages?: AdvisorLanguage[]
+  languagesDisplay?: string
   specialtyCategory?: string
   additionalCertifications?: string
   credentials?: string
@@ -38,14 +46,18 @@ export function parseAdvisorApplicationBio(
     return {
       professionalTitle: credentials.professionalTitle,
       professionType: getProfessionLabel(credentials.professionType),
-      credentialType: credentials.credentialType,
-      issuingBody: credentials.issuingBody,
-      issuingRegion: credentials.issuingRegion,
+      credentialType: resolveCredentialTypeDisplay(
+        credentials.credentialType,
+        credentials.credentialTypeOther,
+      ),
+      issuingBody: resolveIssuingBodyDisplay(credentials.issuingBody, credentials.issuingBodyOther),
+      issuingRegion: resolveRegionDisplay(credentials.issuingRegion, credentials.issuingRegionOther),
       licenseNumber: credentials.licenseNumber,
       degree: credentials.degree,
       yearsExperience:
         credentials.yearsExperience > 0 ? String(credentials.yearsExperience) : undefined,
       languages: credentials.languages,
+      languagesDisplay: formatLanguagesList(credentials.languages),
       specialtyCategory: credentials.specialtyCategory
         ? getSpecialtyCategoryLabel(credentials.specialtyCategory)
         : undefined,
@@ -72,7 +84,7 @@ export function parseAdvisorApplicationBio(
   let licenseNumber: string | undefined
   let degree: string | undefined
   let yearsExperience: string | undefined
-  let languages: string[] | undefined
+  let languagesDisplay: string | undefined
   let specialtyCategory: string | undefined
   let additionalCertifications: string | undefined
   let credentialsLine: string | undefined
@@ -107,7 +119,7 @@ export function parseAdvisorApplicationBio(
       yearsExperience = line.slice(12).replace(/ years$/, '').trim()
       isStructured = true
     } else if (line.startsWith('Languages: ')) {
-      languages = line.slice(11).split(',').map((l) => l.trim()).filter(Boolean)
+      languagesDisplay = line.slice(11).trim()
       isStructured = true
     } else if (line.startsWith('Focus area: ')) {
       specialtyCategory = line.slice(12).trim()
@@ -132,7 +144,7 @@ export function parseAdvisorApplicationBio(
     degree,
     credentials: credentialsLine,
     yearsExperience,
-    languages,
+    languagesDisplay,
     specialtyCategory,
     additionalCertifications,
     approach,
