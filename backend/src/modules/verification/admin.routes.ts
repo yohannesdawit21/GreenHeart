@@ -36,6 +36,7 @@ router.patch(
   adminController.updatePartnerDoctor,
 );
 router.delete('/partner-doctors/:id', adminController.deletePartnerDoctor);
+router.get('/platform-stats', adminController.getPlatformStats);
 router.get('/advisors', adminController.listAdvisors);
 router.patch(
   '/advisors/:id/verification-status',

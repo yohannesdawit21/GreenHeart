@@ -11,6 +11,9 @@ import { WorkflowGuidePage } from './pages/WorkflowGuidePage'
 
 const AdvisorControlPage = lazy(() => import('./pages/AdvisorControlPage').then((m) => ({ default: m.AdvisorControlPage })))
 const PartnerDashboardPage = lazy(() => import('./pages/PartnerDashboardPage').then((m) => ({ default: m.PartnerDashboardPage })))
+const PartnerApplicantDetailPage = lazy(() =>
+  import('./pages/partner/PartnerApplicantDetailPage').then((m) => ({ default: m.PartnerApplicantDetailPage })),
+)
 const AdminPartnersPage = lazy(() => import('./pages/admin/AdminPartnersPage').then((m) => ({ default: m.AdminPartnersPage })))
 const AdminAdvisorsPage = lazy(() => import('./pages/admin/AdminAdvisorsPage').then((m) => ({ default: m.AdminAdvisorsPage })))
 const VerificationRoomPage = lazy(() => import('./pages/VerificationRoomPage').then((m) => ({ default: m.VerificationRoomPage })))
@@ -128,6 +131,14 @@ export default function App() {
         element={
           <ProtectedRoute roles={['partner_doctor']}>
             <PartnerDashboardPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/partner/applicants/:id"
+        element={
+          <ProtectedRoute roles={['partner_doctor']}>
+            <PartnerApplicantDetailPage />
           </ProtectedRoute>
         }
       />

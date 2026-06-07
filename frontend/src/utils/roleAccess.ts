@@ -82,6 +82,7 @@ const ROUTE_ACCESS: Record<string, UserRole[] | 'public' | 'guest'> = {
   '/waiting': ['client'],
   '/advisor': ['advisor'],
   '/partner': ['partner_doctor'],
+  '/partner/applicants': ['partner_doctor'],
   '/admin': ['admin'],
   '/admin/partners': ['admin'],
   '/admin/advisors': ['admin'],

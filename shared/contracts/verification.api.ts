@@ -38,6 +38,11 @@ export interface ApplicantListResponse {
   applicants: ApplicantDto[];
 }
 
+/** GET /api/verification/applicants/:id — partner review before interview */
+export interface ApplicantDetailResponse {
+  applicant: ApplicantDto;
+}
+
 export interface RegisterPartnerDoctorRequest {
   email: string;
   password: string;

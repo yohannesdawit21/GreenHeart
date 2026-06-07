@@ -12,6 +12,7 @@ import {
 import { btnDanger, btnSuccess } from '../../components/layout/buttonStyles'
 import { MaterialIcon } from '../../components/MaterialIcon'
 import { AdminSubNav } from '../../components/admin/AdminSubNav'
+import { AdminPlatformStats } from '../../components/admin/AdminPlatformStats'
 import { AdvisorApplicationDetails } from '../../components/admin/AdvisorApplicationDetails'
 import { verificationService } from '../../api/verification.service'
 import { getApiErrorMessage } from '../../utils/apiError'
@@ -93,6 +94,8 @@ export function AdminAdvisorsPage() {
         />
 
         <AdminSubNav />
+
+        <AdminPlatformStats />
 
         {pageError && (
           <DashboardAlert variant="error" icon="error">

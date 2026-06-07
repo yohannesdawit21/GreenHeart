@@ -264,6 +264,17 @@ export function getWithdrawalFeeRate() {
   return { feePercent: config.platformWithdrawalFeePercent };
 }
 
+export async function getPlatformStats() {
+  const feePercent = config.platformWithdrawalFeePercent;
+  const stats = await walletRepo.getPlatformEarningsStats(feePercent);
+  return {
+    platformEarnedCoins: stats.platform_earned_coins,
+    grossWithdrawnCoins: stats.gross_withdrawn_coins,
+    withdrawalCount: stats.withdrawal_count,
+    feePercent,
+  };
+}
+
 /** Dev sandbox — client completes mock checkout from frontend */
 export async function completeMockPurchase(userId: string, mockPaymentId: string) {
   const existing = await walletRepo.findTransactionByGatewayReference(mockPaymentId);

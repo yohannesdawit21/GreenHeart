@@ -1,6 +1,7 @@
 import { apiClient } from './client';
 import type {
   ApplicantListResponse,
+  ApplicantDetailResponse,
   PartnerDoctorListResponse,
   PartnerDoctorDto,
   PartnerDoctorResponse,
@@ -20,6 +21,11 @@ import type {
 export const verificationService = {
   getApplicants: async (): Promise<ApplicantListResponse> => {
     const response = await apiClient.get<ApplicantListResponse>('/verification/applicants');
+    return response.data;
+  },
+
+  getApplicant: async (id: string): Promise<ApplicantDetailResponse> => {
+    const response = await apiClient.get<ApplicantDetailResponse>(`/verification/applicants/${id}`);
     return response.data;
   },
 

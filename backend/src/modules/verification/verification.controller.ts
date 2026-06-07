@@ -6,6 +6,11 @@ export async function listApplicants(_req: Request, res: Response) {
   res.json({ applicants });
 }
 
+export async function getApplicant(req: Request, res: Response) {
+  const applicant = await verificationService.getApplicantById(req.params.id as string);
+  res.json({ applicant });
+}
+
 export async function startInterview(req: Request, res: Response) {
   const result = await verificationService.startInterview(
     req.auth!.userId,

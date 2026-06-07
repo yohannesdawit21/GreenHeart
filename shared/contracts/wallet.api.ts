@@ -82,3 +82,11 @@ export interface WithdrawResponse {
 export interface WithdrawFeeRateResponse {
   feePercent: number;
 }
+
+/** GET /api/admin/platform-stats — marketplace revenue from advisor withdrawal fees */
+export interface PlatformStatsResponse {
+  platformEarnedCoins: number;
+  grossWithdrawnCoins: number;
+  withdrawalCount: number;
+  feePercent: number;
+}

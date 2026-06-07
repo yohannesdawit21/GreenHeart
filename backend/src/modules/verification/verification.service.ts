@@ -44,6 +44,32 @@ export async function listApplicants() {
   }));
 }
 
+export async function getApplicantById(applicantId: string) {
+  const applicant = await usersRepo.findUserById(applicantId);
+  if (!applicant || applicant.role !== 'advisor') {
+    throw new AppError(404, 'VALIDATION_ERROR', 'Applicant not found');
+  }
+  if (applicant.verification_status !== 'pending_review') {
+    throw new AppError(400, 'VALIDATION_ERROR', 'Applicant is not pending review');
+  }
+
+  const isOnline = await interviewAvailabilityRepo.isInterviewAvailable(applicantId);
+  return {
+    ...toApplicantDto({
+      id: applicant.id,
+      email: applicant.email,
+      username: applicant.username,
+      bio: applicant.bio,
+      tags: applicant.tags,
+      coin_rate_per_session: applicant.coin_rate_per_session,
+      verification_status: applicant.verification_status ?? 'pending_review',
+      created_at: applicant.created_at,
+      advisor_credentials: applicant.advisor_credentials,
+    }),
+    isOnline,
+  };
+}
+
 export async function getInterviewAvailability(applicantId: string) {
   const available = await interviewAvailabilityRepo.isInterviewAvailable(applicantId);
   return { available };

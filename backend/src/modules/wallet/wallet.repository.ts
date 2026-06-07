@@ -64,6 +64,32 @@ export async function findTransactionByGatewayReference(
   return rows[0] ?? null;
 }
 
+export interface PlatformEarningsRow {
+  platform_earned_coins: number;
+  gross_withdrawn_coins: number;
+  withdrawal_count: number;
+}
+
+/** Sum platform fees retained on completed advisor withdrawals */
+export async function getPlatformEarningsStats(feePercent: number): Promise<PlatformEarningsRow> {
+  const { rows } = await getPool().query<PlatformEarningsRow>(
+    `SELECT
+       COALESCE(SUM(FLOOR(amount_coins * $1 / 100.0)), 0)::int AS platform_earned_coins,
+       COALESCE(SUM(amount_coins), 0)::int AS gross_withdrawn_coins,
+       COUNT(*)::int AS withdrawal_count
+     FROM transactions
+     WHERE type = 'withdrawal' AND status = 'completed'`,
+    [feePercent],
+  );
+  return (
+    rows[0] ?? {
+      platform_earned_coins: 0,
+      gross_withdrawn_coins: 0,
+      withdrawal_count: 0,
+    }
+  );
+}
+
 export async function createPendingDeposit(input: {
   clientId: string;
   amountCoins: number;

@@ -1,4 +1,5 @@
 import type { Request, Response } from 'express';
+import * as walletService from '../wallet/wallet.service.js';
 import * as verificationService from './verification.service.js';
 
 export async function registerPartnerDoctor(req: Request, res: Response) {
@@ -32,4 +33,9 @@ export async function overrideVerificationStatus(req: Request, res: Response) {
     req.body.status,
   );
   res.json(result);
+}
+
+export async function getPlatformStats(_req: Request, res: Response) {
+  const stats = await walletService.getPlatformStats();
+  res.json(stats);
 }

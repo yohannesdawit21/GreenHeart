@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { AppShell } from '../components/layout/AppShell'
 import {
   appShellMainClass,
@@ -20,8 +20,8 @@ import type {
   VerificationInterviewAcceptedPayload,
   VerificationInterviewDeclinedPayload,
 } from '@shared/contracts/socket.events'
-import { AdvisorApplicationDetails } from '../components/admin/AdvisorApplicationDetails'
 import { credentialPreview } from '../utils/advisorApplicationBio'
+import { getProfessionLabel } from '@shared/advisor/credentialOptions'
 
 interface PendingInterview {
   interviewId: string
@@ -38,9 +38,6 @@ export function PartnerDashboardPage() {
   const [applicants, setApplicants] = useState<ApplicantDto[]>([])
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState('')
-  const [actionError, setActionError] = useState('')
-  const [rowErrorId, setRowErrorId] = useState('')
-  const [startingId, setStartingId] = useState('')
   const [pendingInterview, setPendingInterview] = useState<PendingInterview | null>(null)
   const navigate = useNavigate()
 
@@ -81,28 +78,6 @@ export function PartnerDashboardPage() {
     }
   }, [socket, user?.role])
 
-  const handleStartInterview = async (applicant: ApplicantDto) => {
-    setActionError('')
-    setRowErrorId('')
-    setStartingId(applicant.id)
-    try {
-      const data = await verificationService.startInterview({ applicantId: applicant.id })
-      setPendingInterview({
-        interviewId: data.interviewId,
-        applicantId: applicant.id,
-        applicantUsername: data.applicantUsername,
-        applicantOnline: data.applicantOnline,
-        accepted: false,
-        declined: false,
-      })
-    } catch (err) {
-      setRowErrorId(applicant.id)
-      setActionError(getApiErrorMessage(err, 'Could not start interview. Please try again.'))
-    } finally {
-      setStartingId('')
-    }
-  }
-
   const handleEnterRoom = () => {
     if (!pendingInterview) return
     navigate(`/verification/${pendingInterview.interviewId}`)
@@ -135,7 +110,7 @@ export function PartnerDashboardPage() {
       <main className={`${appShellMainClass} flex flex-col gap-stack-lg`}>
         <DashboardHeader
           title="Partner portal"
-          description="Review advisor applications and run verification video interviews."
+          description="Review advisor applications in full, then run verification video interviews."
           badge={
             <span className="inline-flex items-center gap-2 bg-secondary-container/25 border border-secondary/30 text-secondary px-3 py-1.5 rounded-lg font-label-md text-xs">
               <MaterialIcon name="verified_user" className="text-sm" />
@@ -145,8 +120,8 @@ export function PartnerDashboardPage() {
         />
 
         <DashboardAlert variant="info" icon="info">
-          Applicants must toggle <strong>Open for interview</strong> on Advisor Hub before you can start a verification
-          call. Green status means they are ready; closed applicants stay in the queue but cannot be interviewed yet.
+          Open each application to review credentials and session details before starting an interview. Applicants must
+          toggle <strong>Open for interview</strong> on Advisor Hub first.
         </DashboardAlert>
 
         {pendingInterview && (
@@ -192,6 +167,13 @@ export function PartnerDashboardPage() {
                     Enter verification room
                   </button>
                 )}
+                <Link
+                  to={`/partner/applicants/${pendingInterview.applicantId}`}
+                  className={`${btnOutline} text-sm px-4 py-2.5 inline-flex items-center gap-1`}
+                >
+                  <MaterialIcon name="description" className="text-sm" />
+                  View application
+                </Link>
                 <button type="button" onClick={handleDismissPending} className={`${btnOutline} text-sm px-4 py-2.5`}>
                   Dismiss
                 </button>
@@ -227,39 +209,43 @@ export function PartnerDashboardPage() {
               <div className="md:hidden divide-y divide-outline-variant/40">
                 {applicants.map((applicant) => (
                   <div key={applicant.id} className="p-stack-lg flex flex-col gap-stack-md">
-                    <div>
-                      <p className="font-bold text-on-background">{applicant.username}</p>
-                      <p className="text-sm text-on-surface-variant">{applicant.email}</p>
-                      <div className="mt-1">{renderAvailabilityBadge(applicant)}</div>
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="font-bold text-on-background truncate">{applicant.username}</p>
+                        <p className="text-sm text-on-surface-variant truncate">{applicant.email}</p>
+                        <div className="mt-2">{renderAvailabilityBadge(applicant)}</div>
+                      </div>
+                      <span className="text-xs text-on-surface-variant shrink-0">
+                        {applicant.coinRatePerSession} coins
+                      </span>
                     </div>
                     <p className="text-sm text-on-surface-variant line-clamp-2">
                       {credentialPreview(applicant.bio, applicant.credentials) || 'No credentials listed'}
                     </p>
-                    <AdvisorApplicationDetails bio={applicant.bio} credentials={applicant.credentials} />
+                    {applicant.credentials?.professionType && (
+                      <p className="text-xs text-outline">
+                        {getProfessionLabel(applicant.credentials.professionType)}
+                      </p>
+                    )}
                     {applicant.tags.length > 0 && (
                       <div className="flex flex-wrap gap-1">
-                        {applicant.tags.map((tag) => (
+                        {applicant.tags.slice(0, 4).map((tag) => (
                           <span key={tag} className="text-[10px] bg-surface-container px-2 py-0.5 rounded uppercase">
                             {tag}
                           </span>
                         ))}
+                        {applicant.tags.length > 4 && (
+                          <span className="text-[10px] text-on-surface-variant">+{applicant.tags.length - 4}</span>
+                        )}
                       </div>
                     )}
-                    <button
-                      type="button"
-                      disabled={startingId === applicant.id || !applicant.isOnline}
-                      onClick={() => handleStartInterview(applicant)}
-                      className={`${btnPrimary} text-sm py-3 px-4 w-full flex items-center justify-center gap-2 disabled:opacity-40`}
+                    <Link
+                      to={`/partner/applicants/${applicant.id}`}
+                      className={`${btnPrimary} text-sm py-3 px-4 w-full flex items-center justify-center gap-2`}
                     >
-                      <MaterialIcon name="videocam" className="text-sm" />
-                      {startingId === applicant.id ? 'Starting…' : 'Start interview'}
-                    </button>
-                    {!applicant.isOnline && (
-                      <p className="text-xs text-on-surface-variant">Applicant must open for interview first.</p>
-                    )}
-                    {rowErrorId === applicant.id && actionError && (
-                      <p className="text-error text-sm">{actionError}</p>
-                    )}
+                      <MaterialIcon name="description" className="text-sm" />
+                      Review application
+                    </Link>
                   </div>
                 ))}
               </div>
@@ -269,7 +255,8 @@ export function PartnerDashboardPage() {
                   <thead>
                     <tr className="border-b border-outline-variant/50">
                       <th className="py-stack-sm px-stack-lg font-label-md text-on-surface-variant">Applicant</th>
-                      <th className="py-stack-sm px-stack-lg font-label-md text-on-surface-variant">Bio</th>
+                      <th className="py-stack-sm px-stack-lg font-label-md text-on-surface-variant">Summary</th>
+                      <th className="py-stack-sm px-stack-lg font-label-md text-on-surface-variant">Rate</th>
                       <th className="py-stack-sm px-stack-lg font-label-md text-on-surface-variant text-right">Action</th>
                     </tr>
                   </thead>
@@ -281,7 +268,7 @@ export function PartnerDashboardPage() {
                           <div className="text-on-surface-variant text-sm">{applicant.email}</div>
                           <div className="mt-2">{renderAvailabilityBadge(applicant)}</div>
                           <div className="mt-2 flex flex-wrap gap-1">
-                            {applicant.tags.map((tag) => (
+                            {applicant.tags.slice(0, 3).map((tag) => (
                               <span key={tag} className="text-[10px] bg-surface-container px-2 py-0.5 rounded uppercase">
                                 {tag}
                               </span>
@@ -289,31 +276,26 @@ export function PartnerDashboardPage() {
                           </div>
                         </td>
                         <td className="py-stack-md px-stack-lg align-top max-w-md">
-                          <p className="text-sm text-on-surface-variant line-clamp-2 mb-2">
+                          <p className="text-sm text-on-surface-variant line-clamp-2">
                             {credentialPreview(applicant.bio, applicant.credentials) || 'No credentials listed'}
                           </p>
-                          <AdvisorApplicationDetails bio={applicant.bio} credentials={applicant.credentials} />
+                          {applicant.credentials?.professionType && (
+                            <p className="text-[10px] text-outline mt-1">
+                              {getProfessionLabel(applicant.credentials.professionType)}
+                            </p>
+                          )}
+                        </td>
+                        <td className="py-stack-md px-stack-lg align-top text-sm whitespace-nowrap">
+                          {applicant.coinRatePerSession} coins
                         </td>
                         <td className="py-stack-md px-stack-lg text-right align-middle">
-                          <div className="flex flex-col items-end gap-2">
-                            <button
-                              type="button"
-                              disabled={startingId === applicant.id || !applicant.isOnline}
-                              onClick={() => handleStartInterview(applicant)}
-                              className={`${btnPrimary} text-xs py-2.5 px-4 inline-flex items-center gap-2 disabled:opacity-40`}
-                            >
-                              <MaterialIcon name="videocam" className="text-sm" />
-                              {startingId === applicant.id ? 'Starting…' : 'Start interview'}
-                            </button>
-                            {!applicant.isOnline && (
-                              <p className="text-xs text-on-surface-variant max-w-xs text-right">
-                                Applicant must open for interview first.
-                              </p>
-                            )}
-                            {rowErrorId === applicant.id && actionError && (
-                              <p className="text-error text-xs max-w-xs text-right">{actionError}</p>
-                            )}
-                          </div>
+                          <Link
+                            to={`/partner/applicants/${applicant.id}`}
+                            className={`${btnPrimary} text-xs py-2.5 px-4 inline-flex items-center gap-2`}
+                          >
+                            <MaterialIcon name="description" className="text-sm" />
+                            Review application
+                          </Link>
                         </td>
                       </tr>
                     ))}

@@ -22,6 +22,7 @@ const router = Router();
 router.use(requireAuth);
 
 router.get('/applicants', requireRole('partner_doctor'), verificationController.listApplicants);
+router.get('/applicants/:id', requireRole('partner_doctor'), verificationController.getApplicant);
 router.get('/my-interview', requireRole('advisor'), verificationController.getMyInterview);
 router.get('/availability', requireRole('advisor'), verificationController.getInterviewAvailability);
 router.patch(
