@@ -192,6 +192,11 @@ export function DiscoveryPage({ aiPulse = false }: DiscoveryPageProps) {
     return sortAdvisorsForDiscover(filtered, sortId)
   }, [baseList, filterOptions, filters.sortId, searchResults])
 
+  const [showAllLanguages, setShowAllLanguages] = useState(false)
+  const [showAllRegions, setShowAllRegions] = useState(false)
+  const visibleLanguages = showAllLanguages ? LANGUAGE_OPTIONS : LANGUAGE_OPTIONS.slice(0, 24)
+  const visibleRegions = showAllRegions ? COUNTRY_REGIONS : COUNTRY_REGIONS.slice(0, 20)
+
   const activeFilterCount = countActiveDiscoverFilters(filterOptions)
 
   const handleConnect = async (advisorId: string) => {
@@ -377,8 +382,8 @@ export function DiscoveryPage({ aiPulse = false }: DiscoveryPageProps) {
 
       <div>
         <p className="font-label-md text-xs uppercase tracking-wide text-outline mb-2">Languages</p>
-        <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto overscroll-contain">
-          {LANGUAGE_OPTIONS.slice(0, 24).map((lang) => (
+        <div className="flex flex-wrap gap-2 max-h-40 overflow-y-auto overscroll-contain">
+          {visibleLanguages.map((lang) => (
             <button
               key={lang.code}
               type="button"
@@ -389,12 +394,21 @@ export function DiscoveryPage({ aiPulse = false }: DiscoveryPageProps) {
             </button>
           ))}
         </div>
+        {LANGUAGE_OPTIONS.length > 24 && (
+          <button
+            type="button"
+            onClick={() => setShowAllLanguages((v) => !v)}
+            className={`${btnGhost} text-xs mt-2 py-1.5 px-2`}
+          >
+            {showAllLanguages ? 'Show fewer languages' : `Show all ${LANGUAGE_OPTIONS.length} languages`}
+          </button>
+        )}
       </div>
 
       <div>
         <p className="font-label-md text-xs uppercase tracking-wide text-outline mb-2">Licensed region</p>
-        <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto overscroll-contain">
-          {COUNTRY_REGIONS.slice(0, 20).map((region) => (
+        <div className="flex flex-wrap gap-2 max-h-40 overflow-y-auto overscroll-contain">
+          {visibleRegions.map((region) => (
             <button
               key={region.id}
               type="button"
@@ -405,6 +419,15 @@ export function DiscoveryPage({ aiPulse = false }: DiscoveryPageProps) {
             </button>
           ))}
         </div>
+        {COUNTRY_REGIONS.length > 20 && (
+          <button
+            type="button"
+            onClick={() => setShowAllRegions((v) => !v)}
+            className={`${btnGhost} text-xs mt-2 py-1.5 px-2`}
+          >
+            {showAllRegions ? 'Show fewer regions' : `Show all ${COUNTRY_REGIONS.length} regions`}
+          </button>
+        )}
       </div>
 
       <div>

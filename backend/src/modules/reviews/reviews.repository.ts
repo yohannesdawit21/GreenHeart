@@ -10,6 +10,10 @@ export interface ReviewRow {
   created_at: Date;
 }
 
+export interface ClientReviewRow extends ReviewRow {
+  advisor_username: string;
+}
+
 export interface AdvisorRatingAggregate {
   advisor_id: string;
   average_rating: number;
@@ -49,6 +53,20 @@ export async function listReviewsForAdvisor(advisorId: string, limit = 50): Prom
      ORDER BY created_at DESC
      LIMIT $2`,
     [advisorId, limit],
+  );
+  return rows;
+}
+
+export async function listReviewsForClient(clientId: string, limit = 50): Promise<ClientReviewRow[]> {
+  const { rows } = await getPool().query<ClientReviewRow>(
+    `SELECT r.id, r.session_id, r.client_id, r.advisor_id, r.rating, r.comment, r.created_at,
+            p.username AS advisor_username
+     FROM reviews r
+     JOIN profiles p ON p.user_id = r.advisor_id
+     WHERE r.client_id = $1
+     ORDER BY r.created_at DESC
+     LIMIT $2`,
+    [clientId, limit],
   );
   return rows;
 }

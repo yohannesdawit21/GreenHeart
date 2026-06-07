@@ -30,14 +30,15 @@ const WORKFLOW_STEPS: WorkflowStep[] = [
     title: 'Admin — seed the platform',
     icon: 'admin_panel_settings',
     role: 'Admin',
-    path: '/admin',
+    path: '/admin/overview',
     accent: 'primary',
     steps: [
       'Log in with the demo admin account (credentials below).',
-      'Admin → Partners → Add partner doctor.',
-      'Save the partner email and password — you need them in Phase 2.',
-      'Optional: force-verify an advisor from Admin → Advisors (Verify / Reject).',
+      'Open **Admin → Overview** — see platform revenue, partner count, and pending applicants.',
+      'Go to **Partners → Add partner doctor** and save the login you will use in Phase 2.',
+      'Optional shortcut: **Advisors → Verify / Reject** to skip the partner video interview.',
     ],
+    tip: 'Overview refreshes marketplace stats (coins earned from advisor withdrawal fees).',
   },
   {
     phase: '1',
@@ -49,10 +50,10 @@ const WORKFLOW_STEPS: WorkflowStep[] = [
     highlight: 'Interview availability → Open',
     steps: [
       'Use a second browser or incognito window.',
-      'Apply at Advisor Apply — title, license, specialties, session rate, and approach.',
-      'Land on Advisor Hub with status “Under review”.',
-      'Toggle Interview availability to Open (Live dispatch unlocks after verification).',
-      'Wait on Advisor Hub — partners only see you when the toggle is Open.',
+      'Complete the 5-step apply wizard (progress auto-saves if you leave and return).',
+      'Land on Advisor Hub with **Application submitted** and status “Under review”.',
+      'Toggle **Interview availability** to Open (Live dispatch unlocks only after verification).',
+      'Stay on Advisor Hub — partners only see **Open for interview** when this toggle is on.',
     ],
   },
   {
@@ -62,16 +63,16 @@ const WORKFLOW_STEPS: WorkflowStep[] = [
     role: 'Partner doctor',
     path: '/partner',
     accent: 'secondary',
-    highlight: 'Open for interview → Accept dialog',
+    highlight: 'Review application → Accept → Enter room',
     steps: [
-      'Log in as the partner doctor from Phase 0.',
-      'Partner Portal lists pending applicants — green Open for interview means ready.',
-      'Tap Review application to read credentials on the full profile page.',
-      'Start verification interview only after reviewing — applicant must accept first.',
-      'Enter the verification room after accept → both join the video call.',
-      'Partner clicks Verify or Reject to complete the interview.',
+      'Log in as the partner doctor created in Phase 0.',
+      'Partner Portal lists pending applicants — green **Open for interview** means ready.',
+      'Tap **Review application** to read the full credential profile before interviewing.',
+      'On the profile page, **Start verification interview** — the doctor gets an accept modal on Advisor Hub.',
+      'After the doctor accepts, tap **Enter verification room** (not before accept).',
+      'Partner clicks **Verify** or **Reject** in the call to complete the interview.',
     ],
-    tip: 'Admin shortcut: force-verify from Admin → Advisors without a video call.',
+    tip: 'Admin shortcut: force-verify from **Admin → Advisors** without a video call.',
   },
   {
     phase: '3',
@@ -81,9 +82,10 @@ const WORKFLOW_STEPS: WorkflowStep[] = [
     path: '/wallet',
     accent: 'primary',
     steps: [
-      'Sign up as a patient on /auth (Looking for Care).',
-      'Wallet → choose a coin bundle → Buy coins (sandbox payment).',
-      'Confirm balance updates before booking a session.',
+      'Sign up as a patient on /auth (**Looking for Care**).',
+      'Wallet → choose a coin bundle → **Buy demo coins** (sandbox payment).',
+      'Confirm balance updates — you need enough coins for the advisor’s session rate.',
+      'Use **Find an advisor** after purchase to go straight to Discover.',
     ],
   },
   {
@@ -93,15 +95,16 @@ const WORKFLOW_STEPS: WorkflowStep[] = [
     role: 'Patient + verified advisor',
     path: '/discover',
     accent: 'tertiary',
-    highlight: 'Live dispatch → Online',
+    highlight: 'Escrow → Accept → Review',
     steps: [
-      'Verified advisor: toggle Live dispatch to Online (wait for green Live in header).',
-      'Patient: Discover → browse or AI Match → Connect on an online advisor.',
-      'Advisor accepts the incoming call → both enter the consultation room.',
-      'End session — coins move from patient escrow to advisor earnings.',
-      'Patient may leave an optional star review when the session ends.',
+      'Verified advisor: toggle **Live dispatch** to Online (green Live in header).',
+      'Patient: **Discover** or **/discover/ai** → Connect on an online advisor (guests sign in and return to connect).',
+      'Coins lock in **escrow** on the waiting screen while the advisor’s incoming call rings.',
+      'Advisor **Accept & join** on the incoming call page → both enter the consultation room.',
+      'End session — escrow releases to the advisor’s withdrawable earnings.',
+      'Patient optional star review at end; history lives under **Reviews** (/reviews).',
     ],
-    tip: 'Use 3 browser sessions (normal + 2 incognito) so each role stays logged in.',
+    tip: 'Advisor Hub → **Withdraw earnings** (demo payout). Admin Overview shows the platform fee retained.',
   },
 ]
 
@@ -212,27 +215,21 @@ function TogglePreview({
   )
 }
 
-function VerificationFlowVisual() {
-  const nodes = [
-    { icon: 'toggle_on', label: 'Doctor toggles Open', sub: 'Advisor Hub' },
-    { icon: 'arrow_forward', label: '', sub: '' },
-    { icon: 'groups', label: 'Partner sees queue', sub: 'Open for interview' },
-    { icon: 'arrow_forward', label: '', sub: '' },
-    { icon: 'videocam', label: 'Start interview', sub: 'Accept modal' },
-    { icon: 'arrow_forward', label: '', sub: '' },
-    { icon: 'verified', label: 'Video call', sub: 'Verify / Reject' },
-  ]
-
+function FlowVisual({
+  nodes,
+}: {
+  nodes: { icon: string; label: string; sub: string; arrow?: boolean }[]
+}) {
   return (
     <div className="overflow-x-auto pb-2">
       <div className="flex items-center gap-2 min-w-max px-1">
         {nodes.map((node, i) =>
-          node.icon === 'arrow_forward' ? (
+          node.arrow ? (
             <MaterialIcon key={`arrow-${i}`} name="arrow_forward" className="text-outline shrink-0" />
           ) : (
             <div
-              key={node.label}
-              className="flex flex-col items-center text-center w-28 shrink-0 rounded-xl border border-outline-variant/60 bg-surface-container-low p-3"
+              key={`${node.label}-${i}`}
+              className="flex flex-col items-center text-center w-24 sm:w-28 shrink-0 rounded-xl border border-outline-variant/60 bg-surface-container-low p-3"
             >
               <MaterialIcon name={node.icon} className="text-secondary text-2xl mb-1" />
               <p className="text-xs font-label-md text-on-surface leading-tight">{node.label}</p>
@@ -242,6 +239,42 @@ function VerificationFlowVisual() {
         )}
       </div>
     </div>
+  )
+}
+
+function VerificationFlowVisual() {
+  return (
+    <FlowVisual
+      nodes={[
+        { icon: 'toggle_on', label: 'Doctor Open', sub: 'Advisor Hub' },
+        { icon: 'arrow_forward', label: '', sub: '', arrow: true },
+        { icon: 'groups', label: 'Partner queue', sub: 'Open badge' },
+        { icon: 'arrow_forward', label: '', sub: '', arrow: true },
+        { icon: 'description', label: 'Review app', sub: 'Full profile' },
+        { icon: 'arrow_forward', label: '', sub: '', arrow: true },
+        { icon: 'mail', label: 'Start invite', sub: 'Doctor accepts' },
+        { icon: 'arrow_forward', label: '', sub: '', arrow: true },
+        { icon: 'verified', label: 'Verify call', sub: 'Verify / Reject' },
+      ]}
+    />
+  )
+}
+
+function ConsultationFlowVisual() {
+  return (
+    <FlowVisual
+      nodes={[
+        { icon: 'explore', label: 'Connect', sub: 'Discover / AI' },
+        { icon: 'arrow_forward', label: '', sub: '', arrow: true },
+        { icon: 'lock', label: 'Waiting', sub: 'Escrow held' },
+        { icon: 'arrow_forward', label: '', sub: '', arrow: true },
+        { icon: 'call', label: 'Advisor accepts', sub: 'Incoming call' },
+        { icon: 'arrow_forward', label: '', sub: '', arrow: true },
+        { icon: 'videocam', label: 'Consultation', sub: 'Live session' },
+        { icon: 'arrow_forward', label: '', sub: '', arrow: true },
+        { icon: 'rate_review', label: 'Review', sub: '/reviews' },
+      ]}
+    />
   )
 }
 
@@ -281,9 +314,9 @@ function GuideContent() {
             </Link>
           )}
           {isAdmin && (
-            <Link to="/admin" className={`${btnPrimary} text-sm py-2.5 px-5 inline-flex items-center gap-2`}>
-              <MaterialIcon name="admin_panel_settings" className="text-sm" />
-              Open admin dashboard
+            <Link to="/admin/overview" className={`${btnPrimary} text-sm py-2.5 px-5 inline-flex items-center gap-2`}>
+              <MaterialIcon name="dashboard" className="text-sm" />
+              Open admin overview
             </Link>
           )}
         </div>
@@ -293,7 +326,7 @@ function GuideContent() {
         title="Advisor Hub toggles — know the difference"
         badge={
           <span className="text-xs font-label-md text-secondary bg-secondary-container/25 px-3 py-1 rounded-full border border-secondary/20">
-            New in verification flow
+            Pending vs verified
           </span>
         }
       >
@@ -328,14 +361,16 @@ function GuideContent() {
                 <span className="w-2 h-2 rounded-full bg-secondary animate-pulse" />
                 Open for interview
               </span>
-              <span className="text-on-surface-variant">Partner can start verification call</span>
+              <span className="text-on-surface-variant">
+                Partner can <strong className="text-on-surface">Review application</strong> and start interview
+              </span>
             </div>
             <div className="flex gap-2 items-start rounded-lg bg-surface-container-low p-stack-sm border border-outline-variant/40">
               <span className="inline-flex items-center gap-1 text-on-surface-variant shrink-0">
                 <span className="w-2 h-2 rounded-full bg-outline-variant" />
                 Closed for interview
               </span>
-              <span className="text-on-surface-variant">Listed in queue but Start interview disabled</span>
+              <span className="text-on-surface-variant">Still in queue — start interview disabled until Open</span>
             </div>
           </div>
         </div>
@@ -347,14 +382,14 @@ function GuideContent() {
           <div className="grid md:grid-cols-3 gap-gutter">
             {[
               {
-                icon: 'notifications',
-                title: 'Accept modal',
-                body: 'Doctor stays on /advisor. A dialog appears — Accept & join or Decline. No forced redirect.',
+                icon: 'description',
+                title: 'Review application',
+                body: 'Partner opens the full applicant profile before sending a verification invite — no blind interviews.',
               },
               {
-                icon: 'hourglass_top',
-                title: 'Partner waits in room',
-                body: 'Partner enters the verification room first and sees a waiting overlay until the doctor accepts.',
+                icon: 'notifications',
+                title: 'Accept modal',
+                body: 'Doctor stays on /advisor. A dialog appears — Accept & join or Decline. Enter room only after accept.',
               },
               {
                 icon: 'thumb_up',
@@ -367,6 +402,40 @@ function GuideContent() {
                 className="rounded-xl border border-outline-variant/50 p-stack-md bg-surface-bright/50"
               >
                 <MaterialIcon name={card.icon} className="text-secondary mb-2" />
+                <p className="font-label-md text-sm text-on-surface mb-1">{card.title}</p>
+                <p className="text-sm text-on-surface-variant leading-relaxed">{card.body}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </DashboardSection>
+
+      <DashboardSection title="Patient consultation flow">
+        <div className="p-stack-lg flex flex-col gap-stack-md">
+          <ConsultationFlowVisual />
+          <div className="grid md:grid-cols-3 gap-gutter">
+            {[
+              {
+                icon: 'lock',
+                title: 'Escrow on Connect',
+                body: 'Session coins move from wallet to escrow on the waiting page. Cancel refunds if the advisor declines.',
+              },
+              {
+                icon: 'call',
+                title: 'Incoming consultation',
+                body: 'Advisor gets a calm incoming-call screen — Accept & join or Decline (client coins refunded).',
+              },
+              {
+                icon: 'payments',
+                title: 'Earnings & platform fee',
+                body: 'Completed sessions credit the advisor. Demo withdraw on Advisor Hub; Admin Overview tracks platform fee coins.',
+              },
+            ].map((card) => (
+              <div
+                key={card.title}
+                className="rounded-xl border border-outline-variant/50 p-stack-md bg-surface-bright/50"
+              >
+                <MaterialIcon name={card.icon} className="text-primary mb-2" />
                 <p className="font-label-md text-sm text-on-surface mb-1">{card.title}</p>
                 <p className="text-sm text-on-surface-variant leading-relaxed">{card.body}</p>
               </div>
@@ -437,7 +506,11 @@ function GuideContent() {
       </DashboardSection>
 
       <DashboardSection title="Browser setup tip">
-        <div className="p-stack-lg">
+        <div className="p-stack-lg flex flex-col gap-stack-md">
+          <p className="text-sm text-on-surface-variant">
+            Use three separate browser sessions (normal window + two incognito profiles) so admin/partner, advisor, and
+            patient stay logged in at once.
+          </p>
           <div className="grid sm:grid-cols-3 gap-gutter">
             {[
               { window: 'Window 1', role: 'Admin + Partner', icon: 'desktop_windows', iconClass: 'text-primary' },
@@ -462,27 +535,27 @@ function GuideContent() {
           {[
             {
               role: 'Admin',
-              path: '/admin',
-              icon: 'admin_panel_settings',
-              desc: 'Register partners, override verification',
+              path: '/admin/overview',
+              icon: 'dashboard',
+              desc: 'Platform revenue, partners, advisor registry, verification overrides',
             },
             {
               role: 'Partner doctor',
               path: '/partner',
               icon: 'verified_user',
-              desc: 'Queue shows Open for interview — start verify call',
+              desc: 'Review applications, then verify via video when applicant is Open',
             },
             {
               role: 'Advisor',
               path: '/advisor',
               icon: 'medical_services',
-              desc: 'Open for interview → then Live dispatch when verified',
+              desc: 'Open for interview → Live dispatch → earnings & demo withdraw',
             },
             {
               role: 'Patient',
               path: '/discover',
               icon: 'explore',
-              desc: 'Discover advisors, wallet, consultations',
+              desc: 'Discover, AI match, wallet, consultations, reviews (/reviews)',
             },
           ].map((r) => (
             <Link
@@ -517,19 +590,19 @@ export function WorkflowGuidePage() {
         <main className={`${appShellMainClass} flex flex-col gap-stack-lg`}>
           <DashboardHeader
             title="Demo workflow guide"
-            description="Full hackathon walkthrough: admin setup, interview availability, partner verification, and live consultations."
+            description="Full hackathon walkthrough: admin overview, partner review & verification, escrow consultations, and reviews."
             badge={
               <span className="inline-flex items-center gap-2 bg-secondary-container/25 border border-secondary/30 text-secondary px-3 py-1.5 rounded-lg font-label-md text-xs">
                 <MaterialIcon name="menu_book" className="text-sm" />
-                Updated verification flow
+                Matches current app
               </span>
             }
             action={
               <Link
-                to="/admin"
+                to="/admin/overview"
                 className={`${btnOutline} text-sm py-3 px-5 inline-flex items-center gap-2 w-full sm:w-auto justify-center`}
               >
-                Skip to admin
+                Skip to admin overview
                 <MaterialIcon name="arrow_forward" className="text-sm" />
               </Link>
             }
@@ -570,8 +643,8 @@ export function WorkflowGuidePage() {
               </span>
               <h1 className="font-display-lg text-headline-lg-mobile md:text-display-lg">How to demo GreenHeart</h1>
               <p className="font-body-lg text-body-lg text-on-surface-variant mt-stack-sm max-w-2xl">
-                Interview availability, partner verification with accept dialog, then live patient consultations — step
-                by step.
+                Admin overview, partner application review, verification interviews, escrow consultations, optional
+                reviews, and advisor demo payouts — step by step.
               </p>
             </div>
             <Link

@@ -14,8 +14,10 @@ const PartnerDashboardPage = lazy(() => import('./pages/PartnerDashboardPage').t
 const PartnerApplicantDetailPage = lazy(() =>
   import('./pages/partner/PartnerApplicantDetailPage').then((m) => ({ default: m.PartnerApplicantDetailPage })),
 )
+const AdminOverviewPage = lazy(() => import('./pages/admin/AdminOverviewPage').then((m) => ({ default: m.AdminOverviewPage })))
 const AdminPartnersPage = lazy(() => import('./pages/admin/AdminPartnersPage').then((m) => ({ default: m.AdminPartnersPage })))
 const AdminAdvisorsPage = lazy(() => import('./pages/admin/AdminAdvisorsPage').then((m) => ({ default: m.AdminAdvisorsPage })))
+const MyReviewsPage = lazy(() => import('./pages/MyReviewsPage').then((m) => ({ default: m.MyReviewsPage })))
 const VerificationRoomPage = lazy(() => import('./pages/VerificationRoomPage').then((m) => ({ default: m.VerificationRoomPage })))
 const WaitingSessionPage = lazy(() => import('./pages/WaitingSessionPage').then((m) => ({ default: m.WaitingSessionPage })))
 const ConsultationRoomPage = lazy(() => import('./pages/ConsultationRoomPage').then((m) => ({ default: m.ConsultationRoomPage })))
@@ -111,6 +113,14 @@ export default function App() {
         }
       />
       <Route
+        path="/reviews"
+        element={
+          <ProtectedRoute roles={['client']}>
+            <MyReviewsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
         path="/settings"
         element={
           <ProtectedRoute roles={['client', 'advisor', 'partner_doctor', 'admin']}>
@@ -146,7 +156,15 @@ export default function App() {
         path="/admin"
         element={
           <ProtectedRoute roles={['admin']}>
-            <Navigate to="/admin/partners" replace />
+            <Navigate to="/admin/overview" replace />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/overview"
+        element={
+          <ProtectedRoute roles={['admin']}>
+            <AdminOverviewPage />
           </ProtectedRoute>
         }
       />

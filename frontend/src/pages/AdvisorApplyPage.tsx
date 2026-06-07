@@ -9,6 +9,11 @@ import { LanguageFluencyEditor, validateLanguages } from '../components/advisor/
 import { useAuth } from '../context/AuthContext'
 import { getApiErrorMessage } from '../utils/apiError'
 import { buildAdvisorBio } from '../utils/advisorApplicationBio'
+import {
+  clearAdvisorApplyDraft,
+  loadAdvisorApplyDraft,
+  saveAdvisorApplyDraft,
+} from '../utils/advisorApplyDraft'
 import { formatLanguagesList } from '@shared/advisor/languageUtils'
 import type { AdvisorCredentials } from '@shared/contracts/models.advisor'
 import { EMPTY_ADVISOR_CREDENTIALS, OTHER_OPTION } from '@shared/contracts/models.advisor'
@@ -116,38 +121,40 @@ function SelectField({
 function WizardProgress({ step }: { step: number }) {
   return (
     <div className="mb-stack-lg">
-      <div className="flex items-center justify-between gap-1 sm:gap-2 mb-3">
+      <div className="flex items-center mb-3">
         {STEPS.map((s, i) => {
           const active = step === s.id
           const done = step > s.id
           return (
-            <div key={s.id} className="flex-1 flex flex-col items-center gap-1 min-w-0">
-              <div
-                className={`w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center border-2 transition-colors ${
-                  active
-                    ? 'bg-primary border-primary text-on-primary'
-                    : done
-                      ? 'bg-secondary-container border-secondary text-on-secondary-container'
-                      : 'bg-surface-container-low border-outline-variant text-outline'
-                }`}
-              >
-                {done ? (
-                  <MaterialIcon name="check" className="text-base" />
-                ) : (
-                  <MaterialIcon name={s.icon} className="text-base" />
-                )}
+            <div key={s.id} className={`flex items-center ${i < STEPS.length - 1 ? 'flex-1' : ''}`}>
+              <div className="flex flex-col items-center gap-1 min-w-0">
+                <div
+                  className={`w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center border-2 transition-colors ${
+                    active
+                      ? 'bg-primary border-primary text-on-primary'
+                      : done
+                        ? 'bg-secondary-container border-secondary text-on-secondary-container'
+                        : 'bg-surface-container-low border-outline-variant text-outline'
+                  }`}
+                >
+                  {done ? (
+                    <MaterialIcon name="check" className="text-base" />
+                  ) : (
+                    <MaterialIcon name={s.icon} className="text-base" />
+                  )}
+                </div>
+                <span
+                  className={`text-[9px] sm:text-xs font-label-md text-center truncate max-w-[4.5rem] sm:max-w-none ${
+                    active ? 'text-primary' : 'text-on-surface-variant'
+                  }`}
+                >
+                  {s.title}
+                </span>
               </div>
-              <span
-                className={`text-[9px] sm:text-xs font-label-md text-center truncate w-full ${
-                  active ? 'text-primary' : 'text-on-surface-variant'
-                }`}
-              >
-                {s.title}
-              </span>
               {i < STEPS.length - 1 && (
                 <div
-                  className={`hidden sm:block absolute h-0.5 w-full top-4 left-1/2 -z-10 ${
-                    done ? 'bg-secondary' : 'bg-outline-variant/40'
+                  className={`h-0.5 flex-1 mx-1 sm:mx-2 rounded-full ${
+                    step > s.id ? 'bg-secondary' : 'bg-outline-variant/40'
                   }`}
                   aria-hidden
                 />
@@ -186,9 +193,36 @@ export function AdvisorApplyPage() {
   const [termsAccepted, setTermsAccepted] = useState(false)
   const [error, setError] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [draftRestored, setDraftRestored] = useState(false)
 
   const { registerAdvisor } = useAuth()
   const navigate = useNavigate()
+
+  useEffect(() => {
+    const draft = loadAdvisorApplyDraft()
+    if (!draft) return
+    if (!prefilled.email && draft.email) setEmail(draft.email)
+    if (!prefilled.username && draft.username) setUsername(draft.username)
+    if (draft.step > 1) setStep(draft.step)
+    if (draft.credentials) setCredentials({ ...EMPTY_ADVISOR_CREDENTIALS, ...draft.credentials })
+    if (draft.selectedTags?.length) setSelectedTags(draft.selectedTags)
+    if (draft.coinRatePerSession) setCoinRatePerSession(draft.coinRatePerSession)
+    if (draft.approach) setApproach(draft.approach)
+    setDraftRestored(true)
+  }, [])
+
+  useEffect(() => {
+    if (step === 1 && !email && !username) return
+    saveAdvisorApplyDraft({
+      step,
+      email,
+      username,
+      credentials,
+      selectedTags,
+      coinRatePerSession,
+      approach,
+    })
+  }, [step, email, username, credentials, selectedTags, coinRatePerSession, approach])
 
   useEffect(() => {
     if (prefilled.email) setEmail(prefilled.email)
@@ -350,6 +384,7 @@ export function AdvisorApplyPage() {
           credentials,
         },
       })
+      clearAdvisorApplyDraft()
       navigate('/advisor', { state: { applicationSubmitted: true } })
     } catch (err: unknown) {
       setError(getApiErrorMessage(err, 'Application submission failed'))
@@ -405,6 +440,12 @@ export function AdvisorApplyPage() {
           </div>
 
           <WizardProgress step={step} />
+
+          {draftRestored && (
+            <p className="text-xs text-secondary bg-secondary-container/20 border border-secondary/20 rounded-lg px-3 py-2 mb-stack-md">
+              Your previous application progress was restored. Password is not saved — re-enter it on step 1 if needed.
+            </p>
+          )}
 
           {error && <FormError className="mb-stack-md">{error}</FormError>}
 

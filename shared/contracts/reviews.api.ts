@@ -28,3 +28,12 @@ export interface AdvisorReviewsResponse {
   reviewCount: number;
   reviews: ReviewDto[];
 }
+
+/** GET /api/reviews/me — client's submitted reviews */
+export interface ClientReviewDto extends ReviewDto {
+  advisorName: string;
+}
+
+export interface ClientReviewsResponse {
+  reviews: ClientReviewDto[];
+}

@@ -3,8 +3,10 @@ import type { UserRole } from '@shared/contracts/auth.api'
 export type NavItem =
   | 'discover'
   | 'wallet'
+  | 'reviews'
   | 'advisor'
   | 'partner'
+  | 'admin-overview'
   | 'admin-partners'
   | 'admin-advisors'
   | 'guide'
@@ -23,7 +25,7 @@ export function getRoleHome(role: UserRole | undefined): string {
   if (!role) return '/discover'
   switch (role) {
     case 'admin':
-      return '/admin/partners'
+      return '/admin/overview'
     case 'partner_doctor':
       return '/partner'
     case 'advisor':
@@ -45,6 +47,7 @@ export function getNavLinksForRole(role: UserRole | undefined): NavLinkDef[] {
       return [
         { id: 'discover', label: 'Discover', icon: 'explore', to: '/discover' },
         { id: 'wallet', label: 'Wallet', icon: 'account_balance_wallet', to: '/wallet' },
+        { id: 'reviews', label: 'Reviews', icon: 'rate_review', to: '/reviews' },
         SETTINGS,
       ]
     case 'advisor':
@@ -60,6 +63,7 @@ export function getNavLinksForRole(role: UserRole | undefined): NavLinkDef[] {
     case 'admin':
       return [
         { id: 'guide', label: 'Demo Guide', icon: 'menu_book', to: '/workflow' },
+        { id: 'admin-overview', label: 'Overview', icon: 'dashboard', to: '/admin/overview' },
         { id: 'admin-partners', label: 'Partners', icon: 'verified_user', to: '/admin/partners' },
         { id: 'admin-advisors', label: 'Advisors', icon: 'medical_services', to: '/admin/advisors' },
         SETTINGS,
@@ -79,11 +83,13 @@ const ROUTE_ACCESS: Record<string, UserRole[] | 'public' | 'guest'> = {
   '/discover/ai': 'guest',
   '/advisors': 'guest',
   '/wallet': ['client'],
+  '/reviews': ['client'],
   '/waiting': ['client'],
   '/advisor': ['advisor'],
   '/partner': ['partner_doctor'],
   '/partner/applicants': ['partner_doctor'],
   '/admin': ['admin'],
+  '/admin/overview': ['admin'],
   '/admin/partners': ['admin'],
   '/admin/advisors': ['admin'],
   '/settings': ['client', 'advisor', 'partner_doctor', 'admin'],

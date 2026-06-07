@@ -13,7 +13,6 @@ import { btnDanger, btnOutline, btnPrimary } from '../../components/layout/butto
 import { MaterialIcon } from '../../components/MaterialIcon'
 import { PasswordInput } from '../../components/PasswordInput'
 import { AdminSubNav } from '../../components/admin/AdminSubNav'
-import { AdminPlatformStats } from '../../components/admin/AdminPlatformStats'
 import { verificationService } from '../../api/verification.service'
 import { getApiErrorMessage } from '../../utils/apiError'
 import type { PartnerDoctorDto } from '@shared/contracts/verification.api'
@@ -129,8 +128,6 @@ export function AdminPartnersPage() {
         />
 
         <AdminSubNav />
-
-        <AdminPlatformStats />
 
         {pageSuccess && (
           <DashboardAlert variant="success" icon="check_circle">

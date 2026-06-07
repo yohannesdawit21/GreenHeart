@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { AppShell } from '../components/layout/AppShell';
 import { appShellMainClass, DashboardHeader, DashboardAlert, FormError } from '../components/layout/dashboard-ui';
-import { btnPrimary } from '../components/layout/buttonStyles';
+import { btnOutline, btnPrimary } from '../components/layout/buttonStyles';
 import { MaterialIcon } from '../components/MaterialIcon';
 import { WalletBalanceChip } from '../components/WalletBalanceChip';
 import { LanguageFluencyEditor, validateLanguages } from '../components/advisor/LanguageFluencyEditor';
@@ -36,7 +36,8 @@ export function SettingsPage() {
   const { user, refreshUser } = useAuth();
   const [username, setUsername] = useState('');
   const [approach, setApproach] = useState('');
-  const [tags, setTags] = useState('');
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [customTag, setCustomTag] = useState('');
   const [coinRate, setCoinRate] = useState(0);
   const [credentials, setCredentials] = useState<AdvisorCredentials>({ ...EMPTY_ADVISOR_CREDENTIALS });
   const [saving, setSaving] = useState(false);
@@ -58,7 +59,7 @@ export function SettingsPage() {
   useEffect(() => {
     if (!user?.profile) return;
     setUsername(user.profile.username);
-    setTags((user.profile.tags ?? []).join(', '));
+    setSelectedTags(user.profile.tags ?? []);
     setCoinRate(user.profile.coinRatePerSession ?? 0);
 
     if (user.profile.credentials) {
@@ -73,6 +74,19 @@ export function SettingsPage() {
   const setCredentialField = <K extends keyof AdvisorCredentials>(key: K, value: AdvisorCredentials[K]) => {
     setCredentials((prev) => ({ ...prev, [key]: value }));
   };
+
+  const addCustomTag = () => {
+    const tag = customTag.trim();
+    if (!tag || selectedTags.includes(tag) || selectedTags.length >= 8) return;
+    setSelectedTags((prev) => [...prev, tag]);
+    setCustomTag('');
+  };
+
+  const removeTag = (tag: string) => {
+    setSelectedTags((prev) => prev.filter((t) => t !== tag));
+  };
+
+  const isVerifiedAdvisor = isAdvisor && user?.profile?.verificationStatus === 'verified';
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -92,10 +106,7 @@ export function SettingsPage() {
     try {
       const payload: Parameters<typeof userService.updateProfile>[0] = {
         username,
-        tags: tags
-          .split(',')
-          .map((t) => t.trim())
-          .filter(Boolean),
+        tags: selectedTags,
         coinRatePerSession: isAdvisor ? coinRate : undefined,
       };
 
@@ -126,6 +137,21 @@ export function SettingsPage() {
 
         {message && (
           <DashboardAlert variant="success" icon="check_circle">{message}</DashboardAlert>
+        )}
+
+        {isClient && (
+          <section className="bg-surface-container-lowest border border-outline-variant rounded-xl p-stack-lg flex flex-col sm:flex-row sm:items-center sm:justify-between gap-stack-md">
+            <div>
+              <h3 className="font-headline-md text-headline-md mb-1">Session reviews</h3>
+              <p className="text-sm text-on-surface-variant">
+                See feedback you&apos;ve left after completed consultations.
+              </p>
+            </div>
+            <Link to="/reviews" className={`${btnOutline} text-sm px-5 py-2.5 inline-flex items-center gap-2 shrink-0`}>
+              <MaterialIcon name="rate_review" className="text-sm" />
+              My reviews
+            </Link>
+          </section>
         )}
 
         {isClient && (
@@ -170,6 +196,13 @@ export function SettingsPage() {
               Withdraw earnings
             </Link>
           </section>
+        )}
+
+        {isAdvisor && isVerifiedAdvisor && (
+          <DashboardAlert variant="warning" icon="warning" title="Verified profile">
+            Changes to credentials or specialties may affect how you appear on Discover. Partner verification was based
+            on your original application — contact support for major updates.
+          </DashboardAlert>
         )}
 
         <form onSubmit={handleSave} className="bg-surface-container-lowest border border-outline-variant rounded-xl p-stack-lg flex flex-col gap-stack-md">
@@ -398,8 +431,39 @@ export function SettingsPage() {
                 />
               </div>
               <div>
-                <label className={labelClass}>Specialties (comma-separated)</label>
-                <input className={inputClass} value={tags} onChange={(e) => setTags(e.target.value)} />
+                <label className={labelClass}>Specialties & focus areas (up to 8)</label>
+                {selectedTags.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mb-2">
+                    {selectedTags.map((tag) => (
+                      <button
+                        key={tag}
+                        type="button"
+                        onClick={() => removeTag(tag)}
+                        className="inline-flex items-center gap-1 text-xs px-3 py-1.5 rounded-full border bg-secondary-container text-on-secondary-container border-secondary"
+                      >
+                        {tag}
+                        <MaterialIcon name="close" className="text-sm" />
+                      </button>
+                    ))}
+                  </div>
+                )}
+                <div className="flex gap-2">
+                  <input
+                    className={`${inputClass} flex-1`}
+                    placeholder="Add specialty tag"
+                    value={customTag}
+                    onChange={(e) => setCustomTag(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        addCustomTag();
+                      }
+                    }}
+                  />
+                  <button type="button" onClick={addCustomTag} className={`${btnOutline} text-sm px-4 shrink-0`}>
+                    Add
+                  </button>
+                </div>
               </div>
               <div>
                 <label className={labelClass}>Coins per session</label>

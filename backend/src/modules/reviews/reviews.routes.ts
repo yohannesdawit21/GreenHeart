@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { AppError } from '../../shared/errors/AppError.js';
 import { requireAuth, requireRole } from '../../shared/middleware/auth.middleware.js';
 import { validateBody } from '../../shared/middleware/validateBody.js';
-import { getAdvisorReviews, postReview } from './reviews.controller.js';
+import { getAdvisorReviews, getMyReviews, postReview } from './reviews.controller.js';
 
 const router = Router();
 
@@ -18,6 +18,8 @@ const advisorIdSchema = z.object({
 });
 
 router.post('/', requireAuth, requireRole('client'), validateBody(submitReviewSchema), postReview);
+
+router.get('/me', requireAuth, requireRole('client'), getMyReviews);
 
 router.get('/advisor/:advisorId', (req, res, next) => {
   const parsed = advisorIdSchema.safeParse(req.params);

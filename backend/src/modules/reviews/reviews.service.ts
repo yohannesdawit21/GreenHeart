@@ -1,6 +1,6 @@
 import { AppError } from '../../shared/errors/AppError.js';
 import { findSessionByPublicId } from '../sessions/sessions.repository.js';
-import { toReviewDto } from './reviews.mapper.js';
+import { toReviewDto, toClientReviewDto } from './reviews.mapper.js';
 import * as reviewsRepo from './reviews.repository.js';
 
 export async function submitReview(
@@ -56,4 +56,9 @@ export async function getAdvisorReviews(advisorId: string) {
 
 export async function getRatingAggregatesForAdvisors(advisorIds: string[]) {
   return reviewsRepo.getRatingAggregatesForAdvisors(advisorIds);
+}
+
+export async function getClientReviews(clientId: string) {
+  const rows = await reviewsRepo.listReviewsForClient(clientId);
+  return { reviews: rows.map(toClientReviewDto) };
 }

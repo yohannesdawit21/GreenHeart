@@ -2,8 +2,9 @@ import { Link, useLocation } from 'react-router-dom'
 import { MaterialIcon } from '../MaterialIcon'
 
 const ADMIN_TABS = [
-  { to: '/admin/partners', label: 'Partner doctors', icon: 'verified_user' },
-  { to: '/admin/advisors', label: 'Advisor doctors', icon: 'medical_services' },
+  { to: '/admin/overview', label: 'Overview', icon: 'dashboard' },
+  { to: '/admin/partners', label: 'Partners', icon: 'verified_user' },
+  { to: '/admin/advisors', label: 'Advisors', icon: 'medical_services' },
 ] as const
 
 export function AdminSubNav() {

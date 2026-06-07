@@ -19,3 +19,12 @@ export async function getAdvisorReviews(req: Request, res: Response, next: NextF
     next(err);
   }
 }
+
+export async function getMyReviews(req: Request, res: Response, next: NextFunction) {
+  try {
+    const result = await reviewsService.getClientReviews(req.auth!.userId);
+    res.json(result);
+  } catch (err) {
+    next(err);
+  }
+}
