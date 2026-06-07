@@ -23,6 +23,13 @@ export interface OnlineAdvisorsResponse {
   advisorIds: string[];
 }
 
+export interface AdvisorPresenceStatusResponse {
+  advisorId: string;
+  online: boolean;
+  intendedOnline: boolean;
+  socketConnected: boolean;
+}
+
 export interface InitiateSessionRequest {
   advisorId: string;
 }

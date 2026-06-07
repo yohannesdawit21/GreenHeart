@@ -2,6 +2,7 @@ import { getRedis } from '../../database/redis/connection.js';
 
 export const ONLINE_ADVISORS_KEY = 'online_advisors';
 export const ADVISOR_SOCKET_KEY_PREFIX = 'advisor_socket:';
+export const ADVISOR_INTENDED_ONLINE_KEY_PREFIX = 'advisor_intended_online:';
 
 function isRedisWrongTypeError(err: unknown): boolean {
   return err instanceof Error && err.message.toUpperCase().includes('WRONGTYPE');
@@ -67,9 +68,29 @@ export async function setAdvisorOffline(advisorId: string): Promise<void> {
   await redis.hDel(ONLINE_ADVISORS_KEY, advisorId);
 }
 
+export async function setAdvisorIntendedOnline(advisorId: string, online: boolean): Promise<void> {
+  const redis = getRedis();
+  if (online) {
+    await redis.set(`${ADVISOR_INTENDED_ONLINE_KEY_PREFIX}${advisorId}`, '1');
+  } else {
+    await redis.del(`${ADVISOR_INTENDED_ONLINE_KEY_PREFIX}${advisorId}`);
+  }
+}
+
+export async function isAdvisorIntendedOnline(advisorId: string): Promise<boolean> {
+  const redis = getRedis();
+  const value = await redis.get(`${ADVISOR_INTENDED_ONLINE_KEY_PREFIX}${advisorId}`);
+  return value === '1';
+}
+
 export async function clearAdvisorSocketRegistration(advisorId: string): Promise<void> {
   const redis = getRedis();
   await redis.del(`${ADVISOR_SOCKET_KEY_PREFIX}${advisorId}`);
+}
+
+/** Remove live dispatch entry without clearing intended-online preference. */
+export async function removeAdvisorFromLiveList(advisorId: string): Promise<void> {
+  const redis = getRedis();
   await redis.hDel(ONLINE_ADVISORS_KEY, advisorId);
 }
 

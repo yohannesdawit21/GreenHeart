@@ -21,8 +21,7 @@ export function AdvisorCard({ advisor, onConnect, onViewProfile, showMatchScore 
   const parsed = parseAdvisorApplicationBio(advisor.bio, advisor.credentials)
   const name = advisor.username
   const title = parsed.professionalTitle ?? parsed.professionType ?? advisor.bio.split('.')[0]
-  const rating = advisor.rating ?? 5.0
-  const reviews = advisor.reviewCount ?? 0
+  const hasReviews = (advisor.reviewCount ?? 0) > 0 && advisor.rating != null
   const tags = advisor.tags.slice(0, 4)
   const extraTags = advisor.tags.length - tags.length
   const description = parsed.approach ?? advisor.bio
@@ -63,12 +62,14 @@ export function AdvisorCard({ advisor, onConnect, onViewProfile, showMatchScore 
             {credentialSummary && (
               <p className="font-label-md text-[11px] text-outline line-clamp-1 mt-0.5">{credentialSummary}</p>
             )}
-            <div className="flex items-center gap-1 mt-1">
-              <MaterialIcon name="star" className="text-[14px] text-primary shrink-0" />
-              <span className="font-label-md text-[12px] text-on-surface-variant">
-                {rating.toFixed(1)} ({reviews} reviews)
-              </span>
-            </div>
+            {hasReviews && (
+              <div className="flex items-center gap-1 mt-1">
+                <MaterialIcon name="star" className="text-[14px] text-primary shrink-0" />
+                <span className="font-label-md text-[12px] text-on-surface-variant">
+                  {advisor.rating!.toFixed(1)} ({advisor.reviewCount} review{advisor.reviewCount === 1 ? '' : 's'})
+                </span>
+              </div>
+            )}
           </div>
         </div>
         <div

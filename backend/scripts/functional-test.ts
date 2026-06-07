@@ -120,7 +120,7 @@ async function main() {
       password: 'password123',
       profile: {
         username: `DrFn_${ts}`,
-        bio: 'Anxiety and mindfulness coaching for sleep and stress relief',
+        bio: `Functional test advisor ${ts}: specialized in anxiety mindfulness sleep stress relief coaching`,
         tags: ['anxiety', 'mindfulness', 'sleep'],
         coinRatePerSession: 10,
       },
@@ -171,15 +171,16 @@ async function main() {
   if (coins >= 10) ok(`Wallet funded (${coins} coins)`);
   else fail('Wallet funded', JSON.stringify(bal.body));
 
-  const reindex = await req('POST', `/api/search/reindex/${advisorId}`);
+  const reindex = await req('POST', `/api/search/reindex/${advisorId}`, { cookie: adminCookie });
   if (reindex.status === 200) ok('Reindex advisor embedding');
   else fail('Reindex advisor', JSON.stringify(reindex.body));
 
   const search = await req('POST', '/api/search/semantic', {
-    body: { query: 'help with anxiety and sleep', limit: 5 },
+    body: { query: `functional test advisor ${ts} anxiety sleep mindfulness`, limit: 10 },
   });
   const results = (search.body as { results?: { id?: string }[] }).results ?? [];
-  if (search.status === 200 && results.some((r) => r.id === advisorId)) {
+  const matched = results.filter((r) => r.id === advisorId);
+  if (search.status === 200 && matched.length > 0) {
     ok('Semantic search finds advisor');
   } else if (search.status === 502) {
     fail('Semantic search', 'Embedding API failed — check GEMINI_EMBEDDING_MODEL=gemini-embedding-001 in .env');

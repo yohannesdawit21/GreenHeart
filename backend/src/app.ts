@@ -8,6 +8,7 @@ import { usersRouter } from './modules/users/users.routes.js';
 import { adminRouter } from './modules/verification/admin.routes.js';
 import { verificationRouter } from './modules/verification/verification.routes.js';
 import { walletRouter } from './modules/wallet/wallet.routes.js';
+import { reviewsRouter } from './modules/reviews/reviews.routes.js';
 import { verificationLiveKitRouter } from './livekit/verification.routes.js';
 import { errorHandler } from './shared/middleware/errorHandler.js';
 import { notFoundHandler } from './shared/middleware/notFoundHandler.js';
@@ -36,6 +37,7 @@ export function createApp() {
   app.use('/api/search', searchRouter);
   app.use('/api/presence', presenceRouter);
   app.use('/api/session', sessionsRouter);
+  app.use('/api/reviews', reviewsRouter);
   app.use('/api/verification/interviews', verificationLiveKitRouter);
 
   app.use(notFoundHandler);

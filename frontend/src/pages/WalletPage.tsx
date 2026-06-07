@@ -82,9 +82,13 @@ export function WalletPage() {
   return (
     <AppShell activeNav="wallet" showSearch={false}>
       <main className={`${appShellMainClass} flex flex-col gap-stack-lg`}>
+        <DashboardAlert variant="info" icon="info" title="Demo coins only">
+          Purchases use a sandbox payment flow. Coins are for demonstration — not real money and not withdrawable as cash.
+        </DashboardAlert>
+
         <DashboardHeader
           title="Wallet"
-          description="Buy coins to book verified advisor sessions."
+          description="Buy demo coins to book verified advisor sessions."
           action={
             <button
               type="button"
@@ -100,7 +104,7 @@ export function WalletPage() {
         <section className="rounded-xl overflow-hidden shadow-ambient relative bg-linear-to-br from-primary to-secondary p-stack-lg md:p-10 text-on-primary">
           <div className="absolute top-0 right-0 w-64 h-64 bg-white opacity-5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3 pointer-events-none" />
           <div className="relative z-10">
-            <p className="font-label-md text-sm uppercase tracking-wider opacity-80 mb-2">Available balance</p>
+            <p className="font-label-md text-sm uppercase tracking-wider opacity-80 mb-2">Demo coin balance</p>
             <div className="flex items-baseline gap-3">
               <MaterialIcon name="monetization_on" className="text-4xl opacity-90" />
               <h2 className="font-stat-xl text-stat-xl font-extrabold">{loading ? '…' : `${balance?.coinBalance ?? 0} coins`}</h2>
@@ -159,7 +163,7 @@ export function WalletPage() {
               disabled={isPurchasing}
               className={`${btnPrimary} px-8 py-3 w-full sm:w-auto flex items-center justify-center gap-2`}
             >
-              {isPurchasing ? 'Processing…' : 'Buy coins (sandbox)'}
+              {isPurchasing ? 'Processing…' : 'Buy demo coins (sandbox)'}
               <MaterialIcon name="arrow_forward" className="text-sm" />
             </button>
           </div>

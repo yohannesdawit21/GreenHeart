@@ -111,10 +111,67 @@ export function advisorMatchesQuery(advisor: DiscoverAdvisor, query: string): bo
   return parts.some((p) => normalize(p).includes(q));
 }
 
-export function filterAdvisors(
-  advisors: DiscoverAdvisor[],
-  options: { categoryId?: DiscoverFilterId; query?: string; onlineOnly?: boolean },
-): DiscoverAdvisor[] {
+export type DiscoverSortId = 'online_first' | 'highest_rated' | 'lowest_rate' | 'best_match';
+
+export const DISCOVER_SORT_OPTIONS: { id: DiscoverSortId; label: string }[] = [
+  { id: 'online_first', label: 'Online first' },
+  { id: 'highest_rated', label: 'Highest rated' },
+  { id: 'lowest_rate', label: 'Lowest rate' },
+  { id: 'best_match', label: 'Best match' },
+];
+
+export interface DiscoverFilterOptions {
+  categoryId?: DiscoverFilterId;
+  query?: string;
+  onlineOnly?: boolean;
+  languageCodes?: string[];
+  regionIds?: string[];
+  professionTypes?: string[];
+  minRate?: number;
+  maxRate?: number;
+  minRating?: number;
+}
+
+export function advisorMatchesLanguages(advisor: DiscoverAdvisor, languageCodes: string[]): boolean {
+  if (languageCodes.length === 0) return true;
+  const advisorCodes = advisor.credentials?.languages?.map((l) => l.code) ?? [];
+  return languageCodes.some((code) => advisorCodes.includes(code));
+}
+
+export function advisorMatchesRegion(advisor: DiscoverAdvisor, regionIds: string[]): boolean {
+  if (regionIds.length === 0) return true;
+  const region = advisor.credentials?.issuingRegion;
+  if (!region) return false;
+  return regionIds.includes(region);
+}
+
+export function advisorMatchesProfession(advisor: DiscoverAdvisor, professionTypes: string[]): boolean {
+  if (professionTypes.length === 0) return true;
+  const profession = advisor.credentials?.professionType;
+  if (!profession) return false;
+  return professionTypes.includes(profession);
+}
+
+export function advisorMatchesRateRange(
+  advisor: DiscoverAdvisor,
+  minRate?: number,
+  maxRate?: number,
+): boolean {
+  const rate = advisor.coinRatePerSession;
+  if (minRate != null && rate < minRate) return false;
+  if (maxRate != null && rate > maxRate) return false;
+  return true;
+}
+
+export function advisorMatchesMinRating(advisor: DiscoverAdvisor, minRating?: number): boolean {
+  if (minRating == null || minRating <= 0) return true;
+  const rating = advisor.rating ?? 0;
+  const count = advisor.reviewCount ?? 0;
+  if (count === 0) return false;
+  return rating >= minRating;
+}
+
+export function filterAdvisors(advisors: DiscoverAdvisor[], options: DiscoverFilterOptions): DiscoverAdvisor[] {
   const categoryId = options.categoryId ?? DISCOVER_ALL_FILTER;
   const query = options.query?.trim() ?? '';
 
@@ -122,25 +179,68 @@ export function filterAdvisors(
     if (options.onlineOnly && !advisor.isOnline) return false;
     if (!advisorMatchesCategory(advisor, categoryId)) return false;
     if (query && !advisorMatchesQuery(advisor, query)) return false;
+    if (!advisorMatchesLanguages(advisor, options.languageCodes ?? [])) return false;
+    if (!advisorMatchesRegion(advisor, options.regionIds ?? [])) return false;
+    if (!advisorMatchesProfession(advisor, options.professionTypes ?? [])) return false;
+    if (!advisorMatchesRateRange(advisor, options.minRate, options.maxRate)) return false;
+    if (!advisorMatchesMinRating(advisor, options.minRating)) return false;
     return true;
   });
 }
 
-/** Online first, then match score / featured, then rating. */
-export function sortAdvisorsForDiscover(advisors: DiscoverAdvisor[]): DiscoverAdvisor[] {
+export function countActiveDiscoverFilters(options: DiscoverFilterOptions): number {
+  let count = 0;
+  if (options.onlineOnly) count++;
+  if (options.categoryId && options.categoryId !== DISCOVER_ALL_FILTER) count++;
+  if (options.languageCodes?.length) count++;
+  if (options.regionIds?.length) count++;
+  if (options.professionTypes?.length) count++;
+  if (options.minRate != null || options.maxRate != null) count++;
+  if (options.minRating != null && options.minRating > 0) count++;
+  return count;
+}
+
+export function sortAdvisorsForDiscover(
+  advisors: DiscoverAdvisor[],
+  sortId: DiscoverSortId = 'online_first',
+): DiscoverAdvisor[] {
   return [...advisors].sort((a, b) => {
-    const onlineA = a.isOnline ? 1 : 0;
-    const onlineB = b.isOnline ? 1 : 0;
-    if (onlineA !== onlineB) return onlineB - onlineA;
-
-    const scoreA = a.matchScore ?? (a.featured ? 0.85 : 0);
-    const scoreB = b.matchScore ?? (b.featured ? 0.85 : 0);
-    if (scoreA !== scoreB) return scoreB - scoreA;
-
-    const ratingA = a.rating ?? 0;
-    const ratingB = b.rating ?? 0;
-    if (ratingA !== ratingB) return ratingB - ratingA;
-
+    switch (sortId) {
+      case 'highest_rated': {
+        const ratingA = a.rating ?? 0;
+        const ratingB = b.rating ?? 0;
+        if (ratingA !== ratingB) return ratingB - ratingA;
+        const countA = a.reviewCount ?? 0;
+        const countB = b.reviewCount ?? 0;
+        if (countA !== countB) return countB - countA;
+        break;
+      }
+      case 'lowest_rate': {
+        if (a.coinRatePerSession !== b.coinRatePerSession) {
+          return a.coinRatePerSession - b.coinRatePerSession;
+        }
+        break;
+      }
+      case 'best_match': {
+        const scoreA = a.matchScore ?? 0;
+        const scoreB = b.matchScore ?? 0;
+        if (scoreA !== scoreB) return scoreB - scoreA;
+        break;
+      }
+      case 'online_first':
+      default: {
+        const onlineA = a.isOnline ? 1 : 0;
+        const onlineB = b.isOnline ? 1 : 0;
+        if (onlineA !== onlineB) return onlineB - onlineA;
+        const scoreA = a.matchScore ?? (a.featured ? 0.85 : 0);
+        const scoreB = b.matchScore ?? (b.featured ? 0.85 : 0);
+        if (scoreA !== scoreB) return scoreB - scoreA;
+        const ratingA = a.rating ?? 0;
+        const ratingB = b.rating ?? 0;
+        if (ratingA !== ratingB) return ratingB - ratingA;
+        break;
+      }
+    }
     return a.username.localeCompare(b.username);
   });
 }

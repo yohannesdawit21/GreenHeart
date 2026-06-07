@@ -1,6 +1,6 @@
 # Sprint Status
 
-**Last updated:** 2026-06-06  
+**Last updated:** 2026-06-07  
 **Team guide:** [agent/team-roles.md](../agent/team-roles.md)
 
 ## Merged on `main`
@@ -13,6 +13,7 @@
 | **#7** `feat/m6-verification-livekit-token` | Role C | Verification LiveKit tokens |
 | **Merge** `feat/m6-verification-rbac` | Role B | M6 verification RBAC + admin APIs |
 | **Commit** `d706331` | Role A | M6 UI — advisor-apply, partner, admin, verification room |
+| **Latest** | All | Reviews, discover filters, presence restore, notifications, docs |
 
 ## Module status
 
@@ -21,19 +22,22 @@
 | M1 | Frontend (Phase 1) | Role A | **Done** |
 | M1 | Frontend (Phase 2 / M6 UI) | Role A | **Done** |
 | M2 | Auth & Users | Role B | **Done** |
-| M3 | Wallet & Ledger | Role B | **Done** |
+| M3 | Wallet & Ledger | Role B | **Done** — demo/sandbox coins |
 | M4 | Search & Vectors | Role C | **Done** |
-| M5 | Presence & Sessions | Role C | **Done** |
+| M5 | Presence & Sessions | Role C | **Done** — intended-online restore on reload |
 | M6 | Advisor Verification | B + A + C | **Done** |
+| M7 | Reviews & Discover UX | A + B | **Done** |
 
 ## Definition of done (MVP demo)
 
-- [x] Client registers (patient path), buys coins (sandbox), searches **verified** advisors semantically
-- [x] Doctor registers (advisor-apply path), partner doctor verifies via **video**, then appears in search
-- [x] Admin (seed) registers partner doctors; can override verification status
-- [x] Client connects → verified advisor receives overlay → accept → video call
+- [x] Client registers (patient path), buys **demo coins** (sandbox), searches **verified** advisors semantically
+- [x] Doctor registers via **5-step** `/auth/advisor-apply`, partner doctor verifies via **video**, then appears in search
+- [x] Admin (seed `admin@gmail.com`) registers partner doctors; can override verification status
+- [x] Client connects → verified advisor receives overlay + browser notification → accept → video call
 - [x] Escrow locks and releases correctly
-- [x] Verified advisor can go online/offline
+- [x] Verified advisor can go online/offline; **online state restores after page reload**
+- [x] Client can leave a **review** after completed session
+- [x] Discover supports multi-filter (language, region, profession, rate, rating, sort)
 
 ## Verify locally
 
@@ -52,7 +56,11 @@ cd frontend && npm run dev
 
 | Role | How to get |
 |------|------------|
-| Admin | `npm run db:seed` → `admin@greenheart.dev` / `AdminChangeMe123!` |
-| Partner doctor | Admin registers at `/admin` |
-| Advisor applicant | Self-register at `/auth/advisor-apply` |
+| Admin | `npm run db:seed` → `admin@gmail.com` / `12345678` |
+| Partner doctor | Admin registers at `/admin/partners` |
+| Advisor applicant | Self-register at `/auth/advisor-apply` (5-step wizard) |
 | Client | Self-register at `/auth` |
+
+## Deploy note (Render)
+
+Run migration **007_reviews.sql** after deploy: `npm run db:migrate`

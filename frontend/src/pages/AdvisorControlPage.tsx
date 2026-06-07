@@ -22,6 +22,13 @@ import { verificationService } from '../api/verification.service'
 import { useAuth } from '../context/AuthContext'
 import { useSocket } from '../context/SocketContext'
 import { getApiErrorCode, getApiErrorMessage } from '../utils/apiError'
+import {
+  markIncomingCallPermissionRequested,
+  requestAdvisorNotificationPermission,
+  shouldRequestIncomingCallPermission,
+} from '../utils/notifications'
+
+const INTENDED_ONLINE_KEY = 'gh_advisor_intended_online'
 import type { WalletBalance, TransactionDto } from '@shared/contracts/wallet.api'
 import type { VerificationInterviewStartedPayload } from '@shared/contracts/socket.events'
 
@@ -39,6 +46,7 @@ export function AdvisorControlPage() {
   const [presenceError, setPresenceError] = useState('')
   const [pendingInvitation, setPendingInvitation] = useState<VerificationInvitation | null>(null)
   const [dismissedInterviewId, setDismissedInterviewId] = useState<string | null>(null)
+  const [restoringPresence, setRestoringPresence] = useState(false)
 
   const verificationStatus = user?.profile?.verificationStatus
   const awaitingVerification =
@@ -72,10 +80,13 @@ export function AdvisorControlPage() {
 
   useEffect(() => {
     if (verificationStatus === 'verified' && user?.id) {
+      const sessionIntended = sessionStorage.getItem(INTENDED_ONLINE_KEY) === '1'
       sessionService
-        .getOnlineAdvisors()
-        .then((data) => setOnline(data.advisorIds.includes(user.id)))
-        .catch(() => setOnline(false))
+        .getMyPresence()
+        .then((data) => {
+          setOnline(data.online || data.intendedOnline || sessionIntended)
+        })
+        .catch(() => setOnline(sessionIntended))
     } else if (verificationStatus === 'pending_review') {
       verificationService
         .getInterviewAvailability()
@@ -83,6 +94,33 @@ export function AdvisorControlPage() {
         .catch(() => setInterviewOpen(false))
     }
   }, [verificationStatus, user?.id])
+
+  useEffect(() => {
+    if (verificationStatus !== 'verified' || !user?.id || !connected) return
+
+    const restoreIfNeeded = async () => {
+      const sessionIntended = sessionStorage.getItem(INTENDED_ONLINE_KEY) === '1'
+      try {
+        const presence = await sessionService.getMyPresence()
+        const shouldBeOnline = presence.intendedOnline || sessionIntended
+        if (!shouldBeOnline || presence.online) {
+          setOnline(presence.online || shouldBeOnline)
+          return
+        }
+        setRestoringPresence(true)
+        await sessionService.updatePresence({ online: true })
+        setOnline(true)
+      } catch (err) {
+        if (sessionIntended) {
+          setPresenceError(getApiErrorMessage(err, 'Could not restore online status after reconnect.'))
+        }
+      } finally {
+        setRestoringPresence(false)
+      }
+    }
+
+    void restoreIfNeeded()
+  }, [verificationStatus, user?.id, connected])
 
   useEffect(() => {
     if (!awaitingVerification) return
@@ -131,8 +169,17 @@ export function AdvisorControlPage() {
     setPresenceError('')
     const newStatus = !online
     try {
+      if (newStatus && shouldRequestIncomingCallPermission()) {
+        await requestAdvisorNotificationPermission()
+        markIncomingCallPermissionRequested()
+      }
       await sessionService.updatePresence({ online: newStatus })
       setOnline(newStatus)
+      if (newStatus) {
+        sessionStorage.setItem(INTENDED_ONLINE_KEY, '1')
+      } else {
+        sessionStorage.removeItem(INTENDED_ONLINE_KEY)
+      }
     } catch (err: unknown) {
       const code = getApiErrorCode(err)
       const message = getApiErrorMessage(err, 'Could not update online status.')
@@ -283,8 +330,8 @@ export function AdvisorControlPage() {
             <p className="text-sm text-on-surface-variant mt-1">
               {!toggleEnabled
                 ? 'Complete verification to manage patient availability.'
-                : !connected
-                  ? 'Connecting to realtime server…'
+                : !connected || restoringPresence
+                  ? restoringPresence ? 'Restoring your online status…' : 'Connecting to realtime server…'
                   : isVerified
                     ? toggleOn
                       ? 'You are visible to patients on Discover'
@@ -300,7 +347,7 @@ export function AdvisorControlPage() {
             </span>
             <button
               type="button"
-              disabled={!toggleEnabled || !connected}
+              disabled={!toggleEnabled || !connected || restoringPresence}
               aria-pressed={toggleOn}
               onClick={handleToggle}
               className={`w-14 h-7 ${btnToggle} shrink-0 ${

@@ -2,8 +2,9 @@ import type { Server, Socket } from 'socket.io';
 import {
   clearAdvisorSocketRegistration,
   registerAdvisorSocket,
-  setAdvisorOffline,
+  removeAdvisorFromLiveList,
 } from '../modules/presence/presence.repository.js';
+import { restoreAdvisorPresenceIfIntended } from '../modules/presence/presence.service.js';
 import { setInterviewUnavailable } from '../modules/verification/interviewAvailability.repository.js';
 import { acceptSession, declineSession } from '../modules/sessions/sessions.service.js';
 import { getSocketAuth } from './auth.middleware.js';
@@ -14,7 +15,9 @@ export function registerSocketHandlers(io: Server): void {
     socket.join(`user:${auth.userId}`);
 
     if (auth.role === 'advisor') {
-      void registerAdvisorSocket(auth.userId, socket.id);
+      void registerAdvisorSocket(auth.userId, socket.id).then(() =>
+        restoreAdvisorPresenceIfIntended(auth.userId),
+      );
     }
 
     socket.on('call_accepted', async (payload: { sessionId?: string }) => {
@@ -54,7 +57,7 @@ export function registerSocketHandlers(io: Server): void {
     socket.on('disconnect', () => {
       if (auth.role === 'advisor') {
         void clearAdvisorSocketRegistration(auth.userId);
-        void setAdvisorOffline(auth.userId);
+        void removeAdvisorFromLiveList(auth.userId);
         void setInterviewUnavailable(auth.userId);
       }
     });

@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import bcrypt from 'bcryptjs';
-import { config } from '../../config/index.js';
 import { AppError } from '../../shared/errors/AppError.js';
+import { reindexAdvisor } from '../search/search.service.js';
 import type { InterviewOutcome, VerificationStatus } from '../../shared/types/contracts.js';
 import { getIO, isUserSocketConnected } from '../../socket/index.js';
 import { toApplicantDto, toPartnerDoctorDto } from '../users/users.mapper.js';
@@ -14,10 +14,9 @@ const BCRYPT_ROUNDS = 10;
 
 async function triggerReindex(advisorId: string): Promise<void> {
   try {
-    const base = `http://127.0.0.1:${config.port}`;
-    await fetch(`${base}/api/search/reindex/${advisorId}`, { method: 'POST' });
-  } catch {
-    // M4 may not be implemented yet — non-fatal
+    await reindexAdvisor(advisorId);
+  } catch (err) {
+    console.error('[verification] reindex failed for', advisorId, err);
   }
 }
 

@@ -145,13 +145,14 @@ export function AdvisorProfilePage() {
               {parsed?.issuingRegion && (
                 <p className="text-xs text-outline mt-1">Licensed in {parsed.issuingRegion}</p>
               )}
-              <div className="flex items-center gap-1 mt-2">
-                <MaterialIcon name="star" className="text-primary text-sm" />
-                <span className="text-sm text-on-surface-variant">
-                  {(advisor.rating ?? 5.0).toFixed(1)} rating
-                  {advisor.reviewCount != null && ` · ${advisor.reviewCount} reviews`}
-                </span>
-              </div>
+              {(advisor.reviewCount ?? 0) > 0 && advisor.rating != null && (
+                <div className="flex items-center gap-1 mt-2">
+                  <MaterialIcon name="star" className="text-primary text-sm" />
+                  <span className="text-sm text-on-surface-variant">
+                    {advisor.rating.toFixed(1)} rating · {advisor.reviewCount} review{advisor.reviewCount === 1 ? '' : 's'}
+                  </span>
+                </div>
+              )}
             </div>
           </div>
 

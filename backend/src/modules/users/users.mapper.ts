@@ -24,7 +24,10 @@ export function toAuthUser(row: UserWithProfileRow): AuthUser {
   };
 }
 
-export function toAdvisorCard(row: AdvisorRow): AdvisorCardDto {
+export function toAdvisorCard(
+  row: AdvisorRow,
+  ratingMeta?: { averageRating: number; reviewCount: number },
+): AdvisorCardDto {
   const credentials = mapCredentials(row);
   return {
     id: row.id,
@@ -33,6 +36,9 @@ export function toAdvisorCard(row: AdvisorRow): AdvisorCardDto {
     tags: row.tags ?? [],
     coinRatePerSession: row.coin_rate_per_session,
     ...(credentials ? { credentials } : {}),
+    ...(ratingMeta && ratingMeta.reviewCount > 0
+      ? { rating: ratingMeta.averageRating, reviewCount: ratingMeta.reviewCount }
+      : {}),
   };
 }
 

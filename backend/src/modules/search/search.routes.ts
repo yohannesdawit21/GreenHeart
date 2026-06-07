@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import { AppError } from '../../shared/errors/AppError.js';
+import { requireAuth, requireRole } from '../../shared/middleware/auth.middleware.js';
 import { postReindexAdvisor, postSemanticSearch } from './search.controller.js';
 
 const router = Router();
@@ -23,7 +24,7 @@ router.post('/semantic', async (req, res, next) => {
   return postSemanticSearch(req, res, next);
 });
 
-router.post('/reindex/:advisorId', async (req, res, next) => {
+router.post('/reindex/:advisorId', requireAuth, requireRole('admin'), async (req, res, next) => {
   const parsed = advisorIdSchema.safeParse(req.params);
   if (!parsed.success) {
     return next(new AppError(400, 'VALIDATION_ERROR', 'Invalid advisor id'));

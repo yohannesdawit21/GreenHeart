@@ -1,26 +1,29 @@
-import { useEffect } from 'react'
+import { lazy, Suspense, useEffect } from 'react'
 import { Navigate, Route, Routes, useNavigate } from 'react-router-dom'
-import { AdvisorControlPage } from './pages/AdvisorControlPage'
+import { LoadingSpinner } from './components/layout/dashboard-ui'
 import { AdvisorApplyPage } from './pages/AdvisorApplyPage'
 import { AdvisorProfilePage } from './pages/AdvisorProfilePage'
-import { PartnerDashboardPage } from './pages/PartnerDashboardPage'
-import { AdminPartnersPage } from './pages/admin/AdminPartnersPage'
-import { AdminAdvisorsPage } from './pages/admin/AdminAdvisorsPage'
-import { VerificationRoomPage } from './pages/VerificationRoomPage'
-import { WaitingSessionPage } from './pages/WaitingSessionPage'
-import { SettingsPage } from './pages/SettingsPage'
-import { AuthPage } from './pages/AuthPage'
-import { ConsultationRoomPage } from './pages/ConsultationRoomPage'
 import { DiscoveryAiPage, DiscoveryPage } from './pages/DiscoveryPage'
-import { IncomingCallPage } from './pages/IncomingCallPage'
-import { IncomingVerificationPage } from './pages/IncomingVerificationPage'
+import { AuthPage } from './pages/AuthPage'
+import { SettingsPage } from './pages/SettingsPage'
 import { WalletPage } from './pages/WalletPage'
 import { WorkflowGuidePage } from './pages/WorkflowGuidePage'
+
+const AdvisorControlPage = lazy(() => import('./pages/AdvisorControlPage').then((m) => ({ default: m.AdvisorControlPage })))
+const PartnerDashboardPage = lazy(() => import('./pages/PartnerDashboardPage').then((m) => ({ default: m.PartnerDashboardPage })))
+const AdminPartnersPage = lazy(() => import('./pages/admin/AdminPartnersPage').then((m) => ({ default: m.AdminPartnersPage })))
+const AdminAdvisorsPage = lazy(() => import('./pages/admin/AdminAdvisorsPage').then((m) => ({ default: m.AdminAdvisorsPage })))
+const VerificationRoomPage = lazy(() => import('./pages/VerificationRoomPage').then((m) => ({ default: m.VerificationRoomPage })))
+const WaitingSessionPage = lazy(() => import('./pages/WaitingSessionPage').then((m) => ({ default: m.WaitingSessionPage })))
+const ConsultationRoomPage = lazy(() => import('./pages/ConsultationRoomPage').then((m) => ({ default: m.ConsultationRoomPage })))
+const IncomingCallPage = lazy(() => import('./pages/IncomingCallPage').then((m) => ({ default: m.IncomingCallPage })))
+const IncomingVerificationPage = lazy(() => import('./pages/IncomingVerificationPage').then((m) => ({ default: m.IncomingVerificationPage })))
 import { ClientAreaRoute, GuestAuthRoute, ProtectedRoute } from './components/ProtectedRoute'
 import { HomeRedirect, NotFoundRedirect, TrailingSlashRedirect } from './components/RouteRedirects'
 import { useSocket } from './context/SocketContext'
 import { useAuth } from './context/AuthContext'
 import type { IncomingCallDispatchPayload } from '@shared/contracts/socket.events'
+import { notifyIncomingCall, playIncomingCallChime } from './utils/notifications'
 
 export default function App() {
   const { socket } = useSocket()
@@ -31,6 +34,8 @@ export default function App() {
     if (!socket || !user || user.role !== 'advisor') return
 
     const handleIncomingCall = (payload: IncomingCallDispatchPayload) => {
+      playIncomingCallChime()
+      notifyIncomingCall(payload.clientName, payload.durationMinutes)
       navigate(
         `/incoming-call?sessionId=${encodeURIComponent(payload.sessionId)}&clientName=${encodeURIComponent(payload.clientName)}&duration=${payload.durationMinutes}`,
       )
@@ -45,6 +50,7 @@ export default function App() {
   return (
     <>
       <TrailingSlashRedirect />
+      <Suspense fallback={<LoadingSpinner label="Loading page…" />}>
       <Routes>
       <Route path="/" element={<HomeRedirect />} />
 
@@ -191,6 +197,7 @@ export default function App() {
 
       <Route path="*" element={<NotFoundRedirect />} />
       </Routes>
+      </Suspense>
     </>
   )
 }

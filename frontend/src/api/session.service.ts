@@ -2,6 +2,7 @@ import { apiClient } from './client';
 import type {
   PresenceStatusRequest,
   PresenceStatusResponse,
+  AdvisorPresenceStatusResponse,
   OnlineAdvisorsResponse,
   InitiateSessionRequest,
   InitiateSessionResponse,
@@ -18,6 +19,11 @@ export const sessionService = {
 
   getOnlineAdvisors: async (): Promise<OnlineAdvisorsResponse> => {
     const response = await apiClient.get<OnlineAdvisorsResponse>('/presence/advisors');
+    return response.data;
+  },
+
+  getMyPresence: async (): Promise<AdvisorPresenceStatusResponse> => {
+    const response = await apiClient.get<AdvisorPresenceStatusResponse>('/presence/me');
     return response.data;
   },
 
