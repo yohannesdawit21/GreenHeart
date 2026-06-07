@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Link, useSearchParams } from 'react-router-dom'
+import { Link, useLocation, useSearchParams } from 'react-router-dom'
 import { AppShell } from '../components/layout/AppShell'
 import {
   appShellMainClass,
@@ -22,6 +22,8 @@ const packages = [
 ]
 
 export function WalletPage() {
+  const location = useLocation()
+  const returnTo = (location.state as { returnTo?: string } | null)?.returnTo
   const [searchParams, setSearchParams] = useSearchParams()
   const [balance, setBalance] = useState<WalletBalance | null>(null)
   const [transactions, setTransactions] = useState<TransactionDto[]>([])
@@ -85,6 +87,15 @@ export function WalletPage() {
         <DashboardAlert variant="info" icon="info" title="Demo coins only">
           Purchases use a sandbox payment flow. Coins are for demonstration — not real money and not withdrawable as cash.
         </DashboardAlert>
+
+        {returnTo && (
+          <DashboardAlert variant="warning" icon="schedule" title="Session still waiting">
+            Coins in escrow for your active request are not shown as spendable balance.{' '}
+            <Link to={returnTo} className="text-primary font-medium hover:underline">
+              Return to waiting screen
+            </Link>
+          </DashboardAlert>
+        )}
 
         <DashboardHeader
           title="Wallet"

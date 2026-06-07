@@ -144,7 +144,7 @@ export async function declineSession(advisorId: string, sessionId: string, _reas
   const io = getIO();
   io?.to(`user:${session.client_id}`).emit('call_processing', {
     sessionId: session.session_id,
-    status: 'ringing',
+    status: 'declined',
   });
 
   return { sessionId: session.session_id, status: updated?.status ?? 'declined' };
@@ -165,6 +165,17 @@ export async function endSession(userId: string, sessionId: string) {
   if (session.status === 'ringing') {
     await refundEscrow(session.client_id, session.coin_amount);
     const updated = await updateSessionStatus(session.session_id, 'cancelled', { endedAt: true });
+
+    const io = getIO();
+    io?.to(`user:${session.advisor_id}`).emit('call_processing', {
+      sessionId: session.session_id,
+      status: 'cancelled',
+    });
+    io?.to(`user:${session.client_id}`).emit('call_processing', {
+      sessionId: session.session_id,
+      status: 'cancelled',
+    });
+
     return { sessionId: session.session_id, status: updated?.status ?? 'cancelled' };
   }
 

@@ -29,7 +29,7 @@ export interface SessionReadyPayload {
 
 export interface CallProcessingPayload {
   sessionId: string;
-  status: 'ringing' | 'connecting';
+  status: 'ringing' | 'connecting' | 'cancelled' | 'declined';
 }
 
 export interface VerificationInterviewStartedPayload {

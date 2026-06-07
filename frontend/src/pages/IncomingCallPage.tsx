@@ -1,11 +1,12 @@
+import { useEffect, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { MaterialIcon } from '../components/MaterialIcon'
 import { btnDanger, btnSecondary } from '../components/layout/buttonStyles'
 import { ConfirmDialog } from '../components/layout/ConfirmDialog'
 import { FormError } from '../components/layout/dashboard-ui'
 import { sessionService } from '../api/session.service'
+import { useSocket } from '../context/SocketContext'
 import { getApiErrorMessage } from '../utils/apiError'
-import { useState } from 'react'
 
 export function IncomingCallPage() {
   const navigate = useNavigate()
@@ -13,9 +14,58 @@ export function IncomingCallPage() {
   const sessionId = searchParams.get('sessionId')
   const clientName = searchParams.get('clientName') || 'A client'
   const duration = searchParams.get('duration') || '30'
+  const { socket } = useSocket()
   const [isProcessing, setIsProcessing] = useState(false)
   const [error, setError] = useState('')
+  const [endedMessage, setEndedMessage] = useState('')
   const [showDeclineConfirm, setShowDeclineConfirm] = useState(false)
+
+  useEffect(() => {
+    if (!sessionId) {
+      navigate('/advisor')
+      return
+    }
+
+    const dismiss = (message: string) => {
+      setEndedMessage(message)
+      setIsProcessing(false)
+      setShowDeclineConfirm(false)
+    }
+
+    const onCallProcessing = (payload: { sessionId: string; status: string }) => {
+      if (payload.sessionId !== sessionId) return
+      if (payload.status === 'cancelled') {
+        dismiss(`${clientName} cancelled the request. Returning to Advisor Hub.`)
+      }
+    }
+
+    socket?.on('call_processing', onCallProcessing)
+
+    const poll = setInterval(async () => {
+      try {
+        const status = await sessionService.getSessionStatus(sessionId)
+        if (status.status === 'cancelled') {
+          dismiss(`${clientName} cancelled the request. Returning to Advisor Hub.`)
+        }
+        if (status.status === 'declined' || status.status === 'completed' || status.status === 'active') {
+          clearInterval(poll)
+        }
+      } catch {
+        /* ignore transient errors */
+      }
+    }, 2000)
+
+    return () => {
+      socket?.off('call_processing', onCallProcessing)
+      clearInterval(poll)
+    }
+  }, [sessionId, socket, navigate, clientName])
+
+  useEffect(() => {
+    if (!endedMessage) return
+    const timer = setTimeout(() => navigate('/advisor'), 2500)
+    return () => clearTimeout(timer)
+  }, [endedMessage, navigate])
 
   const handleAccept = async () => {
     if (!sessionId) return
@@ -43,6 +93,17 @@ export function IncomingCallPage() {
     } finally {
       setShowDeclineConfirm(false)
     }
+  }
+
+  if (endedMessage) {
+    return (
+      <div className="bg-background text-on-background font-body-md min-h-[100dvh] w-full flex items-center justify-center p-margin-mobile">
+        <div className="bg-surface-container-lowest border border-outline-variant rounded-2xl shadow-ambient w-full max-w-md p-stack-lg text-center">
+          <MaterialIcon name="call_end" filled className="text-on-surface-variant text-5xl mb-stack-md mx-auto" />
+          <p className="font-body-lg text-body-lg text-on-surface">{endedMessage}</p>
+        </div>
+      </div>
+    )
   }
 
   return (

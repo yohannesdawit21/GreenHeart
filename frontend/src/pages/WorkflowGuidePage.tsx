@@ -99,12 +99,56 @@ const WORKFLOW_STEPS: WorkflowStep[] = [
     steps: [
       'Verified advisor: toggle **Live dispatch** to Online (green Live in header).',
       'Patient: **Discover** or **/discover/ai** → Connect on an online advisor (guests sign in and return to connect).',
-      'Coins lock in **escrow** on the waiting screen while the advisor’s incoming call rings.',
+      'Patient lands on the **waiting screen** — coins move to escrow while the advisor’s incoming call rings.',
+      'While waiting: **Cancel request** refunds escrow; **View wallet balance** keeps the call active; **Browse other advisors** warns that escrow stays locked.',
       'Advisor **Accept & join** on the incoming call page → both enter the consultation room.',
+      'If the patient cancels or the advisor declines, the incoming call dismisses and escrow returns to the patient.',
       'End session — escrow releases to the advisor’s withdrawable earnings.',
       'Patient optional star review at end; history lives under **Reviews** (/reviews).',
     ],
     tip: 'Advisor Hub → **Withdraw earnings** (demo payout). Admin Overview shows the platform fee retained.',
+  },
+]
+
+interface WaitingActionRow {
+  action: string
+  patient: string
+  advisor: string
+  icon: string
+}
+
+const WAITING_ROOM_ACTIONS: WaitingActionRow[] = [
+  {
+    action: 'Cancel request',
+    icon: 'cancel',
+    patient:
+      'Confirm dialog → escrow refunded immediately → redirected to Discover. Session status becomes cancelled.',
+    advisor:
+      'Incoming call screen closes automatically (“client cancelled”) → returns to Advisor Hub after a moment.',
+  },
+  {
+    action: 'View wallet balance',
+    icon: 'account_balance_wallet',
+    patient:
+      'Opens Wallet — escrow stays locked; request keeps ringing. Banner links **Return to waiting screen**.',
+    advisor:
+      'No change — still sees the incoming call until accept, decline, or patient cancels.',
+  },
+  {
+    action: 'Browse other advisors',
+    icon: 'explore',
+    patient:
+      'Confirm dialog explains the active request stays open → can open Discover while coins remain in escrow.',
+    advisor:
+      'No change — incoming call keeps ringing. Patient can connect with another advisor only if they have enough non-escrow coins.',
+  },
+  {
+    action: 'Advisor declines',
+    icon: 'call_end',
+    patient:
+      'Waiting screen shows refund message → **Back to Discover**. Escrow returned to wallet.',
+    advisor:
+      'Confirm decline → coins refunded to client → returns to Advisor Hub.',
   },
 ]
 
@@ -278,6 +322,36 @@ function ConsultationFlowVisual() {
   )
 }
 
+function WaitingRoomActionsTable() {
+  return (
+    <div className="overflow-x-auto">
+      <table className="w-full min-w-[640px] text-sm border-collapse">
+        <thead>
+          <tr className="border-b border-outline-variant/60 text-left">
+            <th className="py-3 pr-4 font-label-md text-on-surface-variant w-[28%]">Action</th>
+            <th className="py-3 pr-4 font-label-md text-on-surface-variant w-[36%]">Patient (waiting screen)</th>
+            <th className="py-3 font-label-md text-on-surface-variant w-[36%]">Advisor (incoming call)</th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-outline-variant/40">
+          {WAITING_ROOM_ACTIONS.map((row) => (
+            <tr key={row.action} className="align-top">
+              <td className="py-stack-md pr-4">
+                <span className="inline-flex items-center gap-2 font-label-md text-on-surface">
+                  <MaterialIcon name={row.icon} className="text-primary text-lg shrink-0" />
+                  {row.action}
+                </span>
+              </td>
+              <td className="py-stack-md pr-4 text-on-surface-variant leading-relaxed">{row.patient}</td>
+              <td className="py-stack-md text-on-surface-variant leading-relaxed">{row.advisor}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )
+}
+
 function GuideContent() {
   const { user } = useAuth()
   const isAdmin = user?.role === 'admin'
@@ -418,12 +492,12 @@ function GuideContent() {
               {
                 icon: 'lock',
                 title: 'Escrow on Connect',
-                body: 'Session coins move from wallet to escrow on the waiting page. Cancel refunds if the advisor declines.',
+                body: 'Session coins move from wallet to escrow on the waiting page. Cancel or advisor decline refunds escrow before the call starts.',
               },
               {
                 icon: 'call',
                 title: 'Incoming consultation',
-                body: 'Advisor gets a calm incoming-call screen — Accept & join or Decline (client coins refunded).',
+                body: 'Advisor gets a calm incoming-call screen — Accept & join or Decline (client coins refunded). Patient cancel dismisses the call on the advisor side.',
               },
               {
                 icon: 'payments',
@@ -441,6 +515,29 @@ function GuideContent() {
               </div>
             ))}
           </div>
+        </div>
+      </DashboardSection>
+
+      <DashboardSection
+        title="Waiting room — what each button does"
+        badge={
+          <span className="text-xs font-label-md text-on-surface-variant bg-surface-container px-3 py-1 rounded-full">
+            Patient + advisor
+          </span>
+        }
+      >
+        <div className="p-stack-lg flex flex-col gap-stack-md">
+          <p className="text-sm text-on-surface-variant leading-relaxed">
+            After Connect, the patient waits at <code className="text-xs bg-surface-container px-1.5 py-0.5 rounded">/waiting</code>{' '}
+            while the advisor is routed to the incoming call screen. Leaving the waiting page without cancelling does{' '}
+            <strong className="text-on-surface font-semibold">not</strong> stop the ring — only{' '}
+            <strong className="text-on-surface font-semibold">Cancel request</strong> ends the session and frees escrow.
+          </p>
+          <WaitingRoomActionsTable />
+          <DashboardAlert variant="warning" icon="info" title="Demo tip">
+            If the patient browses Discover while a request is still ringing, connecting with another advisor requires
+            enough coins beyond what is already in escrow. Cancel the first request first for a clean demo.
+          </DashboardAlert>
         </div>
       </DashboardSection>
 

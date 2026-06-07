@@ -6,7 +6,7 @@ import { DashboardAlert } from '../components/layout/dashboard-ui';
 import { ConfirmDialog } from '../components/layout/ConfirmDialog';
 import { sessionService } from '../api/session.service';
 import { useSocket } from '../context/SocketContext';
-import type { SessionReadyPayload } from '@shared/contracts/socket.events';
+import type { CallProcessingPayload, SessionReadyPayload } from '@shared/contracts/socket.events';
 
 function formatElapsed(seconds: number): string {
   const m = Math.floor(seconds / 60);
@@ -25,6 +25,7 @@ export function WaitingSessionPage() {
   const [durationMinutes, setDurationMinutes] = useState<number>(30);
   const [elapsed, setElapsed] = useState(0);
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
+  const [showBrowseConfirm, setShowBrowseConfirm] = useState(false);
   const [cancelling, setCancelling] = useState(false);
 
   useEffect(() => {
@@ -48,7 +49,15 @@ export function WaitingSessionPage() {
       if (payload.sessionId === sessionId) goToRoom();
     };
 
+    const onCallProcessing = (payload: CallProcessingPayload) => {
+      if (payload.sessionId !== sessionId) return;
+      if (payload.status === 'declined') {
+        setError('The advisor declined this session. Your coins were refunded.');
+      }
+    };
+
     socket?.on('session_ready', onReady);
+    socket?.on('call_processing', onCallProcessing);
 
     const poll = setInterval(async () => {
       try {
@@ -58,7 +67,11 @@ export function WaitingSessionPage() {
         setDurationMinutes(status.durationMinutes);
         if (status.status === 'active') goToRoom();
         if (status.status === 'declined' || status.status === 'cancelled') {
-          setError('The advisor declined or the session was cancelled. Your coins were refunded.');
+          setError(
+            status.status === 'declined'
+              ? 'The advisor declined this session. Your coins were refunded.'
+              : 'This request was cancelled. Your coins were refunded.',
+          );
           clearInterval(poll);
         }
       } catch {
@@ -68,6 +81,7 @@ export function WaitingSessionPage() {
 
     return () => {
       socket?.off('session_ready', onReady);
+      socket?.off('call_processing', onCallProcessing);
       clearInterval(poll);
     };
   }, [sessionId, socket, navigate]);
@@ -91,18 +105,35 @@ export function WaitingSessionPage() {
     }
   };
 
+  const waitingPath = sessionId ? `/waiting?sessionId=${encodeURIComponent(sessionId)}` : '/discover';
+
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-margin-mobile">
       <ConfirmDialog
         open={showCancelConfirm}
         title="Cancel this request?"
-        message={`${coinAmount ?? 'Your'} coins in escrow will be refunded if you cancel before the advisor accepts.`}
+        message={`${coinAmount ?? 'Your'} coins in escrow will be refunded. ${advisorName} will stop seeing the incoming call.`}
         confirmLabel={cancelling ? 'Cancelling…' : 'Yes, cancel'}
         cancelLabel="Keep waiting"
         variant="danger"
         icon="cancel"
         onConfirm={() => void handleCancel()}
         onCancel={() => setShowCancelConfirm(false)}
+      />
+
+      <ConfirmDialog
+        open={showBrowseConfirm}
+        title="Browse other advisors?"
+        message={`Your request to ${advisorName} stays active — coins remain in escrow and they still see the incoming call until you cancel or they respond.`}
+        confirmLabel="Browse anyway"
+        cancelLabel="Stay on waiting screen"
+        variant="primary"
+        icon="explore"
+        onConfirm={() => {
+          setShowBrowseConfirm(false);
+          navigate('/discover');
+        }}
+        onCancel={() => setShowBrowseConfirm(false)}
       />
 
       <div className="max-w-md w-full bg-surface-container-lowest border border-outline-variant rounded-xl p-stack-lg text-center shadow-lg">
@@ -140,12 +171,24 @@ export function WaitingSessionPage() {
               >
                 Cancel request
               </button>
-              <Link to="/wallet" className="text-sm text-primary hover:underline">
+              <Link
+                to="/wallet"
+                state={{ returnTo: waitingPath }}
+                className="text-sm text-primary hover:underline"
+              >
                 View wallet balance
               </Link>
-              <Link to="/discover" className={`${btnOutline} text-sm px-4 py-2 mt-2`}>
+              <p className="text-xs text-on-surface-variant max-w-xs">
+                Wallet opens in place — escrow stays locked and this request keeps ringing until you cancel or the
+                advisor responds. Use your browser back button to return here.
+              </p>
+              <button
+                type="button"
+                onClick={() => setShowBrowseConfirm(true)}
+                className={`${btnOutline} text-sm px-4 py-2 mt-1`}
+              >
                 Browse other advisors
-              </Link>
+              </button>
             </div>
           </>
         )}
