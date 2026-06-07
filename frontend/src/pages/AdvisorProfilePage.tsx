@@ -9,8 +9,12 @@ import { sessionService } from '../api/session.service';
 import { useAuth } from '../context/AuthContext';
 import { getApiErrorCode, getApiErrorMessage } from '../utils/apiError';
 import { parseAdvisorApplicationBio } from '../utils/advisorApplicationBio';
+import {
+  getAdvisorCredentialSummary,
+  getAdvisorFocusLabel,
+  getAdvisorLanguagesSummary,
+} from '@shared/advisor/discoverUtils';
 import { getProfessionLabel } from '@shared/advisor/credentialOptions';
-import { formatLanguagesList } from '@shared/advisor/languageUtils';
 import type { AdvisorCardDto } from '@shared/contracts/users.api';
 
 export function AdvisorProfilePage() {
@@ -44,18 +48,22 @@ export function AdvisorProfilePage() {
       const code = getApiErrorCode(err)
       if (code === 'INSUFFICIENT_FUNDS') setConnectError('Insufficient coins — visit your wallet first.')
       else if (code === 'ADVISOR_OFFLINE') setConnectError('Advisor is offline.')
+      else if (code === 'ADVISOR_NOT_VERIFIED') setConnectError('This advisor is not verified yet.')
       else setConnectError(getApiErrorMessage(err, 'Could not connect.'))
     }
   };
 
   const parsed = advisor ? parseAdvisorApplicationBio(advisor.bio, advisor.credentials) : null;
-  const headline = parsed?.professionalTitle ?? advisor?.bio.split('.')[0] ?? '';
+  const headline = parsed?.professionalTitle ?? parsed?.professionType ?? advisor?.bio.split('.')[0] ?? '';
   const approachText = parsed?.approach ?? advisor?.bio ?? '';
+  const focusLabel = advisor ? getAdvisorFocusLabel(advisor) : undefined;
+  const credentialSummary = advisor ? getAdvisorCredentialSummary(advisor) : undefined;
+  const languagesSummary = advisor ? getAdvisorLanguagesSummary(advisor) : undefined;
 
   if (loading) {
     return (
       <AppShell activeNav="discover" showSearch={false}>
-        <LoadingSpinner />
+        <LoadingSpinner label="Loading advisor profile..." />
       </AppShell>
     );
   }
@@ -81,53 +89,98 @@ export function AdvisorProfilePage() {
 
         <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-stack-lg">
           <div className="flex items-start gap-stack-md mb-stack-md">
-            <div className="w-20 h-20 rounded-full bg-surface-container-high flex items-center justify-center">
-              <MaterialIcon name="person" className="text-4xl text-on-surface-variant" />
-            </div>
-            <div>
-              <h1 className="font-display-md text-display-md">{advisor.username}</h1>
+            {advisor.avatarUrl ? (
+              <img
+                src={advisor.avatarUrl}
+                alt={`${advisor.username} profile`}
+                className="w-20 h-20 rounded-full object-cover border-2 border-surface-container-low shadow-sm shrink-0"
+              />
+            ) : (
+              <div className="w-20 h-20 rounded-full bg-surface-container-high flex items-center justify-center shrink-0">
+                <MaterialIcon name="person" className="text-4xl text-on-surface-variant" />
+              </div>
+            )}
+            <div className="min-w-0 flex-1">
+              <div className="flex items-start justify-between gap-2">
+                <h1 className="font-display-md text-display-md">{advisor.username}</h1>
+                <div
+                  className={`flex items-center gap-1 rounded-full px-2 py-1 shrink-0 ${
+                    advisor.isOnline
+                      ? 'bg-secondary-container/40 border border-secondary/30'
+                      : 'bg-surface-container-low border border-outline-variant'
+                  }`}
+                >
+                  {advisor.isOnline && <span className="w-2 h-2 rounded-full bg-vibrant-coral pulse-dot" />}
+                  <span className={`text-[10px] uppercase tracking-wider font-label-md ${advisor.isOnline ? 'text-secondary' : 'text-on-surface-variant'}`}>
+                    {advisor.isOnline ? 'Online' : 'Offline'}
+                  </span>
+                </div>
+              </div>
               <p className="text-on-surface-variant font-body-md">{headline}</p>
-              {advisor.credentials?.professionType && (
+              {(credentialSummary || advisor.credentials?.professionType) && (
                 <p className="text-xs text-outline mt-1">
-                  {getProfessionLabel(advisor.credentials.professionType)}
-                  {advisor.credentials.credentialType ? ` · ${advisor.credentials.credentialType}` : ''}
+                  {credentialSummary ??
+                    (advisor.credentials?.professionType
+                      ? getProfessionLabel(advisor.credentials.professionType)
+                      : '')}
                 </p>
               )}
-              {advisor.credentials?.languages && advisor.credentials.languages.length > 0 && (
+              {focusLabel && (
+                <p className="text-xs text-on-surface-variant mt-1 flex items-center gap-1">
+                  <MaterialIcon name="medical_services" className="text-[14px] text-primary" />
+                  {focusLabel}
+                </p>
+              )}
+              {languagesSummary && (
+                <p className="text-xs text-on-surface-variant mt-1 flex items-center gap-1">
+                  <MaterialIcon name="translate" className="text-[14px] text-primary" />
+                  {languagesSummary}
+                </p>
+              )}
+              {parsed?.yearsExperience && (
                 <p className="text-xs text-on-surface-variant mt-1">
-                  Languages: {formatLanguagesList(advisor.credentials.languages)}
+                  {parsed.yearsExperience} years experience
                 </p>
               )}
-              <div className="flex items-center gap-1 mt-1">
+              {parsed?.issuingRegion && (
+                <p className="text-xs text-outline mt-1">Licensed in {parsed.issuingRegion}</p>
+              )}
+              <div className="flex items-center gap-1 mt-2">
                 <MaterialIcon name="star" className="text-primary text-sm" />
-                <span className="text-sm text-on-surface-variant">{advisor.rating ?? 5.0} rating</span>
+                <span className="text-sm text-on-surface-variant">
+                  {(advisor.rating ?? 5.0).toFixed(1)} rating
+                  {advisor.reviewCount != null && ` · ${advisor.reviewCount} reviews`}
+                </span>
               </div>
             </div>
           </div>
 
-          <p className="font-body-md text-body-md text-on-surface-variant mb-stack-md">{approachText}</p>
+          <p className="font-body-md text-body-md text-on-surface-variant mb-stack-md whitespace-pre-line">{approachText}</p>
 
-          <div className="flex flex-wrap gap-2 mb-stack-lg">
-            {advisor.tags.map((tag) => (
-              <span key={tag} className="bg-surface-container px-3 py-1 rounded-full text-sm">
-                {tag}
-              </span>
-            ))}
-          </div>
+          {advisor.tags.length > 0 && (
+            <div className="mb-stack-md">
+              <p className="font-label-md text-xs uppercase tracking-wide text-outline mb-2">Specialties</p>
+              <div className="flex flex-wrap gap-2">
+                {advisor.tags.map((tag) => (
+                  <span key={tag} className="bg-surface-container px-3 py-1 rounded-full text-sm">
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {parsed?.additionalCertifications && (
+            <p className="text-sm text-on-surface-variant mb-stack-md">
+              <span className="font-label-md text-outline">Certifications: </span>
+              {parsed.additionalCertifications}
+            </p>
+          )}
 
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-stack-md border-t border-outline-variant pt-stack-md">
             <div className="min-w-0">
               <span className="font-bold text-lg">{advisor.coinRatePerSession}</span>
               <span className="text-on-surface-variant ml-1">coins / session</span>
-              <div className="text-sm text-on-surface-variant mt-1">
-                {advisor.isOnline ? (
-                  <span className="text-secondary flex items-center gap-1">
-                    <span className="w-2 h-2 rounded-full bg-secondary shrink-0" /> Online now
-                  </span>
-                ) : (
-                  'Currently offline'
-                )}
-              </div>
             </div>
             {user?.role === 'client' && (
               <button
@@ -140,7 +193,7 @@ export function AdvisorProfilePage() {
                     : 'cursor-not-allowed bg-surface-container text-outline rounded-lg opacity-70'
                 }`}
               >
-                {advisor.isOnline ? 'Connect' : 'Advisor offline'}
+                {advisor.isOnline ? 'Connect Now' : 'Advisor offline'}
               </button>
             )}
           </div>

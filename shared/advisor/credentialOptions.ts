@@ -161,6 +161,14 @@ export const SPECIALTY_CATEGORIES = [
   { id: 'behavioral', label: 'Behavioral health & addiction' },
   { id: 'wellness', label: 'Wellness, lifestyle & prevention' },
   { id: 'holistic', label: 'Holistic & integrative approaches' },
+  { id: 'maternal_reproductive', label: 'Maternal & reproductive health' },
+  { id: 'chronic_illness', label: 'Chronic illness & disability support' },
+  { id: 'faith_spiritual', label: 'Faith-based & spiritual care' },
+  { id: 'workplace_career', label: 'Workplace wellness & career' },
+  { id: 'identity_affirming', label: 'LGBTQ+ & identity-affirming care' },
+  { id: 'youth_adolescent', label: 'Youth, teens & young adults' },
+  { id: 'elder_aging', label: 'Elder care & aging' },
+  { id: 'community_cultural', label: 'Community & cultural healing' },
 ] as const;
 
 export type SpecialtyCategoryId = (typeof SPECIALTY_CATEGORIES)[number]['id'];
@@ -168,26 +176,75 @@ export type SpecialtyCategoryId = (typeof SPECIALTY_CATEGORIES)[number]['id'];
 export const SPECIALTIES_BY_CATEGORY: Record<SpecialtyCategoryId, readonly string[]> = {
   mental_health: [
     'Anxiety', 'Depression', 'Stress management', 'Sleep disorders', 'Burnout',
-    'Self-esteem', 'ADHD support', 'OCD', 'Bipolar support',
+    'Self-esteem', 'ADHD support', 'OCD', 'Bipolar support', 'Panic attacks',
+    'Social anxiety', 'Emotional regulation', 'Loneliness & isolation',
   ],
   relationships: [
     'Couples counseling', 'Marriage therapy', 'Family therapy', 'Parenting',
     'Communication skills', 'Conflict resolution', 'Divorce / separation',
+    'Blended families', 'Co-parenting', 'Intimacy & connection', 'Infidelity recovery',
   ],
   trauma_grief: [
     'Trauma / PTSD', 'EMDR-informed care', 'Grief & loss', 'Crisis support',
-    'Domestic violence recovery',
+    'Domestic violence recovery', 'Sexual assault recovery', 'Childhood trauma',
+    'Complex trauma (C-PTSD)', 'Disaster & emergency trauma', 'Bereavement counseling',
   ],
   behavioral: [
-    'Addiction recovery', 'Substance use', 'Eating disorders', 'Anger management', 'Behavioral change',
+    'Addiction recovery', 'Substance use', 'Eating disorders', 'Anger management',
+    'Behavioral change', 'Gambling recovery', 'Harm reduction', 'Relapse prevention',
+    'Dual diagnosis support', 'Smoking cessation',
   ],
   wellness: [
-    'Mindfulness', 'Nutrition counseling', 'Weight management', 'Chronic illness support',
-    'Work-life balance', 'Health coaching', 'Preventive care',
+    'Mindfulness', 'Nutrition counseling', 'Weight management', 'Work-life balance',
+    'Health coaching', 'Preventive care', 'Sleep hygiene', 'Exercise & movement',
+    'Stress resilience', 'Women\'s wellness', 'Men\'s wellness',
   ],
   holistic: [
     'Integrative therapy', 'Somatic approaches', 'CBT', 'DBT-informed skills',
     'Acceptance & Commitment (ACT)', 'Mind-body connection', 'Spiritual wellness',
+    'Art & expressive therapy', 'Nature-based therapy', 'Breathwork & meditation',
+    'Traditional healing integration', 'Ayurvedic wellness',
+  ],
+  maternal_reproductive: [
+    'Pregnancy & prenatal support', 'Postpartum depression & anxiety', 'Birth trauma',
+    'Fertility & conception support', 'Miscarriage & pregnancy loss', 'Breastfeeding support',
+    'New parent adjustment', 'Perinatal mood disorders', 'Menopause transition',
+  ],
+  chronic_illness: [
+    'Chronic pain management', 'Diabetes support', 'HIV/AIDS support', 'Cancer support',
+    'Autoimmune conditions', 'Disability adjustment', 'Long COVID recovery',
+    'Sickle cell support', 'Hypertension & heart health', 'Caregiver burnout',
+  ],
+  faith_spiritual: [
+    'Christian counseling', 'Islamic counseling', 'Pastoral care', 'Interfaith support',
+    'Spiritual crisis & doubt', 'Grief & faith integration', 'Moral injury',
+    'Prayer & meditation guidance', 'Religious trauma recovery',
+  ],
+  workplace_career: [
+    'Workplace burnout', 'Executive coaching', 'Career transitions', 'Leadership stress',
+    'Remote work isolation', 'Workplace conflict', 'Imposter syndrome',
+    'Professional identity', 'Return-to-work support', 'Entrepreneur wellness',
+  ],
+  identity_affirming: [
+    'LGBTQ+ affirming care', 'Gender identity exploration', 'Coming out support',
+    'Trans-affirming therapy', 'Queer relationship support', 'Minority stress',
+    'Cultural identity', 'Intersectional wellness', 'Body image & dysphoria',
+  ],
+  youth_adolescent: [
+    'Teen anxiety & depression', 'School stress & bullying', 'College transition',
+    'Peer pressure', 'Self-harm support', 'Family conflict (youth)', 'Identity development',
+    'Social media & digital wellness', 'Young adult life skills',
+  ],
+  elder_aging: [
+    'Aging & life transitions', 'Dementia & memory support', 'Caregiver support (elder)',
+    'End-of-life planning', 'Loneliness in older adults', 'Retirement adjustment',
+    'Age-related grief', 'Senior mental health', 'Intergenerational family issues',
+  ],
+  community_cultural: [
+    'Community trauma healing', 'Cultural identity & belonging', 'Diaspora & migration stress',
+    'Refugee & displacement support', 'Ancestral & traditional healing', 'Collective grief',
+    'Racial trauma & healing', 'Ubuntu / communal wellness', 'Group & circle facilitation',
+    'Conflict-affected communities', 'Post-conflict recovery',
   ],
 };
 
