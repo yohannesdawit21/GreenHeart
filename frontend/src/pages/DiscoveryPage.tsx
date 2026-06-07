@@ -71,6 +71,7 @@ export function DiscoveryPage({ aiPulse = false }: DiscoveryPageProps) {
   const [fetchError, setFetchError] = useState('')
   const [searchError, setSearchError] = useState('')
   const [connectError, setConnectError] = useState('')
+  const [connectErrorId, setConnectErrorId] = useState<string | null>(null)
   const [insufficientFunds, setInsufficientFunds] = useState(false)
   const [connectingId, setConnectingId] = useState<string | null>(null)
   const navigate = useNavigate()
@@ -195,10 +196,11 @@ export function DiscoveryPage({ aiPulse = false }: DiscoveryPageProps) {
 
   const handleConnect = async (advisorId: string) => {
     if (!user || user.role !== 'client') {
-      navigate('/auth')
+      navigate('/auth', { state: { from: `/advisors/${advisorId}?connect=1` } })
       return
     }
     setConnectError('')
+    setConnectErrorId(null)
     setInsufficientFunds(false)
     setConnectingId(advisorId)
     try {
@@ -207,6 +209,7 @@ export function DiscoveryPage({ aiPulse = false }: DiscoveryPageProps) {
     } catch (err: unknown) {
       const code = getApiErrorCode(err)
       const message = getApiErrorMessage(err, 'Could not start session. Please try again.')
+      setConnectErrorId(advisorId)
       if (code === 'INSUFFICIENT_FUNDS') {
         setInsufficientFunds(true)
         setConnectError('Insufficient coins — add funds in your wallet first.')
@@ -595,15 +598,7 @@ export function DiscoveryPage({ aiPulse = false }: DiscoveryPageProps) {
           </DashboardAlert>
         )}
 
-        {insufficientFunds ? (
-          <InsufficientFundsAlert />
-        ) : (
-          connectError && (
-            <DashboardAlert variant="error" icon="error">
-              {connectError}
-            </DashboardAlert>
-          )
-        )}
+        {insufficientFunds && <InsufficientFundsAlert />}
 
         {showAdvisorGrid && (
           <>
@@ -708,6 +703,7 @@ export function DiscoveryPage({ aiPulse = false }: DiscoveryPageProps) {
                 advisor={advisor}
                 showMatchScore={isSearching}
                 isConnecting={connectingId === advisor.id}
+                connectError={connectErrorId === advisor.id ? connectError : undefined}
                 onConnect={() => handleConnect(advisor.id)}
                 onViewProfile={() => navigate(`/advisors/${advisor.id}`)}
               />

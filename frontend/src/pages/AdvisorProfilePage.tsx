@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { useState, useEffect, useCallback } from 'react';
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { AppShell } from '../components/layout/AppShell';
 import { appShellMainClass, DashboardAlert, FormError, LoadingSpinner } from '../components/layout/dashboard-ui';
 import { btnPrimary } from '../components/layout/buttonStyles';
@@ -20,6 +20,7 @@ import type { AdvisorCardDto } from '@shared/contracts/users.api';
 
 export function AdvisorProfilePage() {
   const { id } = useParams<{ id: string }>();
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { user } = useAuth();
   const [advisor, setAdvisor] = useState<AdvisorCardDto | null>(null);
@@ -27,6 +28,8 @@ export function AdvisorProfilePage() {
   const [error, setError] = useState('');
   const [connectError, setConnectError] = useState('');
   const [insufficientFunds, setInsufficientFunds] = useState(false);
+  const [connecting, setConnecting] = useState(false);
+  const shouldAutoConnect = searchParams.get('connect') === '1';
 
   useEffect(() => {
     if (!id) return;
@@ -37,13 +40,15 @@ export function AdvisorProfilePage() {
       .finally(() => setLoading(false));
   }, [id]);
 
-  const handleConnect = async () => {
-    if (!advisor || user?.role !== 'client') {
-      navigate('/auth');
+  const handleConnect = useCallback(async () => {
+    if (!advisor) return;
+    if (!user || user.role !== 'client') {
+      navigate('/auth', { state: { from: `/advisors/${advisor.id}?connect=1` } });
       return;
     }
     setConnectError('');
     setInsufficientFunds(false);
+    setConnecting(true);
     try {
       const data = await sessionService.initiateSession({ advisorId: advisor.id });
       navigate(`/waiting?sessionId=${data.sessionId}`);
@@ -55,8 +60,17 @@ export function AdvisorProfilePage() {
       } else if (code === 'ADVISOR_OFFLINE') setConnectError('Advisor is offline.')
       else if (code === 'ADVISOR_NOT_VERIFIED') setConnectError('This advisor is not verified yet.')
       else setConnectError(getApiErrorMessage(err, 'Could not connect.'))
+    } finally {
+      setConnecting(false);
     }
-  };
+  }, [advisor, navigate, user]);
+
+  useEffect(() => {
+    if (!shouldAutoConnect || !advisor || loading || connecting) return;
+    if (user?.role === 'client' && advisor.isOnline) {
+      void handleConnect();
+    }
+  }, [shouldAutoConnect, advisor, loading, user, connecting, handleConnect]);
 
   const parsed = advisor ? parseAdvisorApplicationBio(advisor.bio, advisor.credentials) : null;
   const headline = parsed?.professionalTitle ?? parsed?.professionType ?? advisor?.bio.split('.')[0] ?? '';
@@ -115,7 +129,7 @@ export function AdvisorProfilePage() {
                       : 'bg-surface-container-low border border-outline-variant'
                   }`}
                 >
-                  {advisor.isOnline && <span className="w-2 h-2 rounded-full bg-vibrant-coral pulse-dot" />}
+                  {advisor.isOnline && <span className="w-2 h-2 rounded-full bg-secondary animate-pulse" />}
                   <span className={`text-[10px] uppercase tracking-wider font-label-md ${advisor.isOnline ? 'text-secondary' : 'text-on-surface-variant'}`}>
                     {advisor.isOnline ? 'Online' : 'Offline'}
                   </span>
@@ -187,21 +201,34 @@ export function AdvisorProfilePage() {
             <div className="min-w-0">
               <span className="font-bold text-lg">{advisor.coinRatePerSession}</span>
               <span className="text-on-surface-variant ml-1">coins / session</span>
+              {user?.role === 'client' && advisor.isOnline && (
+                <p className="text-xs text-on-surface-variant mt-1">
+                  Connecting holds {advisor.coinRatePerSession} coins in escrow until the session starts or is cancelled.
+                </p>
+              )}
             </div>
-            {user?.role === 'client' && (
+            {user?.role === 'client' ? (
               <button
                 type="button"
-                onClick={handleConnect}
-                disabled={!advisor.isOnline}
+                onClick={() => void handleConnect()}
+                disabled={!advisor.isOnline || connecting}
                 className={`w-full sm:w-auto px-6 py-3 font-label-md ${
                   advisor.isOnline
                     ? `${btnPrimary}`
                     : 'cursor-not-allowed bg-surface-container text-outline rounded-lg opacity-70'
                 }`}
               >
-                {advisor.isOnline ? 'Connect Now' : 'Advisor offline'}
+                {connecting ? 'Connecting…' : advisor.isOnline ? 'Connect now' : 'Advisor offline'}
               </button>
-            )}
+            ) : !user ? (
+              <Link
+                to="/auth"
+                state={{ from: `/advisors/${advisor.id}?connect=1` }}
+                className={`${btnPrimary} w-full sm:w-auto px-6 py-3 text-center`}
+              >
+                Sign in to connect
+              </Link>
+            ) : null}
           </div>
 
           {insufficientFunds ? (

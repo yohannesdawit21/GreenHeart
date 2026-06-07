@@ -39,6 +39,9 @@ export function AdvisorControlPage() {
   const { connected, socket } = useSocket()
   const navigate = useNavigate()
   const location = useLocation()
+  const applicationSubmitted = Boolean(
+    (location.state as { applicationSubmitted?: boolean } | null)?.applicationSubmitted,
+  )
   const [online, setOnline] = useState(false)
   const [interviewOpen, setInterviewOpen] = useState(false)
   const { balance, loading: walletLoading, error: walletLoadError, refresh: refreshWallet } = useWalletBalance(true)
@@ -325,6 +328,20 @@ export function AdvisorControlPage() {
           description="Manage your availability, earnings, and incoming patient sessions."
         />
 
+        {applicationSubmitted && (
+          <DashboardAlert variant="success" icon="check_circle" title="Application submitted">
+            Your credentials are under partner review. Toggle <strong>Open for interview</strong> when a partner doctor
+            is ready to verify you.
+          </DashboardAlert>
+        )}
+
+        {verificationStatus === 'pending_review' && (
+          <DashboardAlert variant="info" icon="hourglass_top" title="Verification pending">
+            Session earnings and withdrawals unlock after a partner verifies your credentials. You can still open for
+            verification interviews below.
+          </DashboardAlert>
+        )}
+
         {awaitingVerification && verificationStatus === 'pending_review' && dismissedInterviewId && !pendingInvitation && (
           <DashboardAlert variant="info" icon="notifications" title="Verification request pending">
             <div className="flex flex-col sm:flex-row sm:items-center gap-stack-sm mt-1">
@@ -438,7 +455,11 @@ export function AdvisorControlPage() {
             label="Total earnings"
             accent="secondary"
             value={loading ? '…' : `${totalEarnings} coins`}
-            hint="Settled after completed sessions"
+            hint={
+              verificationStatus === 'pending_review'
+                ? 'Available after partner verification'
+                : 'Settled after completed sessions'
+            }
           />
           <StatCard
             icon="check_circle"

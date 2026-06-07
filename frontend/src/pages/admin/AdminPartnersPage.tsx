@@ -39,6 +39,7 @@ export function AdminPartnersPage() {
   const [editingId, setEditingId] = useState<string | null>(null)
   const [form, setForm] = useState<PartnerFormState>(emptyForm)
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null)
+  const [pageSuccess, setPageSuccess] = useState('')
 
   const loadPartners = useCallback(async () => {
     try {
@@ -82,12 +83,14 @@ export function AdminPartnersPage() {
           username: form.username,
           password: form.password,
         })
+        setPageSuccess('Partner doctor created successfully.')
       } else if (editingId) {
         await verificationService.updatePartner(editingId, {
           email: form.email,
           username: form.username,
           ...(form.password ? { password: form.password } : {}),
         })
+        setPageSuccess('Partner doctor updated.')
       }
       setShowModal(false)
       await loadPartners()
@@ -129,6 +132,12 @@ export function AdminPartnersPage() {
 
         <AdminPlatformStats />
 
+        {pageSuccess && (
+          <DashboardAlert variant="success" icon="check_circle">
+            {pageSuccess}
+          </DashboardAlert>
+        )}
+
         {pageError && (
           <DashboardAlert variant="error" icon="error">
             {pageError}
@@ -157,7 +166,49 @@ export function AdminPartnersPage() {
               description="Add a partner doctor so they can verify advisor applicants."
             />
           ) : (
-            <div className="overflow-x-auto">
+            <>
+            <div className="md:hidden divide-y divide-outline-variant/40">
+              {partners.map((p) => (
+                <div key={p.id} className="p-stack-lg flex flex-col gap-stack-md">
+                  <div>
+                    <p className="font-bold text-on-surface">{p.username}</p>
+                    <p className="text-sm text-on-surface-variant font-mono">{p.email}</p>
+                    <p className="text-xs text-on-surface-variant mt-1">
+                      Joined{' '}
+                      {new Date(p.createdAt).toLocaleDateString(undefined, {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric',
+                      })}
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <button type="button" onClick={() => openEdit(p)} className={`${btnOutline} text-xs px-3 py-2`}>
+                      Edit
+                    </button>
+                    {deleteConfirmId === p.id ? (
+                      <>
+                        <button type="button" onClick={() => handleDelete(p.id)} className={`${btnDanger} text-xs px-3 py-2`}>
+                          Confirm delete
+                        </button>
+                        <button type="button" onClick={() => setDeleteConfirmId(null)} className={`${btnOutline} text-xs px-3 py-2`}>
+                          Cancel
+                        </button>
+                      </>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => setDeleteConfirmId(p.id)}
+                        className={`${btnOutline} text-xs px-3 py-2 text-error border-error/30`}
+                      >
+                        Delete
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="hidden md:block overflow-x-auto">
               <table className="w-full text-left border-collapse min-w-[640px]">
                 <thead>
                   <tr className="border-b border-outline-variant/50 bg-surface-container-low/50">
@@ -231,6 +282,7 @@ export function AdminPartnersPage() {
                 </tbody>
               </table>
             </div>
+            </>
           )}
         </DashboardSection>
 

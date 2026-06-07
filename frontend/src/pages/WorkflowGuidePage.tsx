@@ -34,9 +34,9 @@ const WORKFLOW_STEPS: WorkflowStep[] = [
     accent: 'primary',
     steps: [
       'Log in with the demo admin account (credentials below).',
-      'Admin → Register Partner to create a partner doctor account.',
+      'Admin → Partners → Add partner doctor.',
       'Save the partner email and password — you need them in Phase 2.',
-      'Optional shortcut: force-verify an advisor from Verification overrides.',
+      'Optional: force-verify an advisor from Admin → Advisors (Verify / Reject).',
     ],
   },
   {
@@ -65,13 +65,13 @@ const WORKFLOW_STEPS: WorkflowStep[] = [
     highlight: 'Open for interview → Accept dialog',
     steps: [
       'Log in as the partner doctor from Phase 0.',
-      'Partner Portal lists all applicants; green Open for interview means ready.',
-      'Start interview is enabled only when the applicant toggled Open.',
-      'Doctor gets an accept modal on Advisor Hub (not a forced redirect).',
-      'Partner enters the room and waits; doctor accepts → both join the call.',
+      'Partner Portal lists pending applicants — green Open for interview means ready.',
+      'Tap Review application to read credentials on the full profile page.',
+      'Start verification interview only after reviewing — applicant must accept first.',
+      'Enter the verification room after accept → both join the video call.',
       'Partner clicks Verify or Reject to complete the interview.',
     ],
-    tip: 'Admin shortcut: force-verify from /admin without a video call.',
+    tip: 'Admin shortcut: force-verify from Admin → Advisors without a video call.',
   },
   {
     phase: '3',
@@ -96,9 +96,10 @@ const WORKFLOW_STEPS: WorkflowStep[] = [
     highlight: 'Live dispatch → Online',
     steps: [
       'Verified advisor: toggle Live dispatch to Online (wait for green Live in header).',
-      'Patient: Discover → browse or search → Connect on an online advisor.',
+      'Patient: Discover → browse or AI Match → Connect on an online advisor.',
       'Advisor accepts the incoming call → both enter the consultation room.',
-      'End session — coins move from patient wallet to advisor earnings.',
+      'End session — coins move from patient escrow to advisor earnings.',
+      'Patient may leave an optional star review when the session ends.',
     ],
     tip: 'Use 3 browser sessions (normal + 2 incognito) so each role stays logged in.',
   },

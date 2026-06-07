@@ -7,6 +7,7 @@ import {
   DashboardSection,
   LoadingSpinner,
 } from '../../components/layout/dashboard-ui'
+import { StickyActionBar } from '../../components/layout/StickyActionBar'
 import { btnOutline, btnPrimary } from '../../components/layout/buttonStyles'
 import { MaterialIcon } from '../../components/MaterialIcon'
 import { AdvisorApplicationDetails } from '../../components/admin/AdvisorApplicationDetails'
@@ -15,21 +16,18 @@ import { useAuth } from '../../context/AuthContext'
 import { useSocket } from '../../context/SocketContext'
 import { getApiErrorMessage } from '../../utils/apiError'
 import { credentialPreview } from '../../utils/advisorApplicationBio'
+import {
+  getPendingPartnerInterview,
+  patchPendingPartnerInterview,
+  setPendingPartnerInterview,
+  type PendingPartnerInterview,
+} from '../../utils/partnerInterviewStorage'
 import { getProfessionLabel } from '@shared/advisor/credentialOptions'
 import type { ApplicantDto } from '@shared/contracts/verification.api'
 import type {
   VerificationInterviewAcceptedPayload,
   VerificationInterviewDeclinedPayload,
 } from '@shared/contracts/socket.events'
-
-interface PendingInterview {
-  interviewId: string
-  applicantId: string
-  applicantUsername: string
-  applicantOnline: boolean
-  accepted: boolean
-  declined: boolean
-}
 
 function AvailabilityBadge({ isOnline }: { isOnline?: boolean }) {
   if (!isOnline) {
@@ -59,7 +57,14 @@ export function PartnerApplicantDetailPage() {
   const [loadError, setLoadError] = useState('')
   const [actionError, setActionError] = useState('')
   const [starting, setStarting] = useState(false)
-  const [pendingInterview, setPendingInterview] = useState<PendingInterview | null>(null)
+  const [pendingInterview, setPendingInterviewState] = useState<PendingPartnerInterview | null>(() =>
+    getPendingPartnerInterview(),
+  )
+
+  const setPendingInterview = (data: PendingPartnerInterview | null) => {
+    setPendingPartnerInterview(data)
+    setPendingInterviewState(data)
+  }
 
   const loadApplicant = () => {
     if (!id) return
@@ -82,16 +87,16 @@ export function PartnerApplicantDetailPage() {
   useEffect(() => {
     if (!socket || user?.role !== 'partner_doctor') return
 
-    const onAccepted = (payload: VerificationInterviewAcceptedPayload) => {
-      setPendingInterview((prev) =>
-        prev?.interviewId === payload.interviewId ? { ...prev, accepted: true } : prev,
-      )
+    const onAccepted = (_payload: VerificationInterviewAcceptedPayload) => {
+      const next = patchPendingPartnerInterview({ accepted: true })
+      if (next) setPendingInterviewState(next)
     }
 
     const onDeclined = (payload: VerificationInterviewDeclinedPayload) => {
-      setPendingInterview((prev) =>
-        prev?.interviewId === payload.interviewId ? { ...prev, declined: true } : prev,
-      )
+      const current = getPendingPartnerInterview()
+      if (current?.interviewId !== payload.interviewId) return
+      const next = patchPendingPartnerInterview({ declined: true })
+      if (next) setPendingInterviewState(next)
     }
 
     socket.on('verification_interview_accepted', onAccepted)
@@ -108,14 +113,15 @@ export function PartnerApplicantDetailPage() {
     setStarting(true)
     try {
       const data = await verificationService.startInterview({ applicantId: applicant.id })
-      setPendingInterview({
+      const pending: PendingPartnerInterview = {
         interviewId: data.interviewId,
         applicantId: applicant.id,
         applicantUsername: data.applicantUsername,
         applicantOnline: data.applicantOnline,
         accepted: false,
         declined: false,
-      })
+      }
+      setPendingInterview(pending)
     } catch (err) {
       setActionError(getApiErrorMessage(err, 'Could not start interview. Please try again.'))
     } finally {
@@ -124,7 +130,7 @@ export function PartnerApplicantDetailPage() {
   }
 
   const handleEnterRoom = () => {
-    if (!pendingInterview) return
+    if (!pendingInterview?.accepted) return
     navigate(`/verification/${pendingInterview.interviewId}`)
   }
 
@@ -156,10 +162,11 @@ export function PartnerApplicantDetailPage() {
   const professionLabel = applicant.credentials?.professionType
     ? getProfessionLabel(applicant.credentials.professionType)
     : undefined
+  const interviewActive = Boolean(pendingInterview && !pendingInterview.declined)
 
   return (
     <AppShell activeNav="partner" showSearch={false}>
-      <main className={`${appShellMainClass} flex flex-col gap-stack-lg pb-28 md:pb-stack-lg`}>
+      <main className={`${appShellMainClass} flex flex-col gap-stack-lg pb-32 md:pb-stack-lg`}>
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-stack-md">
           <div className="flex flex-col gap-stack-sm min-w-0">
             <Link
@@ -191,9 +198,7 @@ export function PartnerApplicantDetailPage() {
                 day: 'numeric',
               })}
             </p>
-            <p className="text-sm font-label-md text-on-surface">
-              {applicant.coinRatePerSession} coins / session
-            </p>
+            <p className="text-sm font-label-md text-on-surface">{applicant.coinRatePerSession} coins / session</p>
           </div>
         </div>
 
@@ -290,15 +295,15 @@ export function PartnerApplicantDetailPage() {
               </div>
             </div>
 
-            <DashboardAlert variant="info" icon="tips_and_updates">
-              Review credentials below, then start the verification interview. The applicant must be{' '}
-              <strong>open for interview</strong> on Advisor Hub before you can invite them.
+            <DashboardAlert variant="info" icon="checklist">
+              <strong>Before you start:</strong> confirm license details, years of experience, languages, and focus
+              areas match what the applicant submitted.
             </DashboardAlert>
 
-            <div className="hidden lg:flex flex-col gap-2">
+            <div className="hidden md:flex flex-col gap-2">
               <button
                 type="button"
-                disabled={starting || !applicant.isOnline || Boolean(pendingInterview && !pendingInterview.declined)}
+                disabled={starting || !applicant.isOnline || interviewActive}
                 onClick={handleStartInterview}
                 className={`${btnPrimary} w-full py-3 flex items-center justify-center gap-2 disabled:opacity-40`}
               >
@@ -316,23 +321,21 @@ export function PartnerApplicantDetailPage() {
         </div>
       </main>
 
-      <div className="md:hidden fixed bottom-0 inset-x-0 z-20 border-t border-outline-variant/50 bg-surface/95 backdrop-blur-md p-stack-md pb-[max(1rem,env(safe-area-inset-bottom))]">
-        <div className="max-w-4xl mx-auto flex flex-col gap-2">
-          {!applicant.isOnline && (
-            <p className="text-xs text-center text-on-surface-variant">Applicant must open for interview on Advisor Hub.</p>
-          )}
-          {actionError && <p className="text-error text-xs text-center">{actionError}</p>}
-          <button
-            type="button"
-            disabled={starting || !applicant.isOnline || Boolean(pendingInterview && !pendingInterview.declined)}
-            onClick={handleStartInterview}
-            className={`${btnPrimary} w-full py-3.5 flex items-center justify-center gap-2 disabled:opacity-40`}
-          >
-            <MaterialIcon name="videocam" />
-            {starting ? 'Starting…' : 'Start verification interview'}
-          </button>
-        </div>
-      </div>
+      <StickyActionBar>
+        {!applicant.isOnline && (
+          <p className="text-xs text-center text-on-surface-variant">Applicant must open for interview on Advisor Hub.</p>
+        )}
+        {actionError && <p className="text-error text-xs text-center">{actionError}</p>}
+        <button
+          type="button"
+          disabled={starting || !applicant.isOnline || interviewActive}
+          onClick={handleStartInterview}
+          className={`${btnPrimary} w-full py-3.5 flex items-center justify-center gap-2 disabled:opacity-40`}
+        >
+          <MaterialIcon name="videocam" />
+          {starting ? 'Starting…' : 'Start verification interview'}
+        </button>
+      </StickyActionBar>
     </AppShell>
   )
 }

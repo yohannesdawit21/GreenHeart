@@ -22,7 +22,13 @@ export function ProtectedRoute({ children, roles, redirectTo = '/auth' }: Protec
   }
 
   if (!user) {
-    return <Navigate to={redirectTo} state={{ from: location.pathname }} replace />;
+    return (
+      <Navigate
+        to={redirectTo}
+        state={{ from: `${location.pathname}${location.search}` }}
+        replace
+      />
+    );
   }
 
   if (roles && !roles.includes(user.role)) {

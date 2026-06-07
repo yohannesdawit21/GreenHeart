@@ -89,7 +89,9 @@ export function VerificationCompletionOverlay({
           </div>
         )}
 
-        <p className="text-xs text-on-surface-variant mb-stack-md">Ending call for both participants…</p>
+        <p className="text-xs text-on-surface-variant mb-stack-md">
+          You can continue now — we&apos;ll redirect automatically in a few seconds.
+        </p>
 
         <button type="button" onClick={onContinue} className={`${btnPrimary} w-full sm:w-auto px-8 py-3`}>
           Continue

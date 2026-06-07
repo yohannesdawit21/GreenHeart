@@ -15,6 +15,12 @@ import { verificationService } from '../api/verification.service'
 import { useAuth } from '../context/AuthContext'
 import { useSocket } from '../context/SocketContext'
 import { getApiErrorMessage } from '../utils/apiError'
+import {
+  getPendingPartnerInterview,
+  patchPendingPartnerInterview,
+  setPendingPartnerInterview,
+  type PendingPartnerInterview,
+} from '../utils/partnerInterviewStorage'
 import type { ApplicantDto } from '@shared/contracts/verification.api'
 import type {
   VerificationInterviewAcceptedPayload,
@@ -23,22 +29,15 @@ import type {
 import { credentialPreview } from '../utils/advisorApplicationBio'
 import { getProfessionLabel } from '@shared/advisor/credentialOptions'
 
-interface PendingInterview {
-  interviewId: string
-  applicantId: string
-  applicantUsername: string
-  applicantOnline: boolean
-  accepted: boolean
-  declined: boolean
-}
-
 export function PartnerDashboardPage() {
   const { user } = useAuth()
   const { socket } = useSocket()
   const [applicants, setApplicants] = useState<ApplicantDto[]>([])
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState('')
-  const [pendingInterview, setPendingInterview] = useState<PendingInterview | null>(null)
+  const [pendingInterview, setPendingInterviewState] = useState<PendingPartnerInterview | null>(() =>
+    getPendingPartnerInterview(),
+  )
   const navigate = useNavigate()
 
   const loadApplicants = () => {
@@ -59,15 +58,17 @@ export function PartnerDashboardPage() {
     if (!socket || user?.role !== 'partner_doctor') return
 
     const onAccepted = (payload: VerificationInterviewAcceptedPayload) => {
-      setPendingInterview((prev) =>
-        prev?.interviewId === payload.interviewId ? { ...prev, accepted: true } : prev,
-      )
+      const current = getPendingPartnerInterview()
+      if (current?.interviewId !== payload.interviewId) return
+      const next = patchPendingPartnerInterview({ accepted: true })
+      if (next) setPendingInterviewState(next)
     }
 
     const onDeclined = (payload: VerificationInterviewDeclinedPayload) => {
-      setPendingInterview((prev) =>
-        prev?.interviewId === payload.interviewId ? { ...prev, declined: true } : prev,
-      )
+      const current = getPendingPartnerInterview()
+      if (current?.interviewId !== payload.interviewId) return
+      const next = patchPendingPartnerInterview({ declined: true })
+      if (next) setPendingInterviewState(next)
     }
 
     socket.on('verification_interview_accepted', onAccepted)
@@ -79,12 +80,13 @@ export function PartnerDashboardPage() {
   }, [socket, user?.role])
 
   const handleEnterRoom = () => {
-    if (!pendingInterview) return
+    if (!pendingInterview?.accepted) return
     navigate(`/verification/${pendingInterview.interviewId}`)
   }
 
   const handleDismissPending = () => {
-    setPendingInterview(null)
+    setPendingPartnerInterview(null)
+    setPendingInterviewState(null)
     loadApplicants()
   }
 
@@ -132,36 +134,26 @@ export function PartnerDashboardPage() {
                 ? 'cancel'
                 : pendingInterview.accepted
                   ? 'check_circle'
-                  : pendingInterview.applicantOnline
-                    ? 'person'
-                    : 'hourglass_top'
+                  : 'hourglass_top'
             }
             title={
               pendingInterview.declined
                 ? `${pendingInterview.applicantUsername} declined`
                 : pendingInterview.accepted
                   ? `${pendingInterview.applicantUsername} accepted`
-                  : `Interview started — ${pendingInterview.applicantUsername}`
+                  : `Waiting for ${pendingInterview.applicantUsername}`
             }
           >
             <div className="flex flex-col gap-stack-md mt-2">
               {pendingInterview.declined ? (
                 <p>The applicant declined this verification request. You can start a new interview when they are ready.</p>
               ) : pendingInterview.accepted ? (
-                <p>The doctor accepted and is joining the verification room. Enter the room to begin the interview.</p>
-              ) : pendingInterview.applicantOnline ? (
-                <p>
-                  <strong>{pendingInterview.applicantUsername} is open for interview</strong> — invitation sent. Waiting
-                  for them to accept.
-                </p>
+                <p>The doctor accepted — enter the verification room to begin the credential interview.</p>
               ) : (
-                <p>
-                  <strong>{pendingInterview.applicantUsername} was not open for interview</strong> when the request was
-                  sent.
-                </p>
+                <p>Invitation sent. Waiting for the applicant to accept on Advisor Hub.</p>
               )}
               <div className="flex flex-wrap gap-2">
-                {!pendingInterview.declined && (
+                {!pendingInterview.declined && pendingInterview.accepted && (
                   <button type="button" onClick={handleEnterRoom} className={`${btnPrimary} text-sm px-4 py-2.5`}>
                     <MaterialIcon name="videocam" className="text-sm inline mr-1" />
                     Enter verification room
@@ -185,6 +177,9 @@ export function PartnerDashboardPage() {
         {loadError && (
           <DashboardAlert variant="error" icon="error">
             {loadError}
+            <button type="button" onClick={loadApplicants} className={`${btnOutline} mt-2 text-sm px-4 py-2`}>
+              Try again
+            </button>
           </DashboardAlert>
         )}
 
@@ -202,7 +197,7 @@ export function PartnerDashboardPage() {
             <EmptyState
               icon="person_add"
               title="Queue is empty"
-              description="When doctors apply at /auth/advisor-apply, they will appear here for review."
+              description="New advisor applications will appear here when doctors complete the apply flow."
             />
           ) : (
             <>

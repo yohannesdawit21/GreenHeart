@@ -79,7 +79,7 @@ function VerificationRoomContent({
     if (!completion) return
     const timer = setTimeout(() => {
       navigate(backPath, { replace: true })
-    }, 4500)
+    }, 12000)
     return () => clearTimeout(timer)
   }, [completion, backPath, navigate])
 

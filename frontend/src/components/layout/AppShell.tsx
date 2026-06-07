@@ -159,7 +159,7 @@ export function AppShell({
             </span>
           )}
           {isClient && (
-            <div className="hidden sm:flex items-center">
+            <div className="flex items-center max-w-[42vw] sm:max-w-none">
               <WalletBalanceChip
                 balance={balance?.coinBalance ?? null}
                 escrow={balance?.escrowBalance ?? 0}
@@ -167,15 +167,6 @@ export function AppShell({
                 compact
               />
             </div>
-          )}
-          {isClient && (
-            <Link
-              to="/wallet"
-              className="sm:hidden text-on-surface-variant hover:bg-surface-container p-2 rounded-full transition-colors"
-              title="Wallet"
-            >
-              <MaterialIcon name="account_balance_wallet" />
-            </Link>
           )}
           {user ? (
             <UserMenu />

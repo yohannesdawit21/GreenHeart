@@ -57,4 +57,6 @@ export interface SessionStatusResponse {
   status: SessionStatus;
   coinAmount: number;
   durationMinutes: number;
+  advisorId?: string;
+  advisorName?: string;
 }

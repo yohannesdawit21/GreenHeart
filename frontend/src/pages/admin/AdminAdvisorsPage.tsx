@@ -13,6 +13,7 @@ import { btnDanger, btnSuccess } from '../../components/layout/buttonStyles'
 import { MaterialIcon } from '../../components/MaterialIcon'
 import { AdminSubNav } from '../../components/admin/AdminSubNav'
 import { AdminPlatformStats } from '../../components/admin/AdminPlatformStats'
+import { ConfirmDialog } from '../../components/layout/ConfirmDialog'
 import { AdvisorApplicationDetails } from '../../components/admin/AdvisorApplicationDetails'
 import { verificationService } from '../../api/verification.service'
 import { getApiErrorMessage } from '../../utils/apiError'
@@ -39,6 +40,11 @@ export function AdminAdvisorsPage() {
   const [filter, setFilter] = useState<StatusFilter>('all')
   const [professionFilter, setProfessionFilter] = useState<ProfessionFilter>('all')
   const [expandedId, setExpandedId] = useState<string | null>(null)
+  const [confirmOverride, setConfirmOverride] = useState<{
+    id: string
+    username: string
+    status: VerificationStatus
+  } | null>(null)
 
   const loadAdvisors = useCallback(async () => {
     try {
@@ -77,6 +83,7 @@ export function AdminAdvisorsPage() {
 
   const handleOverride = async (advisorId: string, status: VerificationStatus) => {
     setOverrideError('')
+    setConfirmOverride(null)
     try {
       await verificationService.overrideStatus(advisorId, { status })
       await loadAdvisors()
@@ -87,6 +94,22 @@ export function AdminAdvisorsPage() {
 
   return (
     <AppShell activeNav="admin-advisors" showSearch={false}>
+      <ConfirmDialog
+        open={Boolean(confirmOverride)}
+        title={confirmOverride?.status === 'verified' ? 'Verify this advisor?' : 'Reject this advisor?'}
+        message={
+          confirmOverride
+            ? `This will set ${confirmOverride.username} to "${confirmOverride.status.replace('_', ' ')}". This action affects Discover visibility.`
+            : ''
+        }
+        confirmLabel={confirmOverride?.status === 'verified' ? 'Verify' : 'Reject'}
+        variant={confirmOverride?.status === 'verified' ? 'primary' : 'danger'}
+        icon={confirmOverride?.status === 'verified' ? 'verified' : 'cancel'}
+        onConfirm={() => {
+          if (confirmOverride) void handleOverride(confirmOverride.id, confirmOverride.status)
+        }}
+        onCancel={() => setConfirmOverride(null)}
+      />
       <main className={`${appShellMainClass} flex flex-col gap-stack-lg`}>
         <DashboardHeader
           title="Advisor doctors"
@@ -155,7 +178,43 @@ export function AdminAdvisorsPage() {
           ) : filtered.length === 0 ? (
             <EmptyState icon="person_search" title="No advisors in this filter" />
           ) : (
-            <div className="overflow-x-auto">
+            <>
+            <div className="md:hidden divide-y divide-outline-variant/40">
+              {filtered.map((a) => (
+                <div key={a.id} className="p-stack-lg flex flex-col gap-stack-sm">
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <p className="font-bold text-on-surface">{a.username}</p>
+                      <p className="text-xs text-on-surface-variant">{a.email}</p>
+                    </div>
+                    <VerificationStatusPill status={a.verificationStatus} />
+                  </div>
+                  <p className="text-xs text-on-surface-variant line-clamp-2">
+                    {credentialPreview(a.bio, a.credentials) || '—'}
+                  </p>
+                  <p className="text-sm">{a.coinRatePerSession} coins / session</p>
+                  {a.verificationStatus === 'pending_review' && (
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setConfirmOverride({ id: a.id, username: a.username, status: 'verified' })}
+                        className={`${btnSuccess} text-xs px-3 py-2 flex-1`}
+                      >
+                        Verify
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setConfirmOverride({ id: a.id, username: a.username, status: 'rejected' })}
+                        className={`${btnDanger} text-xs px-3 py-2 flex-1`}
+                      >
+                        Reject
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+            <div className="hidden md:block overflow-x-auto">
               <table className="w-full text-left border-collapse min-w-[900px]">
                 <thead>
                   <tr className="border-b border-outline-variant/50 bg-surface-container-low/50">
@@ -231,7 +290,9 @@ export function AdminAdvisorsPage() {
                               <div className="flex justify-end gap-2">
                                 <button
                                   type="button"
-                                  onClick={() => handleOverride(a.id, 'verified')}
+                                  onClick={() =>
+                                    setConfirmOverride({ id: a.id, username: a.username, status: 'verified' })
+                                  }
                                   className={`${btnSuccess} text-xs px-3 py-2 inline-flex items-center gap-1`}
                                 >
                                   <MaterialIcon name="verified" className="text-sm" />
@@ -239,7 +300,9 @@ export function AdminAdvisorsPage() {
                                 </button>
                                 <button
                                   type="button"
-                                  onClick={() => handleOverride(a.id, 'rejected')}
+                                  onClick={() =>
+                                    setConfirmOverride({ id: a.id, username: a.username, status: 'rejected' })
+                                  }
                                   className={`${btnDanger} text-xs px-3 py-2 inline-flex items-center gap-1`}
                                 >
                                   <MaterialIcon name="cancel" className="text-sm" />
@@ -308,6 +371,7 @@ export function AdminAdvisorsPage() {
                 </tbody>
               </table>
             </div>
+            </>
           )}
         </DashboardSection>
       </main>

@@ -48,8 +48,11 @@ export function NotFoundRedirect() {
 
 /** After login, return to the page the user originally requested when allowed */
 export function getPostAuthPath(userRole: Parameters<typeof getRoleHome>[0], from?: string): string {
-  if (from && canAccessPath(from, userRole)) {
-    return from
+  if (from) {
+    const pathname = from.split('?')[0] ?? from
+    if (canAccessPath(pathname, userRole)) {
+      return from
+    }
   }
   return getRoleHome(userRole)
 }

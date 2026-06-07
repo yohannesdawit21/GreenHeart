@@ -30,6 +30,25 @@ export function ConsultationRoomPage() {
   const [endError, setEndError] = useState('')
   const [showReview, setShowReview] = useState(false)
   const [sessionEnded, setSessionEnded] = useState(false)
+  const [advisorName, setAdvisorName] = useState<string>()
+  const [durationMinutes, setDurationMinutes] = useState(30)
+  const [elapsed, setElapsed] = useState(0)
+
+  useEffect(() => {
+    if (!sessionId) return
+    sessionService
+      .getSessionStatus(sessionId)
+      .then((status) => {
+        if (status.advisorName) setAdvisorName(status.advisorName)
+        setDurationMinutes(status.durationMinutes)
+      })
+      .catch(() => undefined)
+  }, [sessionId])
+
+  useEffect(() => {
+    const timer = setInterval(() => setElapsed((e) => e + 1), 1000)
+    return () => clearInterval(timer)
+  }, [])
 
   const fetchTokenWithRetry = useCallback(async (id: string) => {
     for (let attempt = 0; attempt < TOKEN_POLL_MAX_ATTEMPTS; attempt++) {
@@ -122,7 +141,14 @@ export function ConsultationRoomPage() {
   }
 
   if (sessionEnded && showReview && sessionId) {
-    return <ReviewModal sessionId={sessionId} onSubmitted={handleReviewDone} onSkip={handleReviewDone} />
+    return (
+      <ReviewModal
+        sessionId={sessionId}
+        advisorName={advisorName}
+        onSubmitted={handleReviewDone}
+        onSkip={handleReviewDone}
+      />
+    )
   }
 
   return (
@@ -140,9 +166,14 @@ export function ConsultationRoomPage() {
           <div className="flex justify-between items-center gap-stack-sm">
             <div className="flex items-center gap-stack-sm min-w-0">
               <MaterialIcon name="videocam" className="text-tertiary-fixed shrink-0" />
-              <span className="font-label-md text-label-md text-on-primary truncate">
-                Consultation Room: {roomName}
-              </span>
+              <div className="min-w-0">
+                <span className="font-label-md text-label-md text-on-primary truncate block">
+                  {advisorName ? `Session with ${advisorName}` : `Consultation: ${roomName}`}
+                </span>
+                <span className="text-xs text-on-primary/70">
+                  {Math.floor(elapsed / 60)}:{(elapsed % 60).toString().padStart(2, '0')} · {durationMinutes} min booked
+                </span>
+              </div>
             </div>
 
             <button

@@ -202,10 +202,13 @@ export async function getSessionStatus(userId: string, sessionId: string) {
   if (session.client_id !== userId && session.advisor_id !== userId) {
     throw new AppError(403, 'FORBIDDEN', 'Not a participant in this session');
   }
+  const advisor = await findUserById(session.advisor_id);
   return {
     sessionId: session.session_id,
     status: session.status,
     coinAmount: session.coin_amount,
     durationMinutes: session.duration_minutes,
+    advisorId: session.advisor_id,
+    advisorName: advisor?.username ?? 'Advisor',
   };
 }

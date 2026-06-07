@@ -350,7 +350,7 @@ export function AdvisorApplyPage() {
           credentials,
         },
       })
-      navigate('/advisor')
+      navigate('/advisor', { state: { applicationSubmitted: true } })
     } catch (err: unknown) {
       setError(getApiErrorMessage(err, 'Application submission failed'))
     } finally {

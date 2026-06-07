@@ -23,7 +23,7 @@ export function getRoleHome(role: UserRole | undefined): string {
   if (!role) return '/discover'
   switch (role) {
     case 'admin':
-      return '/workflow'
+      return '/admin/partners'
     case 'partner_doctor':
       return '/partner'
     case 'advisor':

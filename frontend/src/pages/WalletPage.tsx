@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { AppShell } from '../components/layout/AppShell'
 import {
   appShellMainClass,
@@ -117,7 +117,12 @@ export function WalletPage() {
 
         {message && (
           <DashboardAlert variant="success" icon="check_circle">
-            {message}
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <span>{message}</span>
+              <Link to="/discover" className={`${btnPrimary} text-sm px-4 py-2 text-center`}>
+                Find an advisor
+              </Link>
+            </div>
           </DashboardAlert>
         )}
         {loadError && (
@@ -176,7 +181,29 @@ export function WalletPage() {
             ) : transactions.length === 0 ? (
               <EmptyState icon="receipt_long" title="No transactions yet" description="Purchase coins to get started." />
             ) : (
-              <div className="overflow-x-auto">
+              <>
+              <div className="md:hidden divide-y divide-outline-variant/40">
+                {transactions.map((tx) => (
+                  <div key={tx.id} className="py-stack-md flex items-center justify-between gap-3">
+                    <div>
+                      <p className="text-sm capitalize">{tx.type.replace(/_/g, ' ')}</p>
+                      <p className="text-xs text-on-surface-variant">
+                        {new Date(tx.timestamp).toLocaleString(undefined, {
+                          dateStyle: 'medium',
+                          timeStyle: 'short',
+                        })}
+                      </p>
+                    </div>
+                    <span
+                      className={`font-label-md ${tx.amountCoins >= 0 ? 'text-secondary' : 'text-error'}`}
+                    >
+                      {tx.amountCoins > 0 ? '+' : ''}
+                      {tx.amountCoins}
+                    </span>
+                  </div>
+                ))}
+              </div>
+              <div className="hidden md:block overflow-x-auto">
                 <table className="w-full text-left border-collapse">
                   <thead>
                     <tr className="border-b border-outline-variant/50">
@@ -203,6 +230,7 @@ export function WalletPage() {
                   </tbody>
                 </table>
               </div>
+              </>
             )}
           </DashboardSection>
         )}

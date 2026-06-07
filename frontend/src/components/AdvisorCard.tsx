@@ -16,6 +16,7 @@ interface AdvisorCardProps {
   onViewProfile?: () => void
   showMatchScore?: boolean
   isConnecting?: boolean
+  connectError?: string
 }
 
 export function AdvisorCard({
@@ -24,6 +25,7 @@ export function AdvisorCard({
   onViewProfile,
   showMatchScore,
   isConnecting = false,
+  connectError,
 }: AdvisorCardProps) {
   const parsed = parseAdvisorApplicationBio(advisor.bio, advisor.credentials)
   const name = advisor.username
@@ -190,6 +192,9 @@ export function AdvisorCard({
             </button>
           ) : null}
         </div>
+        {connectError && (
+          <p className="text-error text-xs sm:text-sm mt-1 w-full text-right sm:text-left">{connectError}</p>
+        )}
       </div>
     </article>
   )

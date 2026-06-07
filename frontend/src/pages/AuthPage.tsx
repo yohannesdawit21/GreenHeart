@@ -234,8 +234,8 @@ export function AuthPage() {
               <div>
                 <div className="flex justify-between items-center mb-unit">
                   <label className="block font-label-md text-label-md text-on-surface-variant">Password</label>
-                  <span className="font-label-md text-label-md text-outline" title="Password reset coming soon">
-                    Forgot?
+                  <span className="font-label-md text-label-md text-outline text-xs">
+                    Demo only — contact admin to reset
                   </span>
                 </div>
                 <PasswordInput
