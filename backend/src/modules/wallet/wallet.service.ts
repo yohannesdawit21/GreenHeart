@@ -15,8 +15,8 @@ export async function getBalance(userId: string) {
 }
 
 export async function getTransactions(userId: string) {
-  const rows = await walletRepo.findTransactionsByClientId(userId);
-  return rows.map(toTransactionDto);
+  const rows = await walletRepo.findTransactionsForUser(userId);
+  return rows.map((row) => toTransactionDto(row, userId));
 }
 
 export async function initiatePurchase(userId: string, packageId: CoinPackageId) {
@@ -176,6 +176,73 @@ export async function processPaymentWebhook(input: {
 
   const updated = await walletRepo.findTransactionByGatewayReference(input.gatewayReference);
   return { alreadyProcessed: false, transaction: toTransactionDto(updated!) };
+}
+
+/** Advisor demo payout — debit withdrawable_balance and record ledger entry */
+export async function withdrawEarnings(advisorId: string, amountCoins: number) {
+  if (!Number.isInteger(amountCoins) || amountCoins <= 0) {
+    throw new AppError(400, 'VALIDATION_ERROR', 'Withdrawal amount must be a positive whole number of coins');
+  }
+
+  const db = await getPool().connect();
+  try {
+    await db.query('BEGIN');
+    const update = await db.query(
+      `UPDATE wallets SET withdrawable_balance = withdrawable_balance - $1
+       WHERE user_id = $2 AND withdrawable_balance >= $1
+       RETURNING user_id, coin_balance, escrow_balance, withdrawable_balance`,
+      [amountCoins, advisorId],
+    );
+    if (update.rowCount === 0) {
+      await db.query('ROLLBACK');
+      throw new AppError(402, 'INSUFFICIENT_FUNDS', 'Insufficient withdrawable balance');
+    }
+
+    const payoutRef = `payout_${randomUUID()}`;
+    const { rows } = await db.query<{ id: string }>(
+      `INSERT INTO transactions (client_id, type, amount_coins, status, gateway_reference)
+       VALUES ($1, 'withdrawal', $2, 'completed', $3)
+       RETURNING id`,
+      [advisorId, amountCoins, payoutRef],
+    );
+
+    await db.query('COMMIT');
+
+    const walletRow = update.rows[0] as {
+      coin_balance: number;
+      escrow_balance: number;
+      withdrawable_balance: number;
+    };
+
+    return {
+      transaction: toTransactionDto(
+        {
+          id: rows[0]!.id,
+          client_id: advisorId,
+          advisor_id: null,
+          type: 'withdrawal',
+          amount_coins: amountCoins,
+          fiat_amount: null,
+          currency: null,
+          status: 'completed',
+          gateway_reference: payoutRef,
+          created_at: new Date(),
+        },
+        advisorId,
+      ),
+      wallet: toWalletBalance({
+        user_id: advisorId,
+        coin_balance: walletRow.coin_balance,
+        escrow_balance: walletRow.escrow_balance,
+        withdrawable_balance: walletRow.withdrawable_balance,
+      }),
+    };
+  } catch (e) {
+    await db.query('ROLLBACK');
+    throw e;
+  } finally {
+    db.release();
+  }
 }
 
 /** Dev sandbox — client completes mock checkout from frontend */

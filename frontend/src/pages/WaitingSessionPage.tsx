@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { MaterialIcon } from '../components/MaterialIcon';
 import { btnPrimary, btnTextDanger } from '../components/layout/buttonStyles';
+import { DashboardAlert } from '../components/layout/dashboard-ui';
 import { sessionService } from '../api/session.service';
 import { useSocket } from '../context/SocketContext';
 import type { SessionReadyPayload } from '@shared/contracts/socket.events';
@@ -12,12 +13,18 @@ export function WaitingSessionPage() {
   const sessionId = searchParams.get('sessionId');
   const { socket } = useSocket();
   const [error, setError] = useState('');
+  const [coinAmount, setCoinAmount] = useState<number | null>(null);
 
   useEffect(() => {
     if (!sessionId) {
       navigate('/discover');
       return;
     }
+
+    sessionService
+      .getSessionStatus(sessionId)
+      .then((status) => setCoinAmount(status.coinAmount))
+      .catch(() => setCoinAmount(null));
 
     const goToRoom = () => navigate(`/consultation?sessionId=${sessionId}`);
 
@@ -30,6 +37,7 @@ export function WaitingSessionPage() {
     const poll = setInterval(async () => {
       try {
         const status = await sessionService.getSessionStatus(sessionId);
+        setCoinAmount(status.coinAmount);
         if (status.status === 'active') goToRoom();
         if (status.status === 'declined' || status.status === 'cancelled') {
           setError('The advisor declined or the session was cancelled. Your coins were refunded.');
@@ -75,19 +83,29 @@ export function WaitingSessionPage() {
           <>
             <div className="animate-spin rounded-full h-14 w-14 border-b-2 border-primary mx-auto mb-stack-md" />
             <h1 className="font-headline-md text-headline-md text-on-background mb-stack-sm">Waiting for Advisor</h1>
-            <p className="font-body-md text-body-md text-on-surface-variant mb-stack-lg">
+            <p className="font-body-md text-body-md text-on-surface-variant mb-stack-md">
               Connecting you with your advisor…
             </p>
-            <p className="font-label-md text-label-md text-on-surface-variant mb-stack-lg">
+            {coinAmount != null && (
+              <DashboardAlert variant="info" icon="lock" title="Coins in escrow">
+                {coinAmount} coins are held securely until the session starts or is cancelled.
+              </DashboardAlert>
+            )}
+            <p className="font-label-md text-label-md text-on-surface-variant mt-stack-md mb-stack-lg">
               Session: <span className="font-mono text-xs">{sessionId}</span>
             </p>
-            <button
-              type="button"
-              onClick={handleCancel}
-              className={btnTextDanger}
-            >
-              Cancel request
-            </button>
+            <div className="flex flex-col gap-2 items-center">
+              <button
+                type="button"
+                onClick={handleCancel}
+                className={btnTextDanger}
+              >
+                Cancel request
+              </button>
+              <Link to="/wallet" className="text-sm text-primary hover:underline">
+                View wallet balance
+              </Link>
+            </div>
           </>
         )}
       </div>

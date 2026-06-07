@@ -24,6 +24,12 @@ export async function completeMockPurchase(req: Request, res: Response) {
   res.json(result);
 }
 
+export async function withdrawEarnings(req: Request, res: Response) {
+  const { amountCoins } = req.body as { amountCoins: number };
+  const result = await walletService.withdrawEarnings(req.auth!.userId, amountCoins);
+  res.json(result);
+}
+
 export async function lockEscrow(req: Request, res: Response) {
   const { clientId, amountCoins } = req.body;
   const success = await walletService.lockEscrow(clientId, amountCoins, req.body.sessionId);

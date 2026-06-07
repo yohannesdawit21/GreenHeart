@@ -9,6 +9,9 @@ import { userService } from '../api/user.service'
 import { searchService } from '../api/search.service'
 import { sessionService } from '../api/session.service'
 import { useAuth } from '../context/AuthContext'
+import { useWalletBalance } from '../hooks/useWalletBalance'
+import { InsufficientFundsAlert } from '../components/InsufficientFundsAlert'
+import { WalletBalanceChip } from '../components/WalletBalanceChip'
 import { getApiErrorCode, getApiErrorMessage } from '../utils/apiError'
 import {
   DISCOVER_ALL_FILTER,
@@ -65,8 +68,11 @@ export function DiscoveryPage({ aiPulse = false }: DiscoveryPageProps) {
   const [fetchError, setFetchError] = useState('')
   const [searchError, setSearchError] = useState('')
   const [connectError, setConnectError] = useState('')
+  const [insufficientFunds, setInsufficientFunds] = useState(false)
   const navigate = useNavigate()
   const { user } = useAuth()
+  const isClient = user?.role === 'client'
+  const { balance, loading: walletLoading, refresh: refreshWallet } = useWalletBalance(isClient)
 
   const loadAdvisors = useCallback(async () => {
     setLoading(true)
@@ -85,6 +91,12 @@ export function DiscoveryPage({ aiPulse = false }: DiscoveryPageProps) {
   useEffect(() => {
     loadAdvisors()
   }, [loadAdvisors])
+
+  useEffect(() => {
+    if (isClient) {
+      void refreshWallet()
+    }
+  }, [isClient, refreshWallet])
 
   const runSemanticSearch = useCallback(async (query: string) => {
     const trimmed = query.trim()
@@ -163,6 +175,7 @@ export function DiscoveryPage({ aiPulse = false }: DiscoveryPageProps) {
       return
     }
     setConnectError('')
+    setInsufficientFunds(false)
     try {
       const data = await sessionService.initiateSession({ advisorId })
       navigate(`/waiting?sessionId=${data.sessionId}`)
@@ -170,6 +183,7 @@ export function DiscoveryPage({ aiPulse = false }: DiscoveryPageProps) {
       const code = getApiErrorCode(err)
       const message = getApiErrorMessage(err, 'Could not start session. Please try again.')
       if (code === 'INSUFFICIENT_FUNDS') {
+        setInsufficientFunds(true)
         setConnectError('Insufficient coins — add funds in your wallet first.')
       } else if (code === 'ADVISOR_OFFLINE') {
         setConnectError('This advisor is offline. Try another advisor or check back later.')
@@ -310,11 +324,20 @@ export function DiscoveryPage({ aiPulse = false }: DiscoveryPageProps) {
           }
           badge={
             !loading ? (
-              <span className="inline-flex items-center gap-1.5 text-xs font-label-md text-secondary bg-secondary-container/30 px-3 py-1 rounded-full">
-                <MaterialIcon name="groups" className="text-[14px]" />
-                {displayedAdvisors.length} result{displayedAdvisors.length === 1 ? '' : 's'}
-                {onlineCount > 0 && ` · ${onlineCount} online`}
-              </span>
+              <div className="flex flex-wrap items-center gap-2">
+                {isClient && (
+                  <WalletBalanceChip
+                    balance={balance?.coinBalance ?? null}
+                    escrow={balance?.escrowBalance ?? 0}
+                    loading={walletLoading}
+                  />
+                )}
+                <span className="inline-flex items-center gap-1.5 text-xs font-label-md text-secondary bg-secondary-container/30 px-3 py-1 rounded-full">
+                  <MaterialIcon name="groups" className="text-[14px]" />
+                  {displayedAdvisors.length} result{displayedAdvisors.length === 1 ? '' : 's'}
+                  {onlineCount > 0 && ` · ${onlineCount} online`}
+                </span>
+              </div>
             ) : undefined
           }
         />
@@ -334,10 +357,14 @@ export function DiscoveryPage({ aiPulse = false }: DiscoveryPageProps) {
           </DashboardAlert>
         )}
 
-        {connectError && (
-          <DashboardAlert variant="error" icon="error">
-            {connectError}
-          </DashboardAlert>
+        {insufficientFunds ? (
+          <InsufficientFundsAlert />
+        ) : (
+          connectError && (
+            <DashboardAlert variant="error" icon="error">
+              {connectError}
+            </DashboardAlert>
+          )
         )}
 
         <section className="flex flex-col gap-stack-sm">

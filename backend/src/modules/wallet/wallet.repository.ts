@@ -34,14 +34,19 @@ export async function findTransactionsByClientId(
   clientId: string,
   limit = 50,
 ): Promise<TransactionRow[]> {
+  return findTransactionsForUser(clientId, limit);
+}
+
+/** Ledger rows where the user is payer (client_id) or payee (advisor_id). */
+export async function findTransactionsForUser(userId: string, limit = 50): Promise<TransactionRow[]> {
   const { rows } = await getPool().query<TransactionRow>(
     `SELECT id, client_id, advisor_id, type, amount_coins, fiat_amount, currency,
             status, gateway_reference, created_at
      FROM transactions
-     WHERE client_id = $1
+     WHERE client_id = $1 OR advisor_id = $1
      ORDER BY created_at DESC
      LIMIT $2`,
-    [clientId, limit],
+    [userId, limit],
   );
   return rows;
 }

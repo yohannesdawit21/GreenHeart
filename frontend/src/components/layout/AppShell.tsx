@@ -5,6 +5,8 @@ import { UserMenu } from '../UserMenu'
 import { MaterialIcon } from '../MaterialIcon'
 import { btnIcon } from './buttonStyles'
 import { useAuth } from '../../context/AuthContext'
+import { useWalletBalance } from '../../hooks/useWalletBalance'
+import { WalletBalanceChip } from '../WalletBalanceChip'
 import { useSocket } from '../../context/SocketContext'
 import { getNavLinksForRole, getRoleHome, type NavItem } from '../../utils/roleAccess'
 
@@ -45,6 +47,7 @@ export function AppShell({
 
   const role = user?.role
   const isClient = role === 'client'
+  const { balance, loading: walletLoading } = useWalletBalance(isClient)
   const navLinks = getNavLinksForRole(role)
   const showLiveIndicator = role === 'advisor' || role === 'partner_doctor'
   const showSearchBar = showSearch && (isClient || !user)
@@ -138,9 +141,19 @@ export function AppShell({
             </span>
           )}
           {isClient && (
+            <div className="hidden sm:flex items-center">
+              <WalletBalanceChip
+                balance={balance?.coinBalance ?? null}
+                escrow={balance?.escrowBalance ?? 0}
+                loading={walletLoading}
+                compact
+              />
+            </div>
+          )}
+          {isClient && (
             <Link
               to="/wallet"
-              className="md:hidden text-on-surface-variant hover:bg-surface-container p-2 rounded-full transition-colors"
+              className="sm:hidden text-on-surface-variant hover:bg-surface-container p-2 rounded-full transition-colors"
               title="Wallet"
             >
               <MaterialIcon name="account_balance_wallet" />

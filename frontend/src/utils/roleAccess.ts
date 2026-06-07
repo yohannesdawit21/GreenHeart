@@ -74,6 +74,7 @@ const ROUTE_ACCESS: Record<string, UserRole[] | 'public' | 'guest'> = {
   '/auth': 'public',
   '/auth/advisor-apply': 'public',
   '/workflow': 'public',
+  '/discovery': 'guest',
   '/discover': 'guest',
   '/discover/ai': 'guest',
   '/advisors': 'guest',

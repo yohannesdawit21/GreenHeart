@@ -6,6 +6,8 @@ import type {
   PurchaseInitiateResponse,
   CompleteMockPurchaseRequest,
   CompleteMockPurchaseResponse,
+  WithdrawRequest,
+  WithdrawResponse,
 } from '@shared/contracts/wallet.api';
 
 export const walletService = {
@@ -31,6 +33,11 @@ export const walletService = {
       '/wallet/purchase/complete-mock',
       data,
     );
+    return response.data;
+  },
+
+  withdraw: async (data: WithdrawRequest): Promise<WithdrawResponse> => {
+    const response = await apiClient.post<WithdrawResponse>('/wallet/withdraw', data);
     return response.data;
   },
 };

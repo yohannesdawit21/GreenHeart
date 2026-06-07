@@ -277,6 +277,32 @@ async function main() {
   if (afterCoins === coins - 10) ok('Client balance after session');
   else fail('Client balance after session', JSON.stringify(balAfter.body));
 
+  const advisorBal = await req('GET', '/api/wallet/balance', { cookie: advisorCookie });
+  const advisorEarned =
+    (advisorBal.body as { wallet?: { withdrawableBalance?: number } }).wallet?.withdrawableBalance ?? 0;
+  if (advisorEarned === 10) ok('Advisor earnings after session');
+  else fail('Advisor earnings after session', JSON.stringify(advisorBal.body));
+
+  const advisorTx = await req('GET', '/api/wallet/transactions', { cookie: advisorCookie });
+  const advisorTransactions =
+    (advisorTx.body as { transactions?: { type?: string; amountCoins?: number }[] }).transactions ?? [];
+  const releaseTx = advisorTransactions.find((tx) => tx.type === 'escrow_release' && tx.amountCoins === 10);
+  if (releaseTx) ok('Advisor sees escrow_release in transaction history');
+  else fail('Advisor transaction history', JSON.stringify(advisorTx.body));
+
+  const withdraw = await req('POST', '/api/wallet/withdraw', {
+    cookie: advisorCookie,
+    body: { amountCoins: 10 },
+  });
+  if (withdraw.status === 200) ok('Advisor withdraws earnings');
+  else fail('Advisor withdraws earnings', JSON.stringify(withdraw.body));
+
+  const advisorBalAfterWithdraw = await req('GET', '/api/wallet/balance', { cookie: advisorCookie });
+  const afterWithdraw =
+    (advisorBalAfterWithdraw.body as { wallet?: { withdrawableBalance?: number } }).wallet?.withdrawableBalance ?? -1;
+  if (afterWithdraw === 0) ok('Advisor balance zero after withdrawal');
+  else fail('Advisor balance after withdrawal', JSON.stringify(advisorBalAfterWithdraw.body));
+
   advisorSocket?.disconnect();
   clientSocket?.disconnect();
 

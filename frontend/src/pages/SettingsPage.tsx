@@ -1,11 +1,14 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { AppShell } from '../components/layout/AppShell';
 import { appShellMainClass, DashboardHeader, DashboardAlert, FormError } from '../components/layout/dashboard-ui';
 import { btnPrimary } from '../components/layout/buttonStyles';
 import { MaterialIcon } from '../components/MaterialIcon';
+import { WalletBalanceChip } from '../components/WalletBalanceChip';
 import { LanguageFluencyEditor, validateLanguages } from '../components/advisor/LanguageFluencyEditor';
 import { userService } from '../api/user.service';
 import { useAuth } from '../context/AuthContext';
+import { useWalletBalance } from '../hooks/useWalletBalance';
 import { getApiErrorMessage } from '../utils/apiError';
 import { buildAdvisorBio } from '../utils/advisorApplicationBio';
 import type { AdvisorCredentials } from '@shared/contracts/models.advisor';
@@ -41,6 +44,8 @@ export function SettingsPage() {
   const [error, setError] = useState('');
 
   const isAdvisor = user?.role === 'advisor';
+  const isClient = user?.role === 'client';
+  const { balance, loading: walletLoading } = useWalletBalance(isClient || isAdvisor);
   const regionGroups = getRegionsByGroup();
   const credentialOptions = getCredentialTypesForRegionProfession(
     credentials.issuingRegion,
@@ -121,6 +126,50 @@ export function SettingsPage() {
 
         {message && (
           <DashboardAlert variant="success" icon="check_circle">{message}</DashboardAlert>
+        )}
+
+        {isClient && (
+          <section className="bg-surface-container-lowest border border-outline-variant rounded-xl p-stack-lg flex flex-col sm:flex-row sm:items-center sm:justify-between gap-stack-md">
+            <div>
+              <h3 className="font-headline-md text-headline-md mb-1">Demo coin wallet</h3>
+              <p className="text-sm text-on-surface-variant">
+                Buy coins to book verified advisor sessions. Escrow holds coins during active calls.
+              </p>
+              <div className="mt-3">
+                <WalletBalanceChip
+                  balance={balance?.coinBalance ?? null}
+                  escrow={balance?.escrowBalance ?? 0}
+                  loading={walletLoading}
+                />
+              </div>
+            </div>
+            <Link to="/wallet" className={`${btnPrimary} text-sm px-5 py-2.5 inline-flex items-center gap-2 shrink-0`}>
+              <MaterialIcon name="shopping_cart" className="text-sm" />
+              Manage wallet
+            </Link>
+          </section>
+        )}
+
+        {isAdvisor && (
+          <section className="bg-surface-container-lowest border border-outline-variant rounded-xl p-stack-lg flex flex-col sm:flex-row sm:items-center sm:justify-between gap-stack-md">
+            <div>
+              <h3 className="font-headline-md text-headline-md mb-1">Session earnings</h3>
+              <p className="text-sm text-on-surface-variant">
+                Completed consultations settle to your withdrawable balance. Cash out via demo payouts on your advisor hub.
+              </p>
+              <div className="mt-3">
+                <WalletBalanceChip
+                  balance={balance?.withdrawableBalance ?? null}
+                  loading={walletLoading}
+                  to="/advisor"
+                />
+              </div>
+            </div>
+            <Link to="/advisor" className={`${btnPrimary} text-sm px-5 py-2.5 inline-flex items-center gap-2 shrink-0`}>
+              <MaterialIcon name="payments" className="text-sm" />
+              Withdraw earnings
+            </Link>
+          </section>
         )}
 
         <form onSubmit={handleSave} className="bg-surface-container-lowest border border-outline-variant rounded-xl p-stack-lg flex flex-col gap-stack-md">

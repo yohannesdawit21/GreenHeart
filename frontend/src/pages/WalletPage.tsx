@@ -26,7 +26,7 @@ export function WalletPage() {
   const [balance, setBalance] = useState<WalletBalance | null>(null)
   const [transactions, setTransactions] = useState<TransactionDto[]>([])
   const [loading, setLoading] = useState(true)
-  const [showHistory, setShowHistory] = useState(false)
+  const [showHistory, setShowHistory] = useState(true)
   const [selectedPackage, setSelectedPackage] = useState<CoinPackageId>('growth')
   const [isPurchasing, setIsPurchasing] = useState(false)
   const [message, setMessage] = useState('')

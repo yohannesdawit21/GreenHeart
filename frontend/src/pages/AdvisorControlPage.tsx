@@ -20,6 +20,7 @@ import { sessionService } from '../api/session.service'
 import { walletService } from '../api/wallet.service'
 import { verificationService } from '../api/verification.service'
 import { useAuth } from '../context/AuthContext'
+import { useWalletBalance } from '../hooks/useWalletBalance'
 import { useSocket } from '../context/SocketContext'
 import { getApiErrorCode, getApiErrorMessage } from '../utils/apiError'
 import {
@@ -29,7 +30,7 @@ import {
 } from '../utils/notifications'
 
 const INTENDED_ONLINE_KEY = 'gh_advisor_intended_online'
-import type { WalletBalance, TransactionDto } from '@shared/contracts/wallet.api'
+import type { TransactionDto } from '@shared/contracts/wallet.api'
 import type { VerificationInterviewStartedPayload } from '@shared/contracts/socket.events'
 
 export function AdvisorControlPage() {
@@ -39,9 +40,13 @@ export function AdvisorControlPage() {
   const location = useLocation()
   const [online, setOnline] = useState(false)
   const [interviewOpen, setInterviewOpen] = useState(false)
-  const [balance, setBalance] = useState<WalletBalance | null>(null)
+  const { balance, loading: walletLoading, error: walletLoadError, refresh: refreshWallet } = useWalletBalance(true)
   const [transactions, setTransactions] = useState<TransactionDto[]>([])
-  const [loading, setLoading] = useState(true)
+  const [transactionsLoading, setTransactionsLoading] = useState(true)
+  const [withdrawAmount, setWithdrawAmount] = useState('')
+  const [withdrawing, setWithdrawing] = useState(false)
+  const [withdrawMessage, setWithdrawMessage] = useState('')
+  const [withdrawError, setWithdrawError] = useState('')
   const [loadError, setLoadError] = useState('')
   const [presenceError, setPresenceError] = useState('')
   const [pendingInvitation, setPendingInvitation] = useState<VerificationInvitation | null>(null)
@@ -69,14 +74,60 @@ export function AdvisorControlPage() {
   }, [location.pathname, location.state, navigate, showInvitation])
 
   useEffect(() => {
-    Promise.all([walletService.getBalance(), walletService.getTransactions()])
-      .then(([bal, tx]) => {
-        setBalance(bal.wallet)
-        setTransactions(tx.transactions)
-      })
-      .catch((err) => setLoadError(getApiErrorMessage(err, 'Could not load wallet data.')))
-      .finally(() => setLoading(false))
+    walletService
+      .getTransactions()
+      .then((tx) => setTransactions(tx.transactions))
+      .catch((err) => setLoadError(getApiErrorMessage(err, 'Could not load earnings history.')))
+      .finally(() => setTransactionsLoading(false))
   }, [])
+
+  useEffect(() => {
+    if (walletLoadError) {
+      setLoadError((prev) => prev || walletLoadError)
+    }
+  }, [walletLoadError])
+
+  const loading = walletLoading || transactionsLoading
+  const completedSessions = transactions.filter((tx) => tx.type === 'escrow_release' && tx.amountCoins > 0).length
+  const totalEarnings = balance?.withdrawableBalance ?? 0
+
+  const refreshTransactions = () => {
+    return walletService
+      .getTransactions()
+      .then((tx) => setTransactions(tx.transactions))
+      .catch((err) => setLoadError(getApiErrorMessage(err, 'Could not load earnings history.')))
+  }
+
+  const handleWithdraw = async (amount: number) => {
+    setWithdrawing(true)
+    setWithdrawError('')
+    setWithdrawMessage('')
+    try {
+      const result = await walletService.withdraw({ amountCoins: amount })
+      setWithdrawMessage(`Demo payout of ${amount} coins processed. Reference: ${result.transaction.id.slice(0, 8)}…`)
+      setWithdrawAmount('')
+      await Promise.all([refreshWallet(), refreshTransactions()])
+    } catch (err) {
+      const code = getApiErrorCode(err)
+      if (code === 'INSUFFICIENT_FUNDS') {
+        setWithdrawError('Not enough withdrawable balance for that amount.')
+      } else {
+        setWithdrawError(getApiErrorMessage(err, 'Withdrawal failed.'))
+      }
+    } finally {
+      setWithdrawing(false)
+    }
+  }
+
+  const handleWithdrawSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    const amount = Number.parseInt(withdrawAmount, 10)
+    if (!Number.isInteger(amount) || amount <= 0) {
+      setWithdrawError('Enter a whole number of coins to withdraw.')
+      return
+    }
+    void handleWithdraw(amount)
+  }
 
   useEffect(() => {
     if (verificationStatus === 'verified' && user?.id) {
@@ -366,17 +417,17 @@ export function AdvisorControlPage() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-gutter">
           <StatCard
             icon="account_balance_wallet"
-            label="Earnings"
+            label="Total earnings"
             accent="secondary"
-            value={loading ? '…' : `${balance?.coinBalance ?? 0} coins`}
-            hint="Available balance"
+            value={loading ? '…' : `${totalEarnings} coins`}
+            hint="Settled after completed sessions"
           />
           <StatCard
-            icon="lock"
-            label="Escrow"
+            icon="check_circle"
+            label="Sessions completed"
             accent="primary"
-            value={loading ? '…' : `${balance?.escrowBalance ?? 0} coins`}
-            hint="Held for active sessions"
+            value={loading ? '…' : `${completedSessions}`}
+            hint="Paid consultations"
           />
           <StatCard
             icon="payments"
@@ -386,6 +437,65 @@ export function AdvisorControlPage() {
             hint="Per consultation"
           />
         </div>
+
+        {verificationStatus === 'verified' && (
+          <DashboardSection title="Withdraw earnings">
+            <DashboardAlert variant="info" icon="info" title="Demo payouts only">
+              Withdrawals simulate paying out settled session earnings. No real money is transferred — for demonstration only.
+            </DashboardAlert>
+
+            <div className="mt-stack-md flex flex-col sm:flex-row sm:items-end gap-stack-md">
+              <div className="grow">
+                <p className="text-sm text-on-surface-variant mb-2">
+                  Available to withdraw:{' '}
+                  <span className="font-label-md text-on-surface">{loading ? '…' : `${totalEarnings} coins`}</span>
+                </p>
+                <form onSubmit={handleWithdrawSubmit} className="flex flex-col sm:flex-row gap-2">
+                  <input
+                    type="number"
+                    min={1}
+                    max={totalEarnings || undefined}
+                    value={withdrawAmount}
+                    onChange={(e) => setWithdrawAmount(e.target.value)}
+                    placeholder="Amount in coins"
+                    className="w-full sm:max-w-xs bg-surface border border-outline-variant rounded-lg px-4 py-2.5 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                    disabled={withdrawing || totalEarnings <= 0}
+                  />
+                  <button
+                    type="submit"
+                    disabled={withdrawing || totalEarnings <= 0}
+                    className={`${btnPrimary} px-6 py-2.5 whitespace-nowrap disabled:opacity-50`}
+                  >
+                    {withdrawing ? 'Processing…' : 'Withdraw coins'}
+                  </button>
+                  <button
+                    type="button"
+                    disabled={withdrawing || totalEarnings <= 0}
+                    onClick={() => void handleWithdraw(totalEarnings)}
+                    className={`${btnGhost} px-4 py-2.5 whitespace-nowrap disabled:opacity-50`}
+                  >
+                    Withdraw all
+                  </button>
+                </form>
+              </div>
+            </div>
+
+            {withdrawMessage && (
+              <div className="mt-stack-md">
+                <DashboardAlert variant="success" icon="check_circle">
+                  {withdrawMessage}
+                </DashboardAlert>
+              </div>
+            )}
+            {withdrawError && (
+              <div className="mt-stack-md">
+                <DashboardAlert variant="error" icon="error">
+                  {withdrawError}
+                </DashboardAlert>
+              </div>
+            )}
+          </DashboardSection>
+        )}
 
         <DashboardSection
           title="Recent activity"

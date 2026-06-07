@@ -7,6 +7,7 @@ import { MaterialIcon } from '../components/MaterialIcon';
 import { userService } from '../api/user.service';
 import { sessionService } from '../api/session.service';
 import { useAuth } from '../context/AuthContext';
+import { InsufficientFundsAlert } from '../components/InsufficientFundsAlert';
 import { getApiErrorCode, getApiErrorMessage } from '../utils/apiError';
 import { parseAdvisorApplicationBio } from '../utils/advisorApplicationBio';
 import {
@@ -25,6 +26,7 @@ export function AdvisorProfilePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [connectError, setConnectError] = useState('');
+  const [insufficientFunds, setInsufficientFunds] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -41,13 +43,16 @@ export function AdvisorProfilePage() {
       return;
     }
     setConnectError('');
+    setInsufficientFunds(false);
     try {
       const data = await sessionService.initiateSession({ advisorId: advisor.id });
       navigate(`/waiting?sessionId=${data.sessionId}`);
     } catch (err: unknown) {
       const code = getApiErrorCode(err)
-      if (code === 'INSUFFICIENT_FUNDS') setConnectError('Insufficient coins — visit your wallet first.')
-      else if (code === 'ADVISOR_OFFLINE') setConnectError('Advisor is offline.')
+      if (code === 'INSUFFICIENT_FUNDS') {
+        setInsufficientFunds(true);
+        setConnectError('Insufficient coins — visit your wallet first.');
+      } else if (code === 'ADVISOR_OFFLINE') setConnectError('Advisor is offline.')
       else if (code === 'ADVISOR_NOT_VERIFIED') setConnectError('This advisor is not verified yet.')
       else setConnectError(getApiErrorMessage(err, 'Could not connect.'))
     }
@@ -199,7 +204,13 @@ export function AdvisorProfilePage() {
             )}
           </div>
 
-          {connectError && <FormError>{connectError}</FormError>}
+          {insufficientFunds ? (
+            <div className="mt-stack-md">
+              <InsufficientFundsAlert />
+            </div>
+          ) : (
+            connectError && <FormError>{connectError}</FormError>
+          )}
         </div>
       </main>
     </AppShell>

@@ -2,7 +2,7 @@
  * Wallet API contracts — Owner: Role B
  */
 
-export type TransactionType = 'deposit' | 'escrow_lock' | 'escrow_release' | 'escrow_refund';
+export type TransactionType = 'deposit' | 'escrow_lock' | 'escrow_release' | 'escrow_refund' | 'withdrawal';
 export type TransactionStatus = 'pending' | 'completed' | 'failed';
 
 export interface WalletBalance {
@@ -63,4 +63,14 @@ export interface EscrowLockRequest {
 export interface EscrowLockResponse {
   success: boolean;
   error?: 'INSUFFICIENT_FUNDS';
+}
+
+/** Advisor demo payout — withdraw settled session earnings */
+export interface WithdrawRequest {
+  amountCoins: number;
+}
+
+export interface WithdrawResponse {
+  transaction: TransactionDto;
+  wallet: WalletBalance;
 }

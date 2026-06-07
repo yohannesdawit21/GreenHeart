@@ -45,6 +45,7 @@ When implementing an endpoint or socket event, update the contract file **first*
 | GET | `/api/wallet/balance` | `wallet.api.ts` | implemented |
 | GET | `/api/wallet/transactions` | `wallet.api.ts` | implemented |
 | POST | `/api/wallet/purchase/initiate` | `wallet.api.ts` | implemented — sandbox/demo coins |
+| POST | `/api/wallet/withdraw` | `wallet.api.ts` | implemented — advisor demo payout |
 | POST | `/api/wallet/webhook/payment` | `wallet.api.ts` | implemented |
 | POST | `/api/wallet/escrow/lock` | `wallet.api.ts` | internal — called by M5 |
 | POST | `/api/wallet/escrow/release` | `wallet.api.ts` | internal |

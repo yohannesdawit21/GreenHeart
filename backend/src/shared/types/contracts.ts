@@ -66,7 +66,7 @@ export interface UpdateProfileRequest {
 
 export type InterviewOutcome = 'pass' | 'fail';
 
-export type TransactionType = 'deposit' | 'escrow_lock' | 'escrow_release' | 'escrow_refund';
+export type TransactionType = 'deposit' | 'escrow_lock' | 'escrow_release' | 'escrow_refund' | 'withdrawal';
 export type TransactionStatus = 'pending' | 'completed' | 'failed';
 export type CoinPackageId = 'starter' | 'growth' | 'pro';
 

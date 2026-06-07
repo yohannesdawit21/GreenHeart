@@ -53,6 +53,8 @@ export default function App() {
       <Suspense fallback={<LoadingSpinner label="Loading page…" />}>
       <Routes>
       <Route path="/" element={<HomeRedirect />} />
+      <Route path="/discovery" element={<Navigate to="/discover" replace />} />
+      <Route path="/discovery/ai" element={<Navigate to="/discover/ai" replace />} />
 
       <Route
         path="/auth"
