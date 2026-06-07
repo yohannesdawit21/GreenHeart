@@ -66,6 +66,12 @@ router.post(
   validateBody(withdrawSchema),
   walletController.withdrawEarnings,
 );
+router.get(
+  '/withdraw/fee-rate',
+  requireAuth,
+  requireRole('advisor'),
+  walletController.getWithdrawalFeeRate,
+);
 
 // Internal escrow endpoints — M5 may call service directly or via HTTP
 router.post('/escrow/lock', requireAuth, validateBody(escrowLockSchema), walletController.lockEscrow);

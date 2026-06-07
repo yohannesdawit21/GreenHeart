@@ -86,6 +86,12 @@ export const config = {
   payment: {
     webhookSecret: process.env.PAYMENT_WEBHOOK_SECRET ?? '',
   },
+
+  /** Percent retained by GreenHeart on advisor withdrawals (demo sandbox) */
+  platformWithdrawalFeePercent: Math.min(
+    100,
+    Math.max(0, parseInt(process.env.PLATFORM_WITHDRAWAL_FEE_PERCENT ?? '10', 10) || 0),
+  ),
 } as const;
 
 export const coinPackages = {

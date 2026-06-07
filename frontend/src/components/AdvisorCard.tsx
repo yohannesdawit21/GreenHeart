@@ -15,9 +15,16 @@ interface AdvisorCardProps {
   onConnect?: () => void
   onViewProfile?: () => void
   showMatchScore?: boolean
+  isConnecting?: boolean
 }
 
-export function AdvisorCard({ advisor, onConnect, onViewProfile, showMatchScore }: AdvisorCardProps) {
+export function AdvisorCard({
+  advisor,
+  onConnect,
+  onViewProfile,
+  showMatchScore,
+  isConnecting = false,
+}: AdvisorCardProps) {
   const parsed = parseAdvisorApplicationBio(advisor.bio, advisor.credentials)
   const name = advisor.username
   const title = parsed.professionalTitle ?? parsed.professionType ?? advisor.bio.split('.')[0]
@@ -32,33 +39,34 @@ export function AdvisorCard({ advisor, onConnect, onViewProfile, showMatchScore 
   const focusLabel = getAdvisorFocusLabel(advisor)
   const credentialSummary = getAdvisorCredentialSummary(advisor)
   const languagesSummary = getAdvisorLanguagesSummary(advisor)
+  const canConnect = isOnline && Boolean(onConnect)
 
   return (
     <article
-      className={`bg-surface-container-lowest rounded-xl border border-outline-variant p-stack-md flex flex-col gap-stack-md relative overflow-hidden group h-full ${
+      className={`bg-surface-container-lowest rounded-xl border border-outline-variant p-4 sm:p-stack-md flex flex-col gap-3 sm:gap-stack-md relative overflow-hidden group h-full ${
         featured ? 'shadow-ambient border-primary/20' : 'shadow-sm hover:shadow-ambient transition-shadow duration-300'
-      }`}
+      } ${isConnecting ? 'opacity-80 pointer-events-none' : ''}`}
     >
       {featured && (
         <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-bl-full -mr-16 -mt-16 transition-transform group-hover:scale-110 duration-500" />
       )}
 
       <div className="flex items-start justify-between relative z-10 gap-2">
-        <div className="flex items-center gap-3 min-w-0">
+        <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
           {image ? (
             <img
               alt={`${name} profile`}
-              className="w-16 h-16 rounded-full object-cover border-2 border-surface-container-lowest shadow-sm shrink-0"
+              className="w-14 h-14 sm:w-16 sm:h-16 rounded-full object-cover border-2 border-surface-container-lowest shadow-sm shrink-0"
               src={image}
             />
           ) : (
-            <div className="w-16 h-16 rounded-full bg-surface-container-high flex items-center justify-center text-on-surface-variant shrink-0">
-              <MaterialIcon name="person" className="text-[32px]" />
+            <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-surface-container-high flex items-center justify-center text-on-surface-variant shrink-0">
+              <MaterialIcon name="person" className="text-[28px] sm:text-[32px]" />
             </div>
           )}
-          <div className="min-w-0">
-            <h3 className="font-headline-md text-[20px] leading-tight text-on-background truncate">{name}</h3>
-            <p className="font-label-md text-label-md text-on-surface-variant line-clamp-1">{title}</p>
+          <div className="min-w-0 flex-1">
+            <h3 className="font-headline-md text-lg sm:text-[20px] leading-tight text-on-background truncate">{name}</h3>
+            <p className="font-label-md text-label-md text-on-surface-variant line-clamp-1 text-sm sm:text-base">{title}</p>
             {credentialSummary && (
               <p className="font-label-md text-[11px] text-outline line-clamp-1 mt-0.5">{credentialSummary}</p>
             )}
@@ -137,28 +145,51 @@ export function AdvisorCard({ advisor, onConnect, onViewProfile, showMatchScore 
         </div>
       )}
 
-      <div className="mt-auto pt-4 flex items-center justify-between border-t border-outline-variant relative z-10 gap-2">
-        <div className="font-label-md text-label-md text-on-surface-variant min-w-0">
-          <span className="font-bold text-on-background">{price}</span> coins / session
+      <div className="mt-auto pt-3 sm:pt-4 flex flex-col sm:flex-row sm:items-center sm:justify-between border-t border-outline-variant relative z-10 gap-3">
+        <div className="font-label-md text-label-md text-on-surface-variant min-w-0 text-center sm:text-left">
+          <span className="font-bold text-on-background text-base sm:text-inherit">{price}</span>
+          <span className="text-sm sm:text-inherit"> coins / session</span>
         </div>
-        {featured && isOnline ? (
-          <button
-            type="button"
-            onClick={onConnect}
-            className={`${btnCoral} text-label-md px-4 py-2 flex items-center gap-2 shrink-0`}
-          >
-            Connect
-            <MaterialIcon name="arrow_forward" className="text-[18px]" />
-          </button>
-        ) : (
-          <button
-            type="button"
-            onClick={onViewProfile ?? onConnect}
-            className={`${btnSoft} text-label-md px-4 py-2 shrink-0`}
-          >
-            View Profile
-          </button>
-        )}
+        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto sm:shrink-0">
+          {onViewProfile && (
+            <button
+              type="button"
+              onClick={onViewProfile}
+              disabled={isConnecting}
+              className={`${btnSoft} text-label-md px-4 py-2.5 min-h-[44px] w-full sm:w-auto justify-center flex items-center`}
+            >
+              View profile
+            </button>
+          )}
+          {canConnect ? (
+            <button
+              type="button"
+              onClick={onConnect}
+              disabled={isConnecting}
+              className={`${btnCoral} text-label-md px-4 py-2.5 min-h-[44px] w-full sm:w-auto justify-center flex items-center gap-2`}
+            >
+              {isConnecting ? (
+                <>
+                  <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  Connecting…
+                </>
+              ) : (
+                <>
+                  Connect
+                  <MaterialIcon name="videocam" className="text-[18px]" />
+                </>
+              )}
+            </button>
+          ) : !onViewProfile ? (
+            <button
+              type="button"
+              disabled
+              className={`${btnSoft} text-label-md px-4 py-2.5 min-h-[44px] w-full sm:w-auto opacity-60 cursor-not-allowed`}
+            >
+              Offline
+            </button>
+          ) : null}
+        </div>
       </div>
     </article>
   )

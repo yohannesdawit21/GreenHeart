@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import type { CoinPackageId } from '../../shared/types/contracts.js';
+import { calculateWithdrawalSplit } from '../../shared/wallet/withdrawalFee.js';
 import { coinPackages, config } from '../../config/index.js';
 import { getPool } from '../../database/postgres/connection.js';
 import { AppError } from '../../shared/errors/AppError.js';
@@ -178,10 +179,20 @@ export async function processPaymentWebhook(input: {
   return { alreadyProcessed: false, transaction: toTransactionDto(updated!) };
 }
 
-/** Advisor demo payout — debit withdrawable_balance and record ledger entry */
+/** Advisor demo payout — debit withdrawable_balance, retain platform service fee */
 export async function withdrawEarnings(advisorId: string, amountCoins: number) {
   if (!Number.isInteger(amountCoins) || amountCoins <= 0) {
     throw new AppError(400, 'VALIDATION_ERROR', 'Withdrawal amount must be a positive whole number of coins');
+  }
+
+  const feePercent = config.platformWithdrawalFeePercent;
+  const split = calculateWithdrawalSplit(amountCoins, feePercent);
+  if (split.netPayoutCoins <= 0) {
+    throw new AppError(
+      400,
+      'VALIDATION_ERROR',
+      `Amount too small after ${feePercent}% platform fee — try withdrawing more coins`,
+    );
   }
 
   const db = await getPool().connect();
@@ -191,7 +202,7 @@ export async function withdrawEarnings(advisorId: string, amountCoins: number) {
       `UPDATE wallets SET withdrawable_balance = withdrawable_balance - $1
        WHERE user_id = $2 AND withdrawable_balance >= $1
        RETURNING user_id, coin_balance, escrow_balance, withdrawable_balance`,
-      [amountCoins, advisorId],
+      [split.grossCoins, advisorId],
     );
     if (update.rowCount === 0) {
       await db.query('ROLLBACK');
@@ -203,7 +214,7 @@ export async function withdrawEarnings(advisorId: string, amountCoins: number) {
       `INSERT INTO transactions (client_id, type, amount_coins, status, gateway_reference)
        VALUES ($1, 'withdrawal', $2, 'completed', $3)
        RETURNING id`,
-      [advisorId, amountCoins, payoutRef],
+      [advisorId, split.grossCoins, payoutRef],
     );
 
     await db.query('COMMIT');
@@ -215,13 +226,17 @@ export async function withdrawEarnings(advisorId: string, amountCoins: number) {
     };
 
     return {
+      grossCoins: split.grossCoins,
+      platformFeeCoins: split.platformFeeCoins,
+      netPayoutCoins: split.netPayoutCoins,
+      feePercent: split.feePercent,
       transaction: toTransactionDto(
         {
           id: rows[0]!.id,
           client_id: advisorId,
           advisor_id: null,
           type: 'withdrawal',
-          amount_coins: amountCoins,
+          amount_coins: split.grossCoins,
           fiat_amount: null,
           currency: null,
           status: 'completed',
@@ -243,6 +258,10 @@ export async function withdrawEarnings(advisorId: string, amountCoins: number) {
   } finally {
     db.release();
   }
+}
+
+export function getWithdrawalFeeRate() {
+  return { feePercent: config.platformWithdrawalFeePercent };
 }
 
 /** Dev sandbox — client completes mock checkout from frontend */

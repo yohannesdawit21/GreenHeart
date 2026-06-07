@@ -73,4 +73,12 @@ export interface WithdrawRequest {
 export interface WithdrawResponse {
   transaction: TransactionDto;
   wallet: WalletBalance;
+  grossCoins: number;
+  platformFeeCoins: number;
+  netPayoutCoins: number;
+  feePercent: number;
+}
+
+export interface WithdrawFeeRateResponse {
+  feePercent: number;
 }

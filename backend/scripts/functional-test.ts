@@ -294,8 +294,14 @@ async function main() {
     cookie: advisorCookie,
     body: { amountCoins: 10 },
   });
-  if (withdraw.status === 200) ok('Advisor withdraws earnings');
-  else fail('Advisor withdraws earnings', JSON.stringify(withdraw.body));
+  const withdrawBody = withdraw.body as {
+    netPayoutCoins?: number;
+    platformFeeCoins?: number;
+    feePercent?: number;
+  };
+  if (withdraw.status === 200 && withdrawBody.netPayoutCoins === 9 && withdrawBody.platformFeeCoins === 1) {
+    ok('Advisor withdraws earnings (10% platform fee)');
+  } else fail('Advisor withdraws earnings', JSON.stringify(withdraw.body));
 
   const advisorBalAfterWithdraw = await req('GET', '/api/wallet/balance', { cookie: advisorCookie });
   const afterWithdraw =

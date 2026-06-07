@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { AdvisorCard } from '../components/AdvisorCard'
 import { AppShell } from '../components/layout/AppShell'
 import { appShellMainClass, DashboardAlert, DashboardHeader, LoadingSpinner } from '../components/layout/dashboard-ui'
-import { btnFilter, btnGhost, btnPrimary } from '../components/layout/buttonStyles'
+import { btnFilter, btnGhost, btnOutline, btnPrimary } from '../components/layout/buttonStyles'
 import { MaterialIcon } from '../components/MaterialIcon'
 import { userService } from '../api/user.service'
 import { searchService } from '../api/search.service'
@@ -69,6 +69,7 @@ export function DiscoveryPage({ aiPulse = false }: DiscoveryPageProps) {
   const [searchError, setSearchError] = useState('')
   const [connectError, setConnectError] = useState('')
   const [insufficientFunds, setInsufficientFunds] = useState(false)
+  const [connectingId, setConnectingId] = useState<string | null>(null)
   const navigate = useNavigate()
   const { user } = useAuth()
   const isClient = user?.role === 'client'
@@ -176,6 +177,7 @@ export function DiscoveryPage({ aiPulse = false }: DiscoveryPageProps) {
     }
     setConnectError('')
     setInsufficientFunds(false)
+    setConnectingId(advisorId)
     try {
       const data = await sessionService.initiateSession({ advisorId })
       navigate(`/waiting?sessionId=${data.sessionId}`)
@@ -192,6 +194,8 @@ export function DiscoveryPage({ aiPulse = false }: DiscoveryPageProps) {
       } else {
         setConnectError(message)
       }
+    } finally {
+      setConnectingId(null)
     }
   }
 
@@ -262,6 +266,131 @@ export function DiscoveryPage({ aiPulse = false }: DiscoveryPageProps) {
     })
   }
 
+  const mobileSearchPlaceholder = aiPulse
+    ? 'Describe what you need help with…'
+    : 'Search by need, language, or specialty…'
+
+  const filterPanel = (
+    <div className="flex flex-col gap-stack-md p-stack-md bg-surface-container-low rounded-xl border border-outline-variant md:rounded-xl">
+      <div className="flex items-center justify-between md:hidden">
+        <h3 className="font-headline-md text-base text-on-background">Filters</h3>
+        <button
+          type="button"
+          onClick={() => setShowFilters(false)}
+          className={`${btnGhost} p-2 min-h-[44px] min-w-[44px] flex items-center justify-center`}
+          aria-label="Close filters"
+        >
+          <MaterialIcon name="close" />
+        </button>
+      </div>
+
+      <label className="flex items-center gap-3 cursor-pointer font-body-md text-body-md text-on-surface min-h-[44px]">
+        <input
+          type="checkbox"
+          checked={filters.onlineOnly}
+          onChange={(e) => setFilters((f) => ({ ...f, onlineOnly: e.target.checked }))}
+          className="rounded border-outline-variant text-primary focus:ring-primary/30 w-4 h-4"
+        />
+        <span className="flex items-center gap-2">
+          Show only advisors available now
+        </span>
+      </label>
+
+      <div>
+        <p className="font-label-md text-xs uppercase tracking-wide text-outline mb-2">Session rate</p>
+        <div className="flex flex-wrap gap-2">
+          {RATE_PRESETS.map((preset) => (
+            <button
+              key={preset.id}
+              type="button"
+              onClick={() => setFilters((f) => ({ ...f, ratePreset: preset.id }))}
+              className={`${btnFilter(filters.ratePreset === preset.id)} text-sm py-2 min-h-[40px]`}
+            >
+              {preset.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div>
+        <p className="font-label-md text-xs uppercase tracking-wide text-outline mb-2">Minimum rating</p>
+        <div className="flex flex-wrap gap-2">
+          {RATING_PRESETS.map((preset) => (
+            <button
+              key={preset.id}
+              type="button"
+              onClick={() => setFilters((f) => ({ ...f, minRating: preset.id }))}
+              className={`${btnFilter(filters.minRating === preset.id)} text-sm py-2 min-h-[40px]`}
+            >
+              {preset.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div>
+        <p className="font-label-md text-xs uppercase tracking-wide text-outline mb-2">Languages</p>
+        <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto overscroll-contain">
+          {LANGUAGE_OPTIONS.slice(0, 24).map((lang) => (
+            <button
+              key={lang.code}
+              type="button"
+              onClick={() => toggleLanguage(lang.code)}
+              className={`${btnFilter(filters.languageCodes.includes(lang.code))} text-sm py-2`}
+            >
+              {lang.name}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div>
+        <p className="font-label-md text-xs uppercase tracking-wide text-outline mb-2">Licensed region</p>
+        <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto overscroll-contain">
+          {COUNTRY_REGIONS.slice(0, 20).map((region) => (
+            <button
+              key={region.id}
+              type="button"
+              onClick={() => toggleRegion(region.id)}
+              className={`${btnFilter(filters.regionIds.includes(region.id))} text-sm py-2`}
+            >
+              {region.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div>
+        <p className="font-label-md text-xs uppercase tracking-wide text-outline mb-2">Profession</p>
+        <div className="flex flex-wrap gap-2">
+          {PROFESSION_TYPES.map((prof) => (
+            <button
+              key={prof.id}
+              type="button"
+              onClick={() => toggleProfession(prof.id)}
+              className={`${btnFilter(filters.professionTypes.includes(prof.id))} text-sm py-2`}
+            >
+              {prof.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {activeFilterCount > 0 && (
+        <button
+          type="button"
+          onClick={() => {
+            clearAllFilters()
+            setShowFilters(false)
+          }}
+          className={`${btnGhost} text-sm py-2.5 w-full md:w-auto border border-outline-variant`}
+        >
+          Clear all filters
+        </button>
+      )}
+    </div>
+  )
+
   return (
     <AppShell
       activeNav="discover"
@@ -271,56 +400,58 @@ export function DiscoveryPage({ aiPulse = false }: DiscoveryPageProps) {
       }
       onSearch={handleSearch}
     >
-      <main className={`${appShellMainClass} flex flex-col gap-stack-lg`}>
-        <div className="relative md:hidden w-full">
-          <MaterialIcon name="search" className="absolute left-4 top-1/2 -translate-y-1/2 text-outline" />
-          <input
-            className={`w-full bg-surface-container-lowest border border-outline-variant rounded-full py-3 pl-12 pr-10 font-body-md text-body-md focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 shadow-sm ${aiPulse || isSearching ? 'ai-pulse-active' : ''}`}
-            placeholder="Search by need, language, or specialty..."
-            type="search"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') handleSearch((e.target as HTMLInputElement).value)
+      <main className={`${appShellMainClass} flex flex-col gap-4 sm:gap-stack-lg pb-24 md:pb-stack-lg`}>
+        {/* Mobile search — sticky below app header */}
+        <div className="md:hidden sticky top-16 z-30 -mx-margin-mobile px-margin-mobile py-2 bg-background/95 backdrop-blur-sm border-b border-outline-variant/40">
+          <form
+            className="flex gap-2"
+            onSubmit={(e) => {
+              e.preventDefault()
+              handleSearch(searchQuery)
             }}
-          />
-          {searchQuery && (
+          >
+            <div className="relative flex-1 min-w-0">
+              <MaterialIcon
+                name="search"
+                className="absolute left-3.5 top-1/2 -translate-y-1/2 text-outline pointer-events-none"
+              />
+              <input
+                className={`w-full bg-surface-container-lowest border border-outline-variant rounded-full py-3 pl-11 pr-10 font-body-md text-base focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 shadow-sm min-h-[48px] ${
+                  aiPulse || isSearching ? 'ai-pulse-active' : ''
+                }`}
+                placeholder={mobileSearchPlaceholder}
+                type="search"
+                enterKeyHint="search"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={handleClearSearch}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-outline hover:text-primary p-2 min-h-[44px] min-w-[44px] flex items-center justify-center"
+                  aria-label="Clear search"
+                >
+                  <MaterialIcon name="close" className="text-[20px]" />
+                </button>
+              )}
+            </div>
             <button
-              type="button"
-              onClick={handleClearSearch}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-outline hover:text-primary p-1"
-              aria-label="Clear search"
+              type="submit"
+              className={`${btnPrimary} shrink-0 px-4 min-h-[48px] min-w-[48px] flex items-center justify-center`}
+              aria-label="Search advisors"
             >
-              <MaterialIcon name="close" className="text-[20px]" />
+              <MaterialIcon name="search" />
             </button>
-          )}
+          </form>
         </div>
-
-        {(aiPulse || isSearching) && (
-          <section className="bg-primary-container/10 border border-primary-container/30 rounded-xl p-stack-md flex items-start sm:items-center gap-stack-md">
-            <div className="w-10 h-10 rounded-full bg-primary-container flex items-center justify-center shrink-0">
-              <MaterialIcon name="psychology" className="text-on-primary-container" />
-            </div>
-            <div className="flex-grow min-w-0">
-              <h4 className="font-headline-md text-[18px] text-on-background">
-                {isSearching ? 'Semantic Search Active' : 'AI-Guided Discovery'}
-              </h4>
-              <p className="font-body-md text-body-md text-on-surface-variant">
-                {isSearching
-                  ? `AI matched advisors for "${semanticQuery}". ${displayedAdvisors.length} result${displayedAdvisors.length === 1 ? '' : 's'} with your filters applied.`
-                  : 'Use the search bar to describe what you need — we match advisors by bio, specialties, and credentials using semantic search.'}
-              </p>
-            </div>
-            <div className="w-2 h-2 rounded-full bg-vibrant-coral pulse-dot shrink-0 hidden sm:block" />
-          </section>
-        )}
 
         <DashboardHeader
           title={isSearching ? 'Search Results' : 'Discover Advisors'}
           description={
             isSearching
-              ? `Specialists matched to "${semanticQuery}". Refine with filters below.`
-              : 'Browse verified wellness advisors by focus area, language, region, and availability.'
+              ? `Matched to “${semanticQuery}”. Refine with filters below.`
+              : 'Verified wellness advisors — filter by focus, language, and availability.'
           }
           badge={
             !loading ? (
@@ -330,9 +461,10 @@ export function DiscoveryPage({ aiPulse = false }: DiscoveryPageProps) {
                     balance={balance?.coinBalance ?? null}
                     escrow={balance?.escrowBalance ?? 0}
                     loading={walletLoading}
+                    compact
                   />
                 )}
-                <span className="inline-flex items-center gap-1.5 text-xs font-label-md text-secondary bg-secondary-container/30 px-3 py-1 rounded-full">
+                <span className="inline-flex items-center gap-1.5 text-xs font-label-md text-secondary bg-secondary-container/30 px-3 py-1.5 rounded-full">
                   <MaterialIcon name="groups" className="text-[14px]" />
                   {displayedAdvisors.length} result{displayedAdvisors.length === 1 ? '' : 's'}
                   {onlineCount > 0 && ` · ${onlineCount} online`}
@@ -342,10 +474,58 @@ export function DiscoveryPage({ aiPulse = false }: DiscoveryPageProps) {
           }
         />
 
+        {!aiPulse && !isSearching && (
+          <section className="bg-linear-to-r from-primary-container/15 to-secondary-container/20 rounded-xl border border-primary/15 p-4 sm:p-stack-md flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-stack-md">
+            <div className="flex items-start gap-3 min-w-0 flex-1">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-primary-container flex items-center justify-center shrink-0">
+                <MaterialIcon name="psychology" className="text-on-primary-container" />
+              </div>
+              <div className="min-w-0">
+                <h4 className="font-headline-md text-base sm:text-[18px] text-on-background">Try AI-powered search</h4>
+                <p className="font-body-md text-sm sm:text-body-md text-on-surface-variant mt-0.5 line-clamp-2 sm:line-clamp-none">
+                  Describe how you feel in plain language — we match verified advisors semantically.
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => navigate('/discover/ai')}
+              className={`${btnPrimary} text-sm sm:text-label-md px-5 py-2.5 min-h-[44px] w-full sm:w-auto flex items-center justify-center gap-2 shrink-0`}
+            >
+              AI search
+              <MaterialIcon name="arrow_forward" className="text-[18px]" />
+            </button>
+          </section>
+        )}
+
+        {(aiPulse || isSearching) && (
+          <section className="bg-primary-container/10 border border-primary-container/30 rounded-xl p-4 sm:p-stack-md flex items-start gap-3 sm:gap-stack-md">
+            <div className="w-10 h-10 rounded-full bg-primary-container flex items-center justify-center shrink-0">
+              <MaterialIcon name="psychology" className="text-on-primary-container" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h4 className="font-headline-md text-base sm:text-[18px] text-on-background">
+                  {isSearching ? 'AI matches' : 'AI-guided discovery'}
+                </h4>
+                <span className="inline-flex items-center gap-1 text-[10px] uppercase tracking-wider text-vibrant-coral font-label-md">
+                  <span className="w-1.5 h-1.5 rounded-full bg-vibrant-coral pulse-dot" />
+                  Active
+                </span>
+              </div>
+              <p className="font-body-md text-sm sm:text-body-md text-on-surface-variant mt-1">
+                {isSearching
+                  ? `${displayedAdvisors.length} advisor${displayedAdvisors.length === 1 ? '' : 's'} for “${semanticQuery}” with your filters.`
+                  : 'Describe your needs in the search bar — matches use bio, credentials, and specialties.'}
+              </p>
+            </div>
+          </section>
+        )}
+
         {fetchError && (
           <DashboardAlert variant="error" icon="error" title="Could not load advisors">
             {fetchError}
-            <button type="button" onClick={loadAdvisors} className={`${btnGhost} mt-2 text-sm`}>
+            <button type="button" onClick={loadAdvisors} className={`${btnGhost} mt-2 text-sm min-h-[44px]`}>
               Try again
             </button>
           </DashboardAlert>
@@ -367,229 +547,155 @@ export function DiscoveryPage({ aiPulse = false }: DiscoveryPageProps) {
           )
         )}
 
-        <section className="flex flex-col gap-stack-sm">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <p className="font-label-md text-label-md text-on-surface-variant uppercase tracking-wide">
-              Focus areas
-            </p>
-            <div className="flex items-center gap-2">
-              <select
-                value={filters.sortId}
-                onChange={(e) => setFilters((f) => ({ ...f, sortId: e.target.value as DiscoverSortId }))}
-                className="text-sm bg-surface-container-low border border-outline-variant rounded-full px-3 py-1.5 focus:outline-none focus:border-primary"
-                aria-label="Sort advisors"
-              >
-                {DISCOVER_SORT_OPTIONS.map((opt) => (
-                  <option key={opt.id} value={opt.id} disabled={opt.id === 'best_match' && !isSearching}>
-                    {opt.label}
-                  </option>
-                ))}
-              </select>
-              <button
-                type="button"
-                onClick={() => setShowFilters((v) => !v)}
-                className={`${btnFilter(showFilters || activeFilterCount > 0)} flex items-center gap-1 text-sm py-1.5 px-3`}
-              >
-                <MaterialIcon name="tune" className="text-[16px]" />
-                Filters
-                {activeFilterCount > 0 && (
-                  <span className="bg-primary text-on-primary text-[10px] rounded-full w-4 h-4 flex items-center justify-center">
-                    {activeFilterCount}
-                  </span>
-                )}
-              </button>
-            </div>
+        {/* Toolbar: sort + filters */}
+        <div className="flex flex-col gap-3 -mx-margin-mobile px-margin-mobile md:mx-0 md:px-0 sticky top-[7.25rem] md:top-16 z-20 py-2 md:py-0 bg-background/95 md:bg-transparent backdrop-blur-sm md:backdrop-blur-none">
+          <div className="flex items-center gap-2">
+            <select
+              value={filters.sortId}
+              onChange={(e) => setFilters((f) => ({ ...f, sortId: e.target.value as DiscoverSortId }))}
+              className="flex-1 min-w-0 text-sm bg-surface-container-lowest border border-outline-variant rounded-full px-3 py-2.5 min-h-[44px] focus:outline-none focus:border-primary"
+              aria-label="Sort advisors"
+            >
+              {DISCOVER_SORT_OPTIONS.map((opt) => (
+                <option key={opt.id} value={opt.id} disabled={opt.id === 'best_match' && !isSearching}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+            <button
+              type="button"
+              onClick={() => setShowFilters((v) => !v)}
+              className={`${btnFilter(showFilters || activeFilterCount > 0)} flex items-center gap-1.5 text-sm py-2.5 px-4 min-h-[44px] shrink-0`}
+            >
+              <MaterialIcon name="tune" className="text-[18px]" />
+              <span className="hidden sm:inline">Filters</span>
+              {activeFilterCount > 0 && (
+                <span className="bg-primary text-on-primary text-[10px] rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1">
+                  {activeFilterCount}
+                </span>
+              )}
+            </button>
           </div>
 
           {activePills.length > 0 && (
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide overscroll-x-contain">
               {activePills.map((pill) => (
                 <button
                   key={pill.key}
                   type="button"
                   onClick={pill.onRemove}
-                  className="inline-flex items-center gap-1 bg-primary-container/30 text-on-primary-container text-xs px-3 py-1 rounded-full hover:bg-primary-container/50"
+                  className="inline-flex items-center gap-1 bg-primary-container/30 text-on-primary-container text-xs px-3 py-2 rounded-full hover:bg-primary-container/50 shrink-0 min-h-[36px]"
                 >
                   {pill.label}
                   <MaterialIcon name="close" className="text-[14px]" />
                 </button>
               ))}
-              <button type="button" onClick={clearAllFilters} className={`${btnGhost} text-xs py-1 px-2`}>
+              <button
+                type="button"
+                onClick={clearAllFilters}
+                className={`${btnGhost} text-xs py-2 px-3 shrink-0 min-h-[36px]`}
+              >
                 Clear all
               </button>
             </div>
           )}
+        </div>
 
-          {showFilters && (
-            <div className="flex flex-col gap-stack-md p-stack-md bg-surface-container-low rounded-xl border border-outline-variant">
-              <label className="flex items-center gap-2 cursor-pointer font-body-md text-body-md text-on-surface">
-                <input
-                  type="checkbox"
-                  checked={filters.onlineOnly}
-                  onChange={(e) => setFilters((f) => ({ ...f, onlineOnly: e.target.checked }))}
-                  className="rounded border-outline-variant text-primary focus:ring-primary/30"
-                />
-                Online only
-              </label>
-
-              <div>
-                <p className="font-label-md text-xs uppercase tracking-wide text-outline mb-2">Session rate</p>
-                <div className="flex flex-wrap gap-2">
-                  {RATE_PRESETS.map((preset) => (
-                    <button
-                      key={preset.id}
-                      type="button"
-                      onClick={() => setFilters((f) => ({ ...f, ratePreset: preset.id }))}
-                      className={btnFilter(filters.ratePreset === preset.id)}
-                    >
-                      {preset.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <p className="font-label-md text-xs uppercase tracking-wide text-outline mb-2">Minimum rating</p>
-                <div className="flex flex-wrap gap-2">
-                  {RATING_PRESETS.map((preset) => (
-                    <button
-                      key={preset.id}
-                      type="button"
-                      onClick={() => setFilters((f) => ({ ...f, minRating: preset.id }))}
-                      className={btnFilter(filters.minRating === preset.id)}
-                    >
-                      {preset.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <p className="font-label-md text-xs uppercase tracking-wide text-outline mb-2">Languages</p>
-                <div className="flex flex-wrap gap-2 max-h-28 overflow-y-auto">
-                  {LANGUAGE_OPTIONS.slice(0, 24).map((lang) => (
-                    <button
-                      key={lang.code}
-                      type="button"
-                      onClick={() => toggleLanguage(lang.code)}
-                      className={btnFilter(filters.languageCodes.includes(lang.code))}
-                    >
-                      {lang.name}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <p className="font-label-md text-xs uppercase tracking-wide text-outline mb-2">Licensed region</p>
-                <div className="flex flex-wrap gap-2 max-h-28 overflow-y-auto">
-                  {COUNTRY_REGIONS.slice(0, 20).map((region) => (
-                    <button
-                      key={region.id}
-                      type="button"
-                      onClick={() => toggleRegion(region.id)}
-                      className={btnFilter(filters.regionIds.includes(region.id))}
-                    >
-                      {region.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <p className="font-label-md text-xs uppercase tracking-wide text-outline mb-2">Profession</p>
-                <div className="flex flex-wrap gap-2">
-                  {PROFESSION_TYPES.map((prof) => (
-                    <button
-                      key={prof.id}
-                      type="button"
-                      onClick={() => toggleProfession(prof.id)}
-                      className={btnFilter(filters.professionTypes.includes(prof.id))}
-                    >
-                      {prof.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
-
-          <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide -mx-margin-mobile px-margin-mobile md:mx-0 md:px-0">
+        {/* Focus area chips — horizontal scroll with edge fade on mobile */}
+        <div className="relative -mx-margin-mobile md:mx-0">
+          <p className="font-label-md text-xs uppercase tracking-wide text-on-surface-variant mb-2 px-margin-mobile md:px-0">
+            Focus areas
+          </p>
+          <div className="pointer-events-none absolute left-0 top-6 bottom-2 w-6 bg-linear-to-r from-background to-transparent z-10 md:hidden" />
+          <div className="pointer-events-none absolute right-0 top-6 bottom-2 w-6 bg-linear-to-l from-background to-transparent z-10 md:hidden" />
+          <div className="flex gap-2 overflow-x-auto pb-2 px-margin-mobile md:px-0 scrollbar-hide overscroll-x-contain snap-x snap-mandatory">
             {QUICK_FILTERS.map((filter) => (
               <button
                 key={filter.id}
                 type="button"
                 onClick={() => setActiveFilter(filter.id)}
-                className={btnFilter(activeFilter === filter.id)}
+                className={`${btnFilter(activeFilter === filter.id)} snap-start text-sm py-2.5 min-h-[44px]`}
                 title={filter.label}
               >
                 {filter.shortLabel}
               </button>
             ))}
           </div>
-        </section>
+        </div>
+
+        {/* Filters: bottom sheet on mobile, inline on desktop */}
+        {showFilters && (
+          <>
+            <button
+              type="button"
+              className="fixed inset-0 bg-black/40 z-40 md:hidden"
+              aria-label="Close filters"
+              onClick={() => setShowFilters(false)}
+            />
+            <div className="fixed inset-x-0 bottom-[var(--app-bottom-nav-h)] z-50 max-h-[min(75vh,520px)] overflow-y-auto rounded-t-2xl shadow-2xl bg-surface-container-lowest md:static md:z-auto md:max-h-none md:overflow-visible md:shadow-none md:rounded-xl md:bg-transparent">
+              {filterPanel}
+            </div>
+          </>
+        )}
 
         {loading ? (
           <LoadingSpinner label="Finding advisors..." />
         ) : displayedAdvisors.length > 0 ? (
-          <section className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-gutter">
+          <section className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-gutter">
             {displayedAdvisors.map((advisor) => (
               <AdvisorCard
                 key={advisor.id}
                 advisor={advisor}
                 showMatchScore={isSearching}
+                isConnecting={connectingId === advisor.id}
                 onConnect={() => handleConnect(advisor.id)}
                 onViewProfile={() => navigate(`/advisors/${advisor.id}`)}
               />
             ))}
           </section>
         ) : (
-          <section className="col-span-full flex flex-col items-center justify-center py-16 px-4 text-center bg-surface-container-low rounded-xl border border-outline-variant border-dashed">
-            <div className="w-16 h-16 rounded-full bg-surface-container-high flex items-center justify-center mb-stack-md">
-              <MaterialIcon name="search_off" className="text-[32px] text-outline" />
+          <section className="flex flex-col items-center justify-center py-12 sm:py-16 px-4 text-center bg-surface-container-low rounded-xl border border-outline-variant border-dashed">
+            <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-surface-container-high flex items-center justify-center mb-stack-md">
+              <MaterialIcon name="search_off" className="text-[28px] sm:text-[32px] text-outline" />
             </div>
-            <h3 className="font-headline-md text-[20px] text-on-background mb-2">No advisors found</h3>
-            <p className="font-body-md text-body-md text-on-surface-variant max-w-md mb-stack-md">
+            <h3 className="font-headline-md text-lg sm:text-[20px] text-on-background mb-2">No advisors found</h3>
+            <p className="font-body-md text-sm sm:text-body-md text-on-surface-variant max-w-md mb-stack-md">
               {isSearching
-                ? `No matches for "${semanticQuery}" with the current filters. Try broadening your search or clearing filters.`
+                ? `No matches for “${semanticQuery}” with the current filters. Try broadening your search or clearing filters.`
                 : activeFilterCount > 0
                   ? 'No advisors match your filters. Try removing some filters or including offline advisors.'
                   : 'No verified advisors are available yet. Check back soon.'}
             </p>
-            <div className="flex flex-wrap gap-2 justify-center">
+            <div className="flex flex-col sm:flex-row flex-wrap gap-2 justify-center w-full max-w-xs sm:max-w-none">
               {(isSearching || searchQuery) && (
-                <button type="button" onClick={handleClearSearch} className={`${btnGhost} text-sm px-4 py-2`}>
+                <button
+                  type="button"
+                  onClick={handleClearSearch}
+                  className={`${btnGhost} text-sm px-4 py-2.5 min-h-[44px] w-full sm:w-auto`}
+                >
                   Clear search
                 </button>
               )}
               {activeFilterCount > 0 && (
-                <button type="button" onClick={clearAllFilters} className={`${btnGhost} text-sm px-4 py-2`}>
+                <button
+                  type="button"
+                  onClick={clearAllFilters}
+                  className={`${btnOutline} text-sm px-4 py-2.5 min-h-[44px] w-full sm:w-auto`}
+                >
                   Clear all filters
                 </button>
               )}
+              {!isSearching && !searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => navigate('/discover/ai')}
+                  className={`${btnPrimary} text-sm px-4 py-2.5 min-h-[44px] w-full sm:w-auto flex items-center justify-center gap-2`}
+                >
+                  Try AI search
+                  <MaterialIcon name="arrow_forward" className="text-sm" />
+                </button>
+              )}
             </div>
-          </section>
-        )}
-
-        {!aiPulse && (
-          <section className="mt-4 mb-2 bg-surface-container-low rounded-xl border border-outline-variant p-stack-md flex flex-col md:flex-row items-center gap-stack-md">
-            <div className="w-12 h-12 rounded-full bg-primary-container flex items-center justify-center shrink-0">
-              <MaterialIcon name="psychology" className="text-on-primary-container" />
-            </div>
-            <div className="grow text-center md:text-left">
-              <h4 className="font-headline-md text-[18px] text-on-background">Not sure who to choose?</h4>
-              <p className="font-body-md text-body-md text-on-surface-variant">
-                Try semantic search — describe your needs in plain language and we will match verified advisors.
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={() => navigate('/discover/ai')}
-              className={`${btnPrimary} text-label-md px-6 py-2 whitespace-nowrap flex items-center gap-2`}
-            >
-              Try AI search
-              <MaterialIcon name="arrow_forward" className="text-[18px]" />
-            </button>
           </section>
         )}
       </main>

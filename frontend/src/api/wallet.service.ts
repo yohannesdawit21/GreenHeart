@@ -8,6 +8,7 @@ import type {
   CompleteMockPurchaseResponse,
   WithdrawRequest,
   WithdrawResponse,
+  WithdrawFeeRateResponse,
 } from '@shared/contracts/wallet.api';
 
 export const walletService = {
@@ -38,6 +39,11 @@ export const walletService = {
 
   withdraw: async (data: WithdrawRequest): Promise<WithdrawResponse> => {
     const response = await apiClient.post<WithdrawResponse>('/wallet/withdraw', data);
+    return response.data;
+  },
+
+  getWithdrawalFeeRate: async (): Promise<WithdrawFeeRateResponse> => {
+    const response = await apiClient.get<WithdrawFeeRateResponse>('/wallet/withdraw/fee-rate');
     return response.data;
   },
 };

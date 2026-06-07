@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { AppShell } from '../components/layout/AppShell'
 import {
@@ -32,6 +32,7 @@ import {
 const INTENDED_ONLINE_KEY = 'gh_advisor_intended_online'
 import type { TransactionDto } from '@shared/contracts/wallet.api'
 import type { VerificationInterviewStartedPayload } from '@shared/contracts/socket.events'
+import { calculateWithdrawalSplit } from '@shared/wallet/withdrawalFee'
 
 export function AdvisorControlPage() {
   const { user } = useAuth()
@@ -47,6 +48,7 @@ export function AdvisorControlPage() {
   const [withdrawing, setWithdrawing] = useState(false)
   const [withdrawMessage, setWithdrawMessage] = useState('')
   const [withdrawError, setWithdrawError] = useState('')
+  const [feePercent, setFeePercent] = useState(10)
   const [loadError, setLoadError] = useState('')
   const [presenceError, setPresenceError] = useState('')
   const [pendingInvitation, setPendingInvitation] = useState<VerificationInvitation | null>(null)
@@ -75,6 +77,15 @@ export function AdvisorControlPage() {
 
   useEffect(() => {
     walletService
+      .getWithdrawalFeeRate()
+      .then((data) => setFeePercent(data.feePercent))
+      .catch(() => {
+        /* keep default */
+      })
+  }, [])
+
+  useEffect(() => {
+    walletService
       .getTransactions()
       .then((tx) => setTransactions(tx.transactions))
       .catch((err) => setLoadError(getApiErrorMessage(err, 'Could not load earnings history.')))
@@ -90,6 +101,11 @@ export function AdvisorControlPage() {
   const loading = walletLoading || transactionsLoading
   const completedSessions = transactions.filter((tx) => tx.type === 'escrow_release' && tx.amountCoins > 0).length
   const totalEarnings = balance?.withdrawableBalance ?? 0
+  const parsedWithdrawAmount = Number.parseInt(withdrawAmount, 10)
+  const withdrawPreview = useMemo(() => {
+    if (!Number.isInteger(parsedWithdrawAmount) || parsedWithdrawAmount <= 0) return null
+    return calculateWithdrawalSplit(parsedWithdrawAmount, feePercent)
+  }, [parsedWithdrawAmount, feePercent])
 
   const refreshTransactions = () => {
     return walletService
@@ -104,7 +120,9 @@ export function AdvisorControlPage() {
     setWithdrawMessage('')
     try {
       const result = await walletService.withdraw({ amountCoins: amount })
-      setWithdrawMessage(`Demo payout of ${amount} coins processed. Reference: ${result.transaction.id.slice(0, 8)}…`)
+      setWithdrawMessage(
+        `Demo payout sent: ${result.netPayoutCoins} coins to you after ${result.feePercent}% platform fee (${result.platformFeeCoins} coins).`,
+      )
       setWithdrawAmount('')
       await Promise.all([refreshWallet(), refreshTransactions()])
     } catch (err) {
@@ -441,7 +459,8 @@ export function AdvisorControlPage() {
         {verificationStatus === 'verified' && (
           <DashboardSection title="Withdraw earnings">
             <DashboardAlert variant="info" icon="info" title="Demo payouts only">
-              Withdrawals simulate paying out settled session earnings. No real money is transferred — for demonstration only.
+              GreenHeart retains a {feePercent}% platform fee on each withdrawal to cover marketplace services.
+              Withdrawals simulate paying out settled session earnings — no real money is transferred.
             </DashboardAlert>
 
             <div className="mt-stack-md flex flex-col sm:flex-row sm:items-end gap-stack-md">
@@ -463,7 +482,12 @@ export function AdvisorControlPage() {
                   />
                   <button
                     type="submit"
-                    disabled={withdrawing || totalEarnings <= 0}
+                    disabled={
+                      withdrawing ||
+                      totalEarnings <= 0 ||
+                      !withdrawPreview ||
+                      withdrawPreview.netPayoutCoins <= 0
+                    }
                     className={`${btnPrimary} px-6 py-2.5 whitespace-nowrap disabled:opacity-50`}
                   >
                     {withdrawing ? 'Processing…' : 'Withdraw coins'}
@@ -477,6 +501,22 @@ export function AdvisorControlPage() {
                     Withdraw all
                   </button>
                 </form>
+                {withdrawPreview && withdrawPreview.grossCoins > 0 && (
+                  <div className="mt-3 text-sm text-on-surface-variant space-y-1">
+                    <p>
+                      Platform fee ({feePercent}%):{' '}
+                      <span className="font-label-md text-on-surface">{withdrawPreview.platformFeeCoins} coins</span>
+                    </p>
+                    <p>
+                      You receive:{' '}
+                      <span className="font-label-md text-secondary">
+                        {withdrawPreview.netPayoutCoins > 0
+                          ? `${withdrawPreview.netPayoutCoins} coins`
+                          : 'Amount too small after fee'}
+                      </span>
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
 
