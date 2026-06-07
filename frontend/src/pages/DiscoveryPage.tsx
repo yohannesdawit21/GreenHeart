@@ -1,7 +1,9 @@
-import { useState, useEffect, useCallback, useMemo } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
+import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { AdvisorCard } from '../components/AdvisorCard'
 import { AppShell } from '../components/layout/AppShell'
+import { AiGuidedSearchPanel } from '../components/discover/AiGuidedSearchPanel'
+import { DiscoverModeTabs } from '../components/discover/DiscoverModeTabs'
 import { appShellMainClass, DashboardAlert, DashboardHeader, LoadingSpinner } from '../components/layout/dashboard-ui'
 import { btnFilter, btnGhost, btnOutline, btnPrimary } from '../components/layout/buttonStyles'
 import { MaterialIcon } from '../components/MaterialIcon'
@@ -62,7 +64,8 @@ export function DiscoveryPage({ aiPulse = false }: DiscoveryPageProps) {
   const [activeFilter, setActiveFilter] = useState<DiscoverFilterId>(DISCOVER_ALL_FILTER)
   const [filters, setFilters] = useState(DEFAULT_FILTERS)
   const [showFilters, setShowFilters] = useState(false)
-  const [loading, setLoading] = useState(true)
+  const [advisorsLoading, setAdvisorsLoading] = useState(true)
+  const [searchLoading, setSearchLoading] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [semanticQuery, setSemanticQuery] = useState('')
   const [fetchError, setFetchError] = useState('')
@@ -71,12 +74,16 @@ export function DiscoveryPage({ aiPulse = false }: DiscoveryPageProps) {
   const [insufficientFunds, setInsufficientFunds] = useState(false)
   const [connectingId, setConnectingId] = useState<string | null>(null)
   const navigate = useNavigate()
+  const location = useLocation()
+  const [searchParams, setSearchParams] = useSearchParams()
+  const mobileSearchRef = useRef<HTMLInputElement>(null)
   const { user } = useAuth()
   const isClient = user?.role === 'client'
+  const isAiMode = aiPulse || location.pathname.startsWith('/discover/ai')
   const { balance, loading: walletLoading, refresh: refreshWallet } = useWalletBalance(isClient)
 
   const loadAdvisors = useCallback(async () => {
-    setLoading(true)
+    setAdvisorsLoading(true)
     setFetchError('')
     try {
       const data = await userService.getAdvisors()
@@ -85,7 +92,7 @@ export function DiscoveryPage({ aiPulse = false }: DiscoveryPageProps) {
       setFetchError(getApiErrorMessage(err, 'Could not load advisors. Please refresh the page.'))
       setAllAdvisors([])
     } finally {
-      setLoading(false)
+      setAdvisorsLoading(false)
     }
   }, [])
 
@@ -99,6 +106,15 @@ export function DiscoveryPage({ aiPulse = false }: DiscoveryPageProps) {
     }
   }, [isClient, refreshWallet])
 
+  useEffect(() => {
+    if (!isAiMode) return
+    const q = searchParams.get('q')?.trim()
+    if (!q || q === semanticQuery) return
+    setSearchQuery(q)
+    void runSemanticSearch(q)
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- hydrate once from URL ?q=
+  }, [isAiMode])
+
   const runSemanticSearch = useCallback(async (query: string) => {
     const trimmed = query.trim()
     if (!trimmed) {
@@ -108,7 +124,7 @@ export function DiscoveryPage({ aiPulse = false }: DiscoveryPageProps) {
       return
     }
 
-    setLoading(true)
+    setSearchLoading(true)
     setSearchError('')
     setSemanticQuery(trimmed)
     try {
@@ -126,13 +142,17 @@ export function DiscoveryPage({ aiPulse = false }: DiscoveryPageProps) {
       setSearchError(getApiErrorMessage(err, 'Search unavailable — showing filtered results instead.'))
       setSearchResults(null)
     } finally {
-      setLoading(false)
+      setSearchLoading(false)
     }
   }, [filters.sortId])
 
   const handleSearch = (query: string) => {
     setSearchQuery(query)
     runSemanticSearch(query)
+    if (isAiMode) {
+      const trimmed = query.trim()
+      setSearchParams(trimmed ? { q: trimmed } : {}, { replace: true })
+    }
   }
 
   const handleClearSearch = () => {
@@ -141,6 +161,9 @@ export function DiscoveryPage({ aiPulse = false }: DiscoveryPageProps) {
     setSearchResults(null)
     setSearchError('')
     setFilters((f) => ({ ...f, sortId: 'online_first' }))
+    if (isAiMode) {
+      setSearchParams({}, { replace: true })
+    }
   }
 
   const ratePreset = RATE_PRESETS.find((p) => p.id === filters.ratePreset) ?? RATE_PRESETS[0]
@@ -236,6 +259,13 @@ export function DiscoveryPage({ aiPulse = false }: DiscoveryPageProps) {
 
   const isSearching = Boolean(semanticQuery)
   const onlineCount = displayedAdvisors.filter((a) => a.isOnline).length
+  const loading = advisorsLoading || searchLoading
+
+  useEffect(() => {
+    if (isAiMode && isSearching) {
+      mobileSearchRef.current?.focus()
+    }
+  }, [isAiMode, isSearching])
 
   const activePills: { key: string; label: string; onRemove: () => void }[] = []
   if (filters.onlineOnly) activePills.push({ key: 'online', label: 'Online only', onRemove: () => setFilters((f) => ({ ...f, onlineOnly: false })) })
@@ -266,9 +296,23 @@ export function DiscoveryPage({ aiPulse = false }: DiscoveryPageProps) {
     })
   }
 
-  const mobileSearchPlaceholder = aiPulse
+  const mobileSearchPlaceholder = isAiMode
     ? 'Describe what you need help with…'
     : 'Search by need, language, or specialty…'
+
+  const pageTitle = isSearching
+    ? 'AI matches'
+    : isAiMode
+      ? 'Find your match'
+      : 'Discover Advisors'
+
+  const pageDescription = isSearching
+    ? `Ranked for “${semanticQuery}”. Adjust filters or edit your search anytime.`
+    : isAiMode
+      ? 'Tell us what you need in plain language — verified advisors matched by AI.'
+      : 'Verified wellness advisors — filter by focus, language, and availability.'
+
+  const showAdvisorGrid = !isAiMode || isSearching
 
   const filterPanel = (
     <div className="flex flex-col gap-stack-md p-stack-md bg-surface-container-low rounded-xl border border-outline-variant md:rounded-xl">
@@ -394,14 +438,30 @@ export function DiscoveryPage({ aiPulse = false }: DiscoveryPageProps) {
   return (
     <AppShell
       activeNav="discover"
-      searchClassName={aiPulse || isSearching ? 'ai-pulse-active' : ''}
-      searchPlaceholder={
-        aiPulse ? 'Describe what you need help with…' : 'Search by need, language, or specialty...'
-      }
+      searchClassName={isAiMode || isSearching ? 'ai-pulse-active' : ''}
+      searchIcon={isAiMode ? 'psychology' : 'search'}
+      searchPlaceholder={mobileSearchPlaceholder}
+      searchValue={searchQuery}
+      onSearchValueChange={setSearchQuery}
       onSearch={handleSearch}
     >
       <main className={`${appShellMainClass} flex flex-col gap-4 sm:gap-stack-lg pb-24 md:pb-stack-lg`}>
-        {/* Mobile search — sticky below app header */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <DiscoverModeTabs />
+          {isAiMode && isSearching && (
+            <button
+              type="button"
+              onClick={handleClearSearch}
+              className={`${btnGhost} text-sm py-2 px-3 min-h-[44px] self-start sm:self-auto flex items-center gap-1.5`}
+            >
+              <MaterialIcon name="edit" className="text-base" />
+              New search
+            </button>
+          )}
+        </div>
+
+        {/* Mobile search — hidden on AI landing (hero has its own input) */}
+        {(!isAiMode || isSearching) && (
         <div className="md:hidden sticky top-16 z-30 -mx-margin-mobile px-margin-mobile py-2 bg-background/95 backdrop-blur-sm border-b border-outline-variant/40">
           <form
             className="flex gap-2"
@@ -412,12 +472,13 @@ export function DiscoveryPage({ aiPulse = false }: DiscoveryPageProps) {
           >
             <div className="relative flex-1 min-w-0">
               <MaterialIcon
-                name="search"
+                name={isAiMode ? 'psychology' : 'search'}
                 className="absolute left-3.5 top-1/2 -translate-y-1/2 text-outline pointer-events-none"
               />
               <input
+                ref={mobileSearchRef}
                 className={`w-full bg-surface-container-lowest border border-outline-variant rounded-full py-3 pl-11 pr-10 font-body-md text-base focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 shadow-sm min-h-[48px] ${
-                  aiPulse || isSearching ? 'ai-pulse-active' : ''
+                  isAiMode || isSearching ? 'ai-pulse-active' : ''
                 }`}
                 placeholder={mobileSearchPlaceholder}
                 type="search"
@@ -439,20 +500,17 @@ export function DiscoveryPage({ aiPulse = false }: DiscoveryPageProps) {
             <button
               type="submit"
               className={`${btnPrimary} shrink-0 px-4 min-h-[48px] min-w-[48px] flex items-center justify-center`}
-              aria-label="Search advisors"
+              aria-label={isAiMode ? 'Find AI match' : 'Search advisors'}
             >
-              <MaterialIcon name="search" />
+              <MaterialIcon name={isAiMode ? 'auto_awesome' : 'search'} />
             </button>
           </form>
         </div>
+        )}
 
         <DashboardHeader
-          title={isSearching ? 'Search Results' : 'Discover Advisors'}
-          description={
-            isSearching
-              ? `Matched to “${semanticQuery}”. Refine with filters below.`
-              : 'Verified wellness advisors — filter by focus, language, and availability.'
-          }
+          title={pageTitle}
+          description={pageDescription}
           badge={
             !loading ? (
               <div className="flex flex-wrap items-center gap-2">
@@ -474,49 +532,49 @@ export function DiscoveryPage({ aiPulse = false }: DiscoveryPageProps) {
           }
         />
 
-        {!aiPulse && !isSearching && (
-          <section className="bg-linear-to-r from-primary-container/15 to-secondary-container/20 rounded-xl border border-primary/15 p-4 sm:p-stack-md flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-stack-md">
-            <div className="flex items-start gap-3 min-w-0 flex-1">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-primary-container flex items-center justify-center shrink-0">
-                <MaterialIcon name="psychology" className="text-on-primary-container" />
-              </div>
-              <div className="min-w-0">
-                <h4 className="font-headline-md text-base sm:text-[18px] text-on-background">Try AI-powered search</h4>
-                <p className="font-body-md text-sm sm:text-body-md text-on-surface-variant mt-0.5 line-clamp-2 sm:line-clamp-none">
-                  Describe how you feel in plain language — we match verified advisors semantically.
-                </p>
-              </div>
-            </div>
-            <button
-              type="button"
-              onClick={() => navigate('/discover/ai')}
-              className={`${btnPrimary} text-sm sm:text-label-md px-5 py-2.5 min-h-[44px] w-full sm:w-auto flex items-center justify-center gap-2 shrink-0`}
+        {isAiMode && !isSearching && (
+          <AiGuidedSearchPanel
+            searchQuery={searchQuery}
+            onSearchQueryChange={setSearchQuery}
+            onSearch={handleSearch}
+            loading={searchLoading}
+          />
+        )}
+
+        {!isAiMode && !isSearching && (
+          <section className="rounded-xl border border-dashed border-outline-variant bg-surface-container-low/50 px-4 py-3 flex flex-col sm:flex-row sm:items-center gap-3 sm:justify-between">
+            <p className="text-sm text-on-surface-variant flex items-start gap-2">
+              <MaterialIcon name="psychology" className="text-primary shrink-0 mt-0.5" />
+              <span>
+                Not sure who to pick? Switch to <strong className="text-on-background font-label-md">AI Match</strong>{' '}
+                and describe your needs in plain language.
+              </span>
+            </p>
+            <Link
+              to="/discover/ai"
+              className={`${btnPrimary} text-sm px-4 py-2.5 min-h-[44px] w-full sm:w-auto flex items-center justify-center gap-2 shrink-0`}
             >
-              AI search
-              <MaterialIcon name="arrow_forward" className="text-[18px]" />
-            </button>
+              Open AI Match
+              <MaterialIcon name="arrow_forward" className="text-sm" />
+            </Link>
           </section>
         )}
 
-        {(aiPulse || isSearching) && (
-          <section className="bg-primary-container/10 border border-primary-container/30 rounded-xl p-4 sm:p-stack-md flex items-start gap-3 sm:gap-stack-md">
+        {isSearching && (
+          <section className="bg-primary-container/10 border border-primary-container/30 rounded-xl p-4 flex items-start gap-3">
             <div className="w-10 h-10 rounded-full bg-primary-container flex items-center justify-center shrink-0">
-              <MaterialIcon name="psychology" className="text-on-primary-container" />
+              <MaterialIcon name="auto_awesome" className="text-on-primary-container filled" />
             </div>
             <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-2 flex-wrap">
-                <h4 className="font-headline-md text-base sm:text-[18px] text-on-background">
-                  {isSearching ? 'AI matches' : 'AI-guided discovery'}
-                </h4>
+              <div className="flex flex-wrap items-center gap-2">
+                <h4 className="font-headline-md text-base text-on-background">AI-ranked results</h4>
                 <span className="inline-flex items-center gap-1 text-[10px] uppercase tracking-wider text-vibrant-coral font-label-md">
                   <span className="w-1.5 h-1.5 rounded-full bg-vibrant-coral pulse-dot" />
-                  Active
+                  {displayedAdvisors.length} match{displayedAdvisors.length === 1 ? '' : 'es'}
                 </span>
               </div>
-              <p className="font-body-md text-sm sm:text-body-md text-on-surface-variant mt-1">
-                {isSearching
-                  ? `${displayedAdvisors.length} advisor${displayedAdvisors.length === 1 ? '' : 's'} for “${semanticQuery}” with your filters.`
-                  : 'Describe your needs in the search bar — matches use bio, credentials, and specialties.'}
+              <p className="text-sm text-on-surface-variant mt-1 line-clamp-2">
+                Showing advisors best aligned with “{semanticQuery}”. Cards with higher match scores are stronger fits.
               </p>
             </div>
           </section>
@@ -547,6 +605,8 @@ export function DiscoveryPage({ aiPulse = false }: DiscoveryPageProps) {
           )
         )}
 
+        {showAdvisorGrid && (
+          <>
         {/* Toolbar: sort + filters */}
         <div className="flex flex-col gap-3 -mx-margin-mobile px-margin-mobile md:mx-0 md:px-0 sticky top-[7.25rem] md:top-16 z-20 py-2 md:py-0 bg-background/95 md:bg-transparent backdrop-blur-sm md:backdrop-blur-none">
           <div className="flex items-center gap-2">
@@ -638,8 +698,8 @@ export function DiscoveryPage({ aiPulse = false }: DiscoveryPageProps) {
           </>
         )}
 
-        {loading ? (
-          <LoadingSpinner label="Finding advisors..." />
+        {(searchLoading || (advisorsLoading && !isSearching)) ? (
+          <LoadingSpinner label={searchLoading ? 'Finding your best matches…' : 'Loading advisors…'} />
         ) : displayedAdvisors.length > 0 ? (
           <section className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-gutter">
             {displayedAdvisors.map((advisor) => (
@@ -686,17 +746,18 @@ export function DiscoveryPage({ aiPulse = false }: DiscoveryPageProps) {
                 </button>
               )}
               {!isSearching && !searchQuery && (
-                <button
-                  type="button"
-                  onClick={() => navigate('/discover/ai')}
+                <Link
+                  to="/discover/ai"
                   className={`${btnPrimary} text-sm px-4 py-2.5 min-h-[44px] w-full sm:w-auto flex items-center justify-center gap-2`}
                 >
-                  Try AI search
+                  Try AI Match
                   <MaterialIcon name="arrow_forward" className="text-sm" />
-                </button>
+                </Link>
               )}
             </div>
           </section>
+        )}
+          </>
         )}
       </main>
     </AppShell>

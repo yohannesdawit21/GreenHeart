@@ -22,6 +22,9 @@ interface AppShellProps {
   showSearch?: boolean
   searchPlaceholder?: string
   searchClassName?: string
+  searchIcon?: string
+  searchValue?: string
+  onSearchValueChange?: (value: string) => void
   onSearch?: (query: string) => void
 }
 
@@ -31,6 +34,9 @@ export function AppShell({
   showSearch = true,
   searchPlaceholder = 'Describe what you are feeling inside...',
   searchClassName = '',
+  searchIcon = 'search',
+  searchValue,
+  onSearchValueChange,
   onSearch,
 }: AppShellProps) {
   const location = useLocation()
@@ -113,19 +119,31 @@ export function AppShell({
             <BrandLockup subtitle="" className="gap-2 [&_span]:text-base" />
           </Link>
           {showSearchBar && (
-            <div className="grow relative hidden md:block min-w-0">
-              <MaterialIcon name="search" className="absolute left-3 top-1/2 -translate-y-1/2 text-outline pointer-events-none" />
+            <form
+              className="grow relative hidden md:block min-w-0"
+              onSubmit={(e) => {
+                e.preventDefault()
+                if (onSearch) onSearch(searchValue ?? '')
+              }}
+            >
+              <MaterialIcon
+                name={searchIcon}
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-outline pointer-events-none"
+              />
               <input
                 className={`w-full bg-surface-container-low border border-outline-variant rounded-full py-2 pl-10 pr-4 text-body-md focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all shadow-sm ${searchClassName}`}
                 placeholder={searchPlaceholder}
-                type="text"
+                type="search"
+                value={searchValue}
+                onChange={(e) => onSearchValueChange?.(e.target.value)}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' && onSearch) {
+                    e.preventDefault()
                     onSearch((e.target as HTMLInputElement).value)
                   }
                 }}
               />
-            </div>
+            </form>
           )}
         </div>
         <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
